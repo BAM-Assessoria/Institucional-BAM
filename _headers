@@ -1,0 +1,17 @@
+# Cabeçalhos de segurança (Netlify / Cloudflare Pages)
+# A Content-Security-Policy é definida por página via <meta> (cada página tem o
+# hash do seu JSON-LD), por isso NÃO é repetida aqui para evitar conflito.
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# Cache longo para assets versionáveis
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/css/*
+  Cache-Control: public, max-age=604800
+/js/*
+  Cache-Control: public, max-age=604800

@@ -1,0 +1,23 @@
+# Artefatos de desenvolvimento / temporários
+data/raw/
+data/shots/
+data/tmp/
+data/tmpc/
+
+# Dependências (o projeto não usa npm, mas por garantia)
+node_modules/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs e backups
+*.log
+*.bak
+
+# Configurações locais do Claude
+.claude/settings.local.json
+
+# Firebase
+.firebase/

@@ -1,0 +1,62 @@
+[
+  {
+    "slug": "natan-michneves",
+    "nome": "Natan Michneves",
+    "cargo": "CTO",
+    "img": "natan-michneves.webp"
+  },
+  {
+    "slug": "leonardo-baldin",
+    "nome": "Leonardo Baldin",
+    "cargo": "CEO",
+    "img": "leonardo-baldin.webp"
+  },
+  {
+    "slug": "lucca-almeida",
+    "nome": "Lucca Almeida",
+    "cargo": "CMO",
+    "img": "lucca-almeida.webp"
+  },
+  {
+    "slug": "caio-louro",
+    "nome": "Caio Louro",
+    "cargo": "Diretor Comercial",
+    "img": "caio-louro.webp"
+  },
+  {
+    "slug": "patrick-visoki",
+    "nome": "Patrick Visoki",
+    "cargo": "Comercial",
+    "img": "patrick-visoki.webp"
+  },
+  {
+    "slug": "felipe-vieira",
+    "nome": "Felipe Vieira",
+    "cargo": "Gerente Operacional",
+    "img": "felipe-vieira.webp"
+  },
+  {
+    "slug": "eduardo-alves",
+    "nome": "Eduardo Alves",
+    "cargo": "Gestor de Tráfego",
+    "img": "eduardo-alves.webp"
+  },
+  {
+    "slug": "mateus-breeky",
+    "nome": "Mateus Breeky",
+    "cargo": "Motion Designer",
+    "img": "mateus-breeky.webp"
+  },
+  {
+    "slug": "luan-teixeira",
+    "nome": "Luan Teixeira",
+    "cargo": "Dev Backend",
+    "img": "luan-teixeira.webp"
+  },
+  {
+    "slug": "thais-santos",
+    "nome": "Thais Santos",
+    "cargo": "Estagiária Operacional",
+    "img": "thais-santos.webp"
+  }
+]
