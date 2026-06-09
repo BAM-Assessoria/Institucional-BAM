@@ -94,31 +94,39 @@
     });
   })();
 
-  /* ---------- Reveals on scroll ---------- */
+  /* ---------- Reveals on scroll (à prova de falhas) ---------- */
   (function () {
-    var els = document.querySelectorAll('.r');
+    var els = [].slice.call(document.querySelectorAll('.r'));
     if (!els.length) return;
+    function reveal(el) { el.classList.add('in'); }
     if (!('IntersectionObserver' in window) || reduceMotion) {
-      els.forEach(function (el) { el.classList.add('in'); });
+      els.forEach(reveal);
       return;
     }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
-        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+        if (en.isIntersecting) { reveal(en.target); io.unobserve(en.target); }
       });
-    }, { threshold: 0.05, rootMargin: '0px 0px -6% 0px' });
+    }, { threshold: 0, rootMargin: '0px 0px -5% 0px' });
     els.forEach(function (el) { if (!el.classList.contains('in')) io.observe(el); });
-    // fallback: revela qualquer .r que esteja na viewport, caso o observer não dispare
-    function revealInView() {
+    // rede de segurança: revela qualquer .r que esteja na viewport OU já tenha sido
+    // rolado para cima (top acima de 95% da tela) — assim nada fica preso invisível.
+    function sweep() {
       var h = window.innerHeight || document.documentElement.clientHeight;
       document.querySelectorAll('.r:not(.in)').forEach(function (el) {
-        var r = el.getBoundingClientRect();
-        if (r.top < h * 0.92 && r.bottom > 0) el.classList.add('in');
+        if (el.getBoundingClientRect().top < h * 0.95) { reveal(el); io.unobserve(el); }
       });
     }
-    window.addEventListener('scroll', revealInView, { passive: true });
-    window.addEventListener('load', revealInView);
-    setTimeout(revealInView, 250);
+    window.addEventListener('scroll', sweep, { passive: true });
+    window.addEventListener('resize', sweep);
+    window.addEventListener('load', sweep);
+    // varredura periódica curta para capturar qualquer caso que o observer perca
+    var ticks = 0;
+    var iv = setInterval(function () {
+      sweep();
+      if (++ticks > 24 || !document.querySelector('.r:not(.in)')) clearInterval(iv);
+    }, 300);
+    sweep();
   })();
 
   /* ---------- Parallax ---------- */
