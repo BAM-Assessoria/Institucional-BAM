@@ -1,4 +1,6 @@
 {
+  "firestore": { "rules": "firestore.rules" },
+  "storage": { "rules": "storage.rules" },
   "hosting": {
     "public": ".",
     "ignore": [
@@ -10,7 +12,9 @@
       "*.md",
       "build.bat",
       "_headers",
-      ".htaccess"
+      ".htaccess",
+      "firestore.rules",
+      "storage.rules"
     ],
     "cleanUrls": false,
     "trailingSlash": false,

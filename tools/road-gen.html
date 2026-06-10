@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>html,body{margin:0;background:#050505}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="c" width="1600" height="900"></canvas>
+<script>
+/* =============================================================
+   BAM — Gerador procedural de frames PLACEHOLDER da "estrada".
+   Desenha uma estrada synthwave dark + neon que avança e
+   outdoors revelando JUNTOS / VAMOS / MAIS / LONGE.
+   NÃO é o render final — só valida a mecânica de scroll.
+   ============================================================= */
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const W = 1600, H = 900;
+const GREEN = '#00ffae';
+
+const BOARDS = [
+  { word: 'JUNTOS', start: 0.10, end: 0.27, side: 1 },
+  { word: 'VAMOS',  start: 0.26, end: 0.43, side: -1 },
+  { word: 'MAIS',   start: 0.42, end: 0.59, side: 1 },
+  { word: 'LONGE',  start: 0.58, end: 0.75, side: -1 },
+];
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+function drawFrame(i, total) {
+  const p = total > 1 ? i / (total - 1) : 0;          // progresso 0..1
+  const horizon = H * 0.46;
+  const vpx = W / 2 + Math.sin(p * Math.PI) * 30;     // ponto de fuga (leve curva)
+  const dest = clamp((p - 0.72) / 0.28, 0, 1);        // brilho do "destino" cresce no fim
+
+  // fundo
+  ctx.fillStyle = '#050505';
+  ctx.fillRect(0, 0, W, H);
+
+  // céu com leve glow verde no horizonte
+  let sky = ctx.createLinearGradient(0, 0, 0, horizon);
+  sky.addColorStop(0, '#050505');
+  sky.addColorStop(1, 'rgba(0,255,174,0.05)');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, horizon);
+
+  // destino: halo neon no ponto de fuga
+  const haloR = lerp(60, 280, dest) + 40;
+  let halo = ctx.createRadialGradient(vpx, horizon, 0, vpx, horizon, haloR);
+  halo.addColorStop(0, `rgba(0,255,174,${0.18 + dest * 0.5})`);
+  halo.addColorStop(1, 'rgba(0,255,174,0)');
+  ctx.fillStyle = halo; ctx.fillRect(0, 0, W, H);
+  if (dest > 0.1) { // arco/farol do destino
+    ctx.strokeStyle = `rgba(0,255,174,${dest})`; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(vpx, horizon, lerp(20, 120, dest), Math.PI, 0); ctx.stroke();
+  }
+
+  // piso em grade (perspectiva) — linhas horizontais correndo
+  ctx.lineWidth = 1;
+  const speed = p * 26;
+  for (let k = 0; k < 26; k++) {
+    const t = ((k + (speed % 1)) / 26);
+    const y = horizon + Math.pow(t, 2.2) * (H - horizon);
+    const a = 0.04 + (1 - t) * 0.10;
+    ctx.strokeStyle = `rgba(0,255,174,${a})`;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  // linhas verticais convergindo ao ponto de fuga
+  for (let gx = -10; gx <= 10; gx++) {
+    const bx = vpx + gx * (W / 7);
+    ctx.strokeStyle = `rgba(0,255,174,${0.05 + (gx === 0 ? 0.05 : 0)})`;
+    ctx.beginPath(); ctx.moveTo(vpx, horizon); ctx.lineTo(bx, H); ctx.stroke();
+  }
+
+  // estrada (faixa central) com bordas neon
+  const roadTopW = 26, roadBotW = 520;
+  function edge(side, w) {
+    ctx.beginPath();
+    ctx.moveTo(vpx + side * roadTopW / 2, horizon);
+    ctx.lineTo(W / 2 + side * roadBotW / 2, H);
+    ctx.lineWidth = w; ctx.strokeStyle = GREEN;
+    ctx.shadowColor = GREEN; ctx.shadowBlur = 18; ctx.stroke(); ctx.shadowBlur = 0;
+  }
+  // asfalto
+  ctx.beginPath();
+  ctx.moveTo(vpx - roadTopW / 2, horizon); ctx.lineTo(vpx + roadTopW / 2, horizon);
+  ctx.lineTo(W / 2 + roadBotW / 2, H); ctx.lineTo(W / 2 - roadBotW / 2, H); ctx.closePath();
+  ctx.fillStyle = '#080a09'; ctx.fill();
+  edge(-1, 4); edge(1, 4);
+  // tracejado central correndo
+  for (let k = 0; k < 14; k++) {
+    const t0 = ((k + (speed % 1)) / 14);
+    if (t0 <= 0.02) continue;
+    const t1 = t0 + 0.035;
+    const y0 = horizon + Math.pow(t0, 2.2) * (H - horizon);
+    const y1 = horizon + Math.pow(Math.min(t1, 1), 2.2) * (H - horizon);
+    const w0 = lerp(2, 26, Math.pow(t0, 2.2));
+    ctx.fillStyle = `rgba(0,255,174,${0.25 + t0 * 0.5})`;
+    ctx.fillRect(W / 2 - w0 / 2, y0, w0, Math.max(2, y1 - y0));
+  }
+
+  // outdoors
+  for (const b of BOARDS) {
+    if (p < b.start || p > b.end) continue;
+    const bp = (p - b.start) / (b.end - b.start);     // 0..1 dentro da janela
+    const sc = Math.pow(bp, 1.6);                      // escala de aproximação
+    const x = lerp(vpx + b.side * 30, W / 2 + b.side * 560, sc);
+    const y = lerp(horizon - 6, H * 0.40, sc);
+    const bw = lerp(8, 420, sc), bh = bw * 0.46;
+    const op = clamp(Math.min(bp / 0.18, (1 - bp) / 0.18), 0, 1);
+    ctx.globalAlpha = op;
+    // poste
+    ctx.strokeStyle = `rgba(0,255,174,0.5)`; ctx.lineWidth = Math.max(2, bw * 0.02);
+    ctx.beginPath(); ctx.moveTo(x, y + bh / 2); ctx.lineTo(x, y + bh / 2 + bh * 0.7); ctx.stroke();
+    // painel
+    ctx.fillStyle = '#0a0d0c';
+    ctx.strokeStyle = GREEN; ctx.lineWidth = Math.max(2, bw * 0.012);
+    ctx.shadowColor = GREEN; ctx.shadowBlur = bw * 0.06;
+    roundRect(x - bw / 2, y - bh / 2, bw, bh, bw * 0.04); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    // palavra
+    ctx.fillStyle = '#eafff7';
+    ctx.font = `700 ${bh * 0.42}px Oswald, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(b.word, x, y);
+    ctx.globalAlpha = 1;
+  }
+
+  // vinheta nas bordas
+  let vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.9);
+  vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+
+  // selo placeholder
+  ctx.fillStyle = 'rgba(138,143,140,0.55)';
+  ctx.font = '400 18px "Space Mono", monospace';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(`PLACEHOLDER · FRAME ${String(i + 1).padStart(3, '0')}/${total}`, 28, H - 28);
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// expõe para o gerador via CDP
+window.__draw = (i, total) => { drawFrame(i, total); };
+window.__toWebp = (q) => cv.toDataURL('image/webp', q);
+// desenho inicial só para conferência visual
+drawFrame(30, 140);
+</script>
+</body>
+</html>

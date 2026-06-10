@@ -31,31 +31,6 @@
     });
   })();
 
-  /* ---------- Cursor customizado (desktop) ---------- */
-  (function () {
-    var c = document.getElementById('cursor');
-    var d = document.getElementById('cursorDot');
-    if (!c || !d || window.matchMedia('(hover: none)').matches) return;
-    var x = 0, y = 0, cx = 0, cy = 0;
-    window.addEventListener('mousemove', function (e) {
-      x = e.clientX; y = e.clientY;
-      d.style.opacity = 1; c.style.opacity = 1;
-      d.style.left = x + 'px'; d.style.top = y + 'px';
-    });
-    (function loop() {
-      cx += (x - cx) * 0.18; cy += (y - cy) * 0.18;
-      c.style.left = cx + 'px'; c.style.top = cy + 'px';
-      requestAnimationFrame(loop);
-    })();
-    var sel = '[data-hover],a,button,.cap,.cat,.member,.cpanel,.pcard';
-    document.addEventListener('mouseover', function (e) {
-      if (e.target.closest(sel)) c.classList.add('big');
-    });
-    document.addEventListener('mouseout', function (e) {
-      if (e.target.closest(sel)) c.classList.remove('big');
-    });
-  })();
-
   /* ---------- Topbar + barra de progresso ---------- */
   (function () {
     var topbar = document.getElementById('topbar');
@@ -218,12 +193,13 @@
   (function () {
     var input = document.getElementById('blogSearch');
     if (!input) return;
-    var cards = [].slice.call(document.querySelectorAll('[data-post]'));
     var count = document.getElementById('blogCount');
     var empty = document.getElementById('noResults');
     input.addEventListener('input', function () {
       var q = input.value.trim().toLowerCase();
       var shown = 0;
+      // reconsulta a cada busca para incluir posts carregados dinamicamente
+      var cards = [].slice.call(document.querySelectorAll('[data-post]'));
       cards.forEach(function (card) {
         var hit = card.getAttribute('data-post').indexOf(q) !== -1;
         card.style.display = hit ? '' : 'none';

@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// Regras de segurança do Firestore para o blog da BAM.
+// - Qualquer pessoa PODE LER os posts (o blog é público).
+// - Só e-mails autorizados PODEM criar/editar/excluir.
+//   >>> Edite a lista ADMINS abaixo com os e-mails que podem publicar. <<<
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in [
+          'bam.assessoria@gmail.com'
+          // , 'outro-admin@bamassessoria.com'
+        ];
+    }
+
+    match /posts/{postId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Bloqueia qualquer outra coleção por padrão.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

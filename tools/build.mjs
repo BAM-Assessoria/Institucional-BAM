@@ -46,7 +46,7 @@ function readingTime(html) {
 }
 
 /* ---------- <head> com CSP (hash do JSON-LD inline) ---------- */
-function head({ prefix, title, desc, path, jsonLd, ogType = 'website' }) {
+function head({ prefix, title, desc, path, jsonLd, ogType = 'website', firebase = false, noindex = false }) {
   const ld = jsonLd || JSON.stringify({
     '@context': 'https://schema.org', '@type': 'Organization',
     name: SITE.name, alternateName: 'B.A.M.',
@@ -56,13 +56,18 @@ function head({ prefix, title, desc, path, jsonLd, ogType = 'website' }) {
     sameAs: [SITE.instagram, SITE.linkedin, SITE.facebook],
   });
   const ldHash = "'sha256-" + createHash('sha256').update(ld, 'utf8').digest('base64') + "'";
+  // Páginas que leem posts do Firestore (blog dinâmico) precisam liberar os
+  // domínios do Firebase no CSP. As demais seguem com a política mais restrita.
+  const FB_SCRIPT = ' https://www.gstatic.com';
+  const FB_CONNECT = ' https://firestore.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com';
+  const FB_IMG = ' https://firebasestorage.googleapis.com https://storage.googleapis.com';
   const csp = [
     "default-src 'self'",
-    "img-src 'self' data:",
+    "img-src 'self' data:" + (firebase ? FB_IMG : ''),
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    `script-src 'self' ${ldHash}`,
-    "connect-src 'self'",
+    `script-src 'self' ${ldHash}` + (firebase ? FB_SCRIPT : ''),
+    "connect-src 'self'" + (firebase ? FB_CONNECT : ''),
     "form-action 'self' https://api.whatsapp.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -75,7 +80,7 @@ function head({ prefix, title, desc, path, jsonLd, ogType = 'website' }) {
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>${esc(title)}</title>
 <meta name="description" content="${escAttr(desc)}">
-<meta name="robots" content="index,follow">
+<meta name="robots" content="${noindex ? 'noindex,follow' : 'index,follow'}">
 <link rel="canonical" href="${canonical}">
 <link rel="icon" href="${prefix}assets/svg/logo-icon.svg" type="image/svg+xml">
 <meta property="og:type" content="${ogType}">
@@ -168,16 +173,14 @@ function waFloat() {
 </a>`;
 }
 
-function page({ prefix, bodyClass = '', title, desc, path, active, hasLoader = false, jsonLd, ogType, content }) {
+function page({ prefix, bodyClass = '', title, desc, path, active, hasLoader = false, jsonLd, ogType, content, firebase = false, noindex = false, extraScripts = '' }) {
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-${head({ prefix, title, desc, path, jsonLd, ogType })}
+${head({ prefix, title, desc, path, jsonLd, ogType, firebase, noindex })}
 </head>
 <body${bodyClass ? ` class="${bodyClass}"` : ''}>
 <a class="skip-link" href="#main">Pular para o conteúdo</a>
-<div class="cursor" id="cursor" aria-hidden="true"></div>
-<div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
 <div class="progress" id="progress" aria-hidden="true"></div>
 ${hasLoader ? loader(prefix) + '\n' : ''}${header(prefix, active)}
 <span id="top"></span>
@@ -187,7 +190,7 @@ ${content}
 ${footer(prefix, active)}
 ${waFloat()}
 <script src="${prefix}js/main.js" defer></script>
-</body>
+${extraScripts}</body>
 </html>
 `;
 }
@@ -197,32 +200,40 @@ const ICON = (prefix) => `${prefix}assets/svg/logo-icon.svg`;
 
 function clientsWall(prefix) {
   const img = (f) => `<img src="${prefix}assets/img/clients/${f}" alt="Cliente BAM" loading="lazy" decoding="async" height="42">`;
-  const a = clients.slice(0, 12), b = clients.slice(12);
-  const row = (arr) => arr.map(img).join('') + arr.map(img).join('');
-  return `<section class="flow">
+  // uma única faixa com todos os clientes (duplicada para o loop contínuo)
+  const row = clients.map(img).join('') + clients.map(img).join('');
+  return `<section class="flow clients">
   <span class="scene-edge"></span>
-  <div class="wrap" style="margin-bottom:40px"><span class="tlabel r up">Clientes &amp; parcerias — marcas que crescem com a BAM</span></div>
-  <div class="wall-row"><div class="wall-move a">${row(a)}</div></div>
-  <div class="wall-row" style="margin-top:30px"><div class="wall-move b">${row(b)}</div></div>
+  <div class="wrap" style="margin-bottom:34px"><span class="tlabel r up">Clientes &amp; parcerias — marcas que crescem com a BAM</span></div>
+  <div class="wall-row"><div class="wall-move a">${row}</div></div>
 </section>`;
 }
 
+const ROAD_FRAMES = 140; // Fase 1: frames placeholder (assets/road/)
+
 function buildHome() {
   const prefix = '';
-  const content = `<!-- HERO -->
-<section class="scene hero" style="border-top:0;box-shadow:none;border-radius:0">
-  <div class="hero-grid" data-par="0.12"></div>
-  <div class="hero-glow" data-par="0.22"></div>
-  <div class="wrap">
-    <div class="hero-eyebrow">
-      <span class="tlabel r up in">Assessoria de marketing de performance</span>
-      <span class="mono r up in d1" style="font-size:11px;color:var(--gray)">DESDE 2022 · SÃO PAULO / BR</span>
-    </div>
-    <h1><span class="r clip in">Performance</span><br><span class="r clip in d1">que vira <span class="g">faturamento</span></span><img src="${ICON(prefix)}" alt="" class="hero-chevsvg r scale in d2" aria-hidden="true"></h1>
-    <div class="hero-bottom">
-      <p class="hero-sub r up in d2">Não somos mais uma agência de execução. Somos a inteligência de crescimento que trata o seu marketing como investimento — e mostra o retorno em tempo real.</p>
-      <a href="#contato" class="next-step r up in d3" data-hover><span class="lab">Próximo passo</span><span class="val">Diagnóstico <span class="g">→</span></span></a>
-      <div class="scroll-ind">Role <i></i></div>
+  const content = `<!-- A ESTRADA (fundo cinematográfico em scroll) -->
+<div class="road-stage" aria-hidden="true">
+  <img class="road-poster" src="${prefix}assets/road/poster.webp" alt="" width="1600" height="900" fetchpriority="high" decoding="async">
+  <canvas id="roadCanvas" data-frames="${ROAD_FRAMES}" data-src="${prefix}assets/road/" role="presentation"></canvas>
+  <div class="road-scrim"></div>
+</div>
+
+<!-- HERO / ABERTURA DA JORNADA (estrada pinada) -->
+<section class="road-journey" id="roadTrack">
+  <div class="road-pin hero">
+    <div class="wrap">
+      <div class="hero-eyebrow">
+        <span class="tlabel r up in">Assessoria de marketing de performance</span>
+        <span class="mono r up in d1" style="font-size:11px;color:var(--gray)">DESDE 2022 · SÃO PAULO / BR</span>
+      </div>
+      <h1><span class="r clip in">Juntos vamos</span><br><span class="r clip in d1">mais <span class="g">longe</span></span><img src="${ICON(prefix)}" alt="" class="hero-chevsvg r scale in d2" aria-hidden="true"></h1>
+      <div class="hero-bottom">
+        <p class="hero-sub r up in d2">Performance que vira <span class="g">faturamento</span>.</p>
+        <a href="#contato" class="next-step r up in d3" data-hover><span class="lab">Próximo passo</span><span class="val">Diagnóstico <span class="g">→</span></span></a>
+        <div class="scroll-ind">Role <i></i></div>
+      </div>
     </div>
   </div>
 </section>
@@ -260,7 +271,7 @@ function buildHome() {
   <div class="wrap">
     <div class="shead"><span class="idx r up">03 — O que fazemos</span><h2 class="r up">Duas frentes,<br><span class="g">um só objetivo.</span></h2></div>
     <div class="panels">
-      <a href="#servicos" class="cat r left" data-hover><div class="cgrid"></div><span class="ctag">Frente 01</span><h2>Perfor<br>mance</h2><div><div class="clist"><span>Tráfego Pago</span><span>Google &amp; Meta Ads</span><span>ROI</span><span>Dados em tempo real</span></div><span class="cgo">Ver capacidades <span class="ar">→</span></span></div></a>
+      <a href="#servicos" class="cat r left" data-hover><div class="cgrid"></div><span class="ctag">Frente 01</span><h2>Performance</h2><div><div class="clist"><span>Tráfego Pago</span><span>Google &amp; Meta Ads</span><span>ROI</span><span>Dados em tempo real</span></div><span class="cgo">Ver capacidades <span class="ar">→</span></span></div></a>
       <a href="#servicos" class="cat r right" data-hover><div class="cgrid"></div><span class="ctag">Frente 02</span><h2>Marca &amp;<br>Conteúdo</h2><div><div class="clist"><span>Branding</span><span>Identidade Visual</span><span>Redes Sociais</span><span>SEO</span></div><span class="cgo">Ver capacidades <span class="ar">→</span></span></div></a>
     </div>
   </div>
@@ -328,6 +339,7 @@ ${clientsWall(prefix)}
     prefix, title: SITE.name + ' | Inteligência de Crescimento Digital',
     desc: 'A BAM é a assessoria de marketing de performance que trata o seu marketing como investimento. Estratégia, tráfego pago, SEO, social e dados em tempo real.',
     path: '/', active: 'inicio', hasLoader: true, content,
+    extraScripts: `<script src="${prefix}js/road-scrubber.js" defer></script>\n`,
   });
 }
 
@@ -519,9 +531,9 @@ function buildBlogIndex() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         <input type="search" id="blogSearch" placeholder="Buscar artigo..." aria-label="Buscar artigo">
       </label>
-      <span class="blog-count" id="blogCount">${posts.length} artigos</span>
+      <span class="blog-count" id="blogCount" data-static="${posts.length}">${posts.length} artigos</span>
     </div>
-    <div class="posts">
+    <div class="posts" id="postsGrid">
       ${cards}
     </div>
     <p class="no-results" id="noResults">Nenhum artigo encontrado.</p>
@@ -530,7 +542,8 @@ function buildBlogIndex() {
   return page({
     prefix, title: 'Blog | BAM Assessoria em Marketing',
     desc: 'Artigos e insights de marketing de performance, tráfego pago, SEO, branding e estratégia pela BAM Assessoria.',
-    path: '/blog/index.html', active: 'blog', content,
+    path: '/blog/index.html', active: 'blog', content, firebase: true,
+    extraScripts: `<script type="module" src="${prefix}js/blog-feed.js"></script>\n`,
   });
 }
 
@@ -553,9 +566,9 @@ function buildPost(p, prev, next) {
   <div class="hero-glow"></div>
   <div class="wrap">
     <nav class="breadcrumb" aria-label="Você está em"><a href="${prefix}index.html">Início</a><span class="sep">/</span><a href="${prefix}blog/index.html">Blog</a><span class="sep">/</span><span>Artigo</span></nav>
-    <div class="article" style="margin-top:18px">
-      <div class="pmeta" style="font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--green);display:flex;gap:12px;flex-wrap:wrap">${cat}<span style="color:var(--gray)">${fmtDate(p.date)} · ${readingTime(p.bodyHtml)} min de leitura</span></div>
-      <h1 style="font-size:clamp(30px,5.2vw,68px);margin-top:14px">${esc(p.title)}</h1>
+    <div class="article-head">
+      <div class="pmeta">${cat}<span class="dim">${fmtDate(p.date)} · ${readingTime(p.bodyHtml)} min de leitura</span></div>
+      <h1>${esc(p.title)}</h1>
     </div>
   </div>
 </header>
@@ -589,12 +602,55 @@ ${p.bodyHtml}
   });
 }
 
+/* ---------- Visualizador de posts dinâmicos (Firestore) ----------
+   Renderiza, no cliente, um post criado pela página /admin. A leitura é por
+   ?slug=... na URL. Mantém o mesmo layout dos artigos estáticos. */
+function buildPostViewer() {
+  const prefix = '../';
+  const content = `<header class="page-head">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="wrap">
+    <nav class="breadcrumb" aria-label="Você está em"><a href="${prefix}index.html">Início</a><span class="sep">/</span><a href="${prefix}blog/index.html">Blog</a><span class="sep">/</span><span>Artigo</span></nav>
+    <div class="article-head">
+      <div class="pmeta" id="postMeta"></div>
+      <h1 id="postTitle">Carregando artigo…</h1>
+    </div>
+  </div>
+</header>
+
+<article class="section">
+  <div class="wrap">
+    <div class="article">
+      <div class="article-cover" id="postCover" hidden><img id="postCoverImg" alt="" width="1200" height="675" decoding="async"></div>
+      <div class="prose" id="postBody"><p style="color:var(--gray)">Carregando conteúdo…</p></div>
+    </div>
+    <div class="article-foot">
+      <a class="back" href="${prefix}blog/index.html"><span aria-hidden="true">←</span> Voltar ao blog</a>
+    </div>
+    <div class="article-cta article">
+      <h3>Quer resultados como esses no seu <span class="g">negócio?</span></h3>
+      <p>Receba um diagnóstico estratégico gratuito e descubra como tratar o seu marketing como investimento.</p>
+      <a href="${prefix}index.html#contato" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a>
+    </div>
+  </div>
+</article>`;
+  return page({
+    prefix, title: 'Artigo | Blog BAM Assessoria',
+    desc: 'Artigo do blog da BAM Assessoria em Marketing.',
+    path: '/blog/post.html', active: 'blog', ogType: 'article',
+    firebase: true, noindex: true, content,
+    extraScripts: `<script type="module" src="${prefix}js/post-view.js"></script>\n`,
+  });
+}
+
 /* ===================== runner ===================== */
 mkdirSync('blog', { recursive: true });
 writeFileSync('index.html', buildHome());
 writeFileSync('sobre.html', buildSobre());
 writeFileSync('privacidade.html', buildPrivacidade());
-let n = 3;
+writeFileSync('blog/post.html', buildPostViewer()); // visualizador de posts dinâmicos
+let n = 4;
 if (posts.length) {
   writeFileSync('blog/index.html', buildBlogIndex());
   n++;

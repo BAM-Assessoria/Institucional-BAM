@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob: https://firebasestorage.googleapis.com https://storage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' https://www.gstatic.com; connect-src 'self' https://firestore.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'">
+<meta name="robots" content="noindex,nofollow">
+<title>Publicar · BAM</title>
+<link rel="icon" href="../assets/svg/logo-icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Firebase não configurado -->
+  <section id="setupView" class="hidden">
+    <div class="bar"><div class="brand"><img src="../assets/svg/logo-wordmark.svg" alt="BAM"><span class="tag">Publicação</span></div></div>
+    <span class="eyebrow">Configuração pendente</span>
+    <h1>Falta conectar o <span class="g">Firebase.</span></h1>
+    <p class="lead">Preencha o arquivo <b>js/firebase-config.js</b> com os dados do projeto Firebase e habilite Authentication, Firestore e Storage. O passo a passo completo está em <b>SETUP-BLOG.md</b>, na raiz do projeto.</p>
+  </section>
+
+  <!-- Login -->
+  <section id="loginView" class="hidden">
+    <div class="login">
+      <div class="brand" style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:26px">
+        <img src="../assets/svg/logo-wordmark.svg" alt="BAM" style="height:30px">
+      </div>
+      <div class="card">
+        <span class="eyebrow">Área restrita</span>
+        <h1>Entrar</h1>
+        <p class="lead">Acesso exclusivo da equipe BAM para publicar artigos no blog.</p>
+        <form id="loginForm">
+          <div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required placeholder="voce@bamassessoria.com"></div>
+          <div class="field"><label for="senha">Senha</label><input id="senha" type="password" autocomplete="current-password" required placeholder="••••••••"></div>
+          <div class="actions"><button class="btn" type="submit" id="loginBtn">Entrar <span class="ar">→</span></button></div>
+          <div class="msg err" id="loginMsg"></div>
+        </form>
+      </div>
+      <p class="footnote">BAM Assessoria · uso interno</p>
+    </div>
+  </section>
+
+  <!-- Editor (logado) -->
+  <section id="appView" class="hidden">
+    <div class="bar">
+      <div class="brand"><img src="../assets/svg/logo-wordmark.svg" alt="BAM"><span class="tag">Publicação</span></div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span class="who" id="whoami"></span>
+        <button class="btn ghost" id="logoutBtn" type="button">Sair</button>
+      </div>
+    </div>
+
+    <span class="eyebrow">Novo artigo</span>
+    <h1>Publicar no <span class="g">blog.</span></h1>
+    <p class="lead">Preencha os campos abaixo. Ao publicar, o artigo aparece no topo do blog imediatamente.</p>
+
+    <form id="postForm" class="card">
+      <div class="field">
+        <label for="titulo">Título</label>
+        <input id="titulo" type="text" required placeholder="Ex.: Como o tráfego pago acelera vendas locais" maxlength="160">
+        <div class="hint">Endereço do artigo: <b id="slugPreview">/blog/post.html?slug=…</b></div>
+      </div>
+
+      <div class="row">
+        <div class="field"><label for="data">Data de publicação</label><input id="data" type="date" required></div>
+        <div class="field"><label for="categoria">Categoria <span class="opt">(opcional)</span></label><input id="categoria" type="text" placeholder="Ex.: SEO, Tráfego Pago…" maxlength="40"></div>
+      </div>
+
+      <div class="field">
+        <label for="resumo">Resumo / chamada</label>
+        <textarea id="resumo" required maxlength="320" placeholder="1 a 2 frases que aparecem no card do blog e nas buscas."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Imagem de capa <span class="opt">(opcional, recomendado — 16:9, .webp/.jpg/.png)</span></label>
+        <div class="cover-pick">
+          <div class="cover-prev" id="coverPrev" aria-hidden="true"></div>
+          <input id="cover" type="file" accept="image/*">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Conteúdo do artigo</label>
+        <div class="toolbar" role="toolbar" aria-label="Formatação">
+          <button type="button" data-cmd="formatBlock" data-val="p" title="Parágrafo">¶ Texto</button>
+          <button type="button" data-cmd="formatBlock" data-val="h2" title="Subtítulo">H2</button>
+          <button type="button" data-cmd="formatBlock" data-val="h3" title="Tópico">H3</button>
+          <button type="button" data-cmd="bold" title="Negrito"><b>N</b></button>
+          <button type="button" data-cmd="italic" title="Itálico"><i>I</i></button>
+          <button type="button" data-cmd="insertUnorderedList" title="Lista">• Lista</button>
+          <button type="button" data-cmd="formatBlock" data-val="blockquote" title="Citação">❝ Citação</button>
+          <button type="button" data-cmd="createLink" title="Link">🔗 Link</button>
+          <button type="button" data-cmd="removeFormat" title="Limpar formatação">✕ Limpar</button>
+        </div>
+        <div class="editor" id="editor" contenteditable="true" data-ph="Escreva o artigo aqui…"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" type="submit" id="publishBtn">Publicar artigo <span class="ar">→</span></button>
+        <button class="btn ghost" type="button" id="resetBtn">Limpar tudo</button>
+      </div>
+      <div class="msg ok" id="okMsg"></div>
+      <div class="msg err" id="errMsg"></div>
+    </form>
+
+    <div class="card">
+      <span class="eyebrow">Publicados por aqui</span>
+      <h1 style="font-size:clamp(20px,3vw,26px)">Artigos do painel</h1>
+      <p class="lead" id="listEmpty">Nenhum artigo publicado pelo painel ainda.</p>
+      <ul class="plist" id="postList"></ul>
+    </div>
+
+    <p class="footnote">Os artigos antigos (importados do site) continuam fixos no blog e não aparecem nesta lista.</p>
+  </section>
+
+</div>
+<script type="module" src="admin.js"></script>
+</body>
+</html>

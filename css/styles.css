@@ -24,10 +24,6 @@ img{display:block;max-width:100%}
 .idx{font-family:var(--mono);font-size:12px;color:var(--gray);letter-spacing:.2em;text-transform:uppercase}
 
 /* cursor */
-.cursor{position:fixed;top:0;left:0;width:34px;height:34px;border:1.5px solid var(--green);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .25s,height .25s,background .25s,opacity .25s;mix-blend-mode:difference;opacity:0}
-.cursor.big{width:74px;height:74px;background:var(--green)}
-.cursor-dot{position:fixed;top:0;left:0;width:5px;height:5px;background:var(--green);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);opacity:0}
-@media(hover:none){.cursor,.cursor-dot{display:none}}
 
 /* progress bar */
 .progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--green);z-index:960;transition:width .1s linear}
@@ -43,9 +39,9 @@ img{display:block;max-width:100%}
 
 /* top bar */
 .topbar{position:fixed;top:0;left:0;width:100%;z-index:920;display:flex;align-items:center;justify-content:space-between;
-  padding:18px var(--gut);transition:background .4s,padding .4s}
-.topbar.scrolled{background:rgba(5,5,5,.6);backdrop-filter:blur(14px);padding-top:12px;padding-bottom:12px}
-.brand-logo{height:24px;width:auto;display:block}
+  padding:26px var(--gut);transition:background .4s,padding .4s,border-color .4s;border-bottom:1px solid transparent}
+.topbar.scrolled{background:rgba(5,5,5,.72);backdrop-filter:blur(14px);padding-top:18px;padding-bottom:18px;border-bottom-color:var(--line)}
+.brand-logo{height:30px;width:auto;display:block}
 .topbar-right{display:flex;align-items:center;gap:22px}
 .store-link{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#cfcfcf;transition:color .25s}
 .store-link:hover{color:var(--green)}
@@ -89,22 +85,24 @@ img{display:block;max-width:100%}
 .r.d1{transition-delay:.08s}.r.d2{transition-delay:.18s}.r.d3{transition-delay:.28s}.r.d4{transition-delay:.38s}.r.d5{transition-delay:.48s}.r.d6{transition-delay:.58s}
 
 /* section header */
-.shead{display:grid;grid-template-columns:auto 1fr;gap:18px 26px;align-items:start;margin-bottom:clamp(36px,5vw,60px)}
-.shead .idx{padding-top:10px}
-.shead h2{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:clamp(27px,5.2vw,82px);line-height:1.1;letter-spacing:-.01em;padding-top:.16em;padding-bottom:.06em}
+.shead{display:block;margin-bottom:clamp(36px,5vw,60px)}
+.shead .idx{display:inline-flex;align-items:center;gap:11px;margin-bottom:clamp(16px,1.7vw,24px)}
+.shead .idx::before{content:"";width:24px;height:1px;background:var(--green);flex:0 0 auto}
+.shead h2{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:clamp(28px,5.2vw,82px);line-height:1.06;letter-spacing:-.014em;padding-top:.04em;padding-bottom:.06em}
 .shead h2 .g{color:var(--green)}
-.shead .sub{grid-column:2;color:#bdbdbd;font-size:18px;max-width:620px;margin-top:6px}
+.shead .sub{color:#bdbdbd;font-size:clamp(16px,1.8vw,19px);max-width:640px;margin-top:18px;line-height:1.55}
 
 /* hero */
 .hero .hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(ellipse 90% 80% at 50% 55%,#000 25%,transparent 80%);opacity:.45;z-index:0}
 .hero .hero-glow{position:absolute;width:80vw;height:80vw;max-width:900px;max-height:900px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,174,.14),transparent 62%);top:-18%;right:-12%;z-index:0;filter:blur(10px)}
-.hero{align-items:flex-end;padding-bottom:38px;padding-top:120px}
+.hero{align-items:center;padding-bottom:clamp(48px,7vh,72px);padding-top:clamp(92px,12vh,118px)}
 .hero-eyebrow{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:24px}
 .hero h1{font-family:var(--disp);font-weight:700;text-transform:uppercase;overflow-wrap:break-word;font-size:clamp(34px,8.4vw,124px);line-height:1.02;letter-spacing:-.012em;padding-top:.08em;padding-bottom:.12em}
 .hero h1 .g{color:var(--green)}
 .hero-chevsvg{height:clamp(38px,6.5vw,112px);width:auto;margin-left:.12em;vertical-align:baseline}
 .hero-bottom{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:24px;margin-top:40px}
 .hero-sub{max-width:440px;color:#d7d7d7;font-size:clamp(15px,1.6vw,19px)}
+.hero-sub .g{color:var(--green)}
 .next-step{display:inline-flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:7px;padding:16px 22px;transition:border-color .3s,background .3s}
 .next-step:hover{border-color:var(--green);background:rgba(0,255,174,.05)}
 .next-step .lab{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--gray)}
@@ -113,6 +111,27 @@ img{display:block;max-width:100%}
 .scroll-ind{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gray);display:flex;align-items:center;gap:10px}
 .scroll-ind i{width:1px;height:34px;background:linear-gradient(var(--green),transparent);display:block;animation:scrolldown 1.8s infinite}
 @keyframes scrolldown{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}50.1%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* =============================================================
+   A ESTRADA — fundo cinematográfico em scroll (Fase 1: placeholders)
+   ============================================================= */
+.road-stage{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--black)}
+.road-stage .road-poster,.road-stage #roadCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.road-stage #roadCanvas{z-index:1}
+.road-scrim{position:absolute;inset:0;z-index:2;background:
+  radial-gradient(125% 85% at 50% 16%,transparent 42%,rgba(5,5,5,.5) 100%),
+  linear-gradient(180deg,rgba(5,5,5,.42) 0%,rgba(5,5,5,.1) 30%,rgba(5,5,5,.2) 58%,rgba(5,5,5,.74) 100%)}
+/* abertura: a seção alta define o comprimento do scrub; o miolo fica pinado */
+.road-journey{position:relative;z-index:1}
+.road-pin{display:flex;align-items:center;min-height:100vh;min-height:100svh}
+body.journey-on .road-journey{height:420vh}
+body.journey-on .road-pin{position:sticky;top:0;height:100vh;height:100svh;min-height:0;overflow:hidden}
+/* conteúdo sempre acima da estrada; seções após a abertura ficam opacas */
+body.journey-on #main>section:not(.road-journey),body.journey-on #main>div:not(.road-stage){position:relative;z-index:1}
+body.journey-on .scene,body.journey-on .cases-h{background:var(--black)}
+/* fallback: mobile/coarse/redução de movimento → site normal, sem estrada */
+@media (max-width:1024px),(pointer:coarse){.road-stage{display:none}}
+@media (prefers-reduced-motion:reduce){.road-stage{display:none}}
 
 /* marquee */
 .marquee{display:flex;overflow:hidden;white-space:nowrap;padding:16px 0;background:var(--green);color:#000;position:relative;z-index:1}
@@ -150,7 +169,7 @@ img{display:block;max-width:100%}
 .cpanel.quote .q .g{color:var(--green)}
 .cpanel.quote .qa{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--gray);margin-top:24px}
 .cpanel.intro{background:transparent;border:0;width:min(86vw,560px)}
-.cpanel.intro .big{font-size:clamp(64px,11vw,150px)}
+.cpanel.intro .big{font-size:clamp(40px,5.6vw,68px)}
 .cpanel .chevbg{position:absolute;right:-30px;bottom:-30px;height:60%;opacity:.12;z-index:0}
 .cases-hint{position:absolute;bottom:28px;left:var(--gut);font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gray);z-index:3;display:flex;align-items:center;gap:10px}
 .cases-hint .arrow{display:inline-block;animation:nudge 1.4s infinite}
@@ -164,7 +183,7 @@ img{display:block;max-width:100%}
 .cat:hover{background:var(--green);color:#000}.cat:hover .cgrid{opacity:0}
 .cat .ctag{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:var(--green);transition:color .5s}
 .cat:hover .ctag{color:#000}
-.cat h2{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:clamp(33px,5.5vw,92px);line-height:1.06;padding-top:.12em;padding-bottom:.04em}
+.cat h2{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:clamp(30px,4.4vw,72px);line-height:1.04;padding-top:.08em;padding-bottom:.04em}
 .cat .clist{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:18px}
 .cat .clist span{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.06em;opacity:.8}
 .cat .cgo{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;text-transform:uppercase;letter-spacing:.1em;margin-top:24px}
@@ -202,6 +221,7 @@ img{display:block;max-width:100%}
 .btn .ar{transition:transform .3s}.btn:hover .ar{transform:translateX(4px)}
 
 /* clients wall */
+.flow.clients{padding:clamp(44px,6vw,76px) 0}
 .wall-row{display:flex;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
 .wall-move{display:flex;align-items:center;gap:60px;padding-right:60px}
 .wall-move.a{animation:marq 40s linear infinite}
@@ -278,7 +298,6 @@ form .btn{width:100%;justify-content:center;margin-top:4px}
   .cat{min-height:auto;padding:34px}
   .team-grid{grid-template-columns:repeat(3,1fr)}
   .founders{grid-template-columns:1fr}
-  .shead{grid-template-columns:1fr}.shead .idx{padding-top:0}.shead .sub{grid-column:1}
 }
 @media(max-width:560px){
   .store-link{display:none}
@@ -394,6 +413,10 @@ body.no-hscroll .cpanel{scroll-snap-align:center}
 
 /* ===== POST: artigo ===== */
 .article{max-width:820px;margin:0 auto}
+.article-head{max-width:820px;margin:18px auto 0}
+.article-head .pmeta{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--green);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.article-head .pmeta .dim{color:var(--gray)}
+.page-head .article-head h1{font-size:clamp(30px,4.6vw,60px);line-height:1.05;letter-spacing:-.015em;margin-top:18px;padding-top:.02em;padding-bottom:.04em}
 .article-cover{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:36px;aspect-ratio:16/9;background:var(--black2)}
 .article-cover img{width:100%;height:100%;object-fit:cover}
 .article-foot{max-width:820px;margin:48px auto 0;padding-top:28px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px}

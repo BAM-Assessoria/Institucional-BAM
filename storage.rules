@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// Regras do Firebase Storage para as imagens de capa do blog.
+// - Leitura pública (as capas aparecem no site).
+// - Upload/remoção só para e-mails autorizados (mesma lista do Firestore).
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in [
+          'bam.assessoria@gmail.com'
+          // , 'outro-admin@bamassessoria.com'
+        ];
+    }
+
+    match /blog/{fileName} {
+      allow read: if true;
+      // até 8 MB e apenas imagens
+      allow write: if isAdmin()
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isAdmin();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
