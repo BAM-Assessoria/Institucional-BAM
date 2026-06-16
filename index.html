@@ -66,24 +66,46 @@
 </nav>
 <span id="top"></span>
 <main id="main">
-<!-- A ESTRADA (fundo cinematográfico em scroll) -->
+<!-- CANVAS ESTRADA (desktop) -->
 <div class="road-stage" aria-hidden="true">
-  <img class="road-poster" src="assets/road/poster.webp" alt="" width="1600" height="900" fetchpriority="high" decoding="async">
-  <canvas id="roadCanvas" data-frames="140" data-src="assets/road/" role="presentation"></canvas>
+  <canvas id="roadCanvas"></canvas>
   <div class="road-scrim"></div>
 </div>
 
-<!-- HERO / ABERTURA DA JORNADA (estrada pinada) -->
+<!-- HERO + ESTRADA 3D -->
 <section class="road-journey" id="roadTrack">
-  <div class="road-pin hero">
-    <div class="road-sign" id="roadSign" aria-hidden="true">
-      <div class="road-sign-box"><span class="road-sign-word" id="roadSignWord">Juntos</span></div>
-      <div class="road-sign-pole"></div>
-    </div>
+  <div class="road-pin">
     <div class="wrap">
-      <h1 class="hero-slogan"><span class="hw">Juntos</span> <span class="hw">vamos</span><br><span class="hw">mais</span> <span class="hw g">longe</span><img src="assets/svg/logo-icon.svg" alt="" class="hero-chevsvg hw" aria-hidden="true"></h1>
+      <h1>
+        <span class="hw">Juntos</span> <span class="hw">vamos</span><br>
+        <span class="hw">mais</span> <span class="hw g">longe</span><img src="assets/svg/logo-icon.svg" alt="" class="hw hero-chevsvg" aria-hidden="true">
+      </h1>
+      <div id="roadSign" class="road-sign">
+        <div class="road-sign-box"><span id="roadSignWord" class="road-sign-word"></span></div>
+        <div class="road-sign-pole"></div>
+      </div>
       <div class="hero-bottom">
-        <div class="scroll-ind">Role <i></i></div>
+        <div class="scroll-ind r up d1">Role <i></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3D PORTFOLIO DECK -->
+<section class="deck-journey" id="deckTrack">
+  <div class="deck-pin">
+    <div class="wrap deck-head-wrap">
+      <span class="idx tlabel r up">02 — Portfolio</span>
+      <h2 class="r up d1" style="font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:clamp(24px,3.6vw,52px);line-height:1.06;margin-top:10px">Cases que <span class="g">falam por si.</span></h2>
+    </div>
+    <div class="deck-scene">
+      <div class="deck-group" id="deckGroup">
+        <div class="deck-card"><img src="portifolio/Kontainers_Feed%2045%20(9)%20(1).png" alt="Kontainers" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Kontainers</div><div class="deck-card-metric">+60% Ticket médio</div></div></div>
+        <div class="deck-card"><img src="portifolio/Jogo%20Ver%C3%A3o_feed.png" alt="Hygge Games" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Hygge Games</div><div class="deck-card-metric">+200% Engajamento</div></div></div>
+        <div class="deck-card"><img src="portifolio/Experiencia%20do%20cliente_feed.png" alt="Redomo Energia" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Redomo Energia</div><div class="deck-card-metric">+600% Tráfego</div></div></div>
+        <div class="deck-card"><img src="portifolio/O%20Futuro%20come%C3%A7a%20V2_feed%20(3).png" alt="Pq. da Cantareira" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Pq. da Cantareira</div><div class="deck-card-metric">+40% Leads</div></div></div>
+        <div class="deck-card"><img src="portifolio/GR%C3%83OS%20QUE%20GERAM%20RENDA.png" alt="Granitos Moredo" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Granitos Moredo</div><div class="deck-card-metric">+20% Novos clientes</div></div></div>
+        <div class="deck-card"><img src="portifolio/Escopo%20claro_feed%20(2).png" alt="Prompt Serviços" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Prompt Serviços</div><div class="deck-card-metric">+80% Orçamentos</div></div></div>
       </div>
     </div>
   </div>
@@ -266,7 +288,7 @@
     <div class="feature r scale">
       <span class="tlabel">App exclusivo · em tempo real</span>
       <h2>Transparência <span class="g">total.</span></h2>
-      <p>Confiança se constrói com transparência. No nosso aplicativo exclusivo você acompanha 24/7 quanto foi investido, em quê e qual retorno cada campanha gera. Sem relatórios complicados, sem espera.</p>
+      <p>Confiança se constrói com transparência. No nosso aplicativo exclusivo você acompanha 24/7 quanto foi investido, em quê e qual retorno cada campanha gera. Sem espera.</p>
       <div class="chips"><span>Investimento ao vivo</span><span>Retorno por campanha</span><span>Sem relatório confuso</span><span>24/7</span></div>
       <div class="fcta"><a href="#contato" class="btn" data-hover><span>Quero essa visibilidade</span> <span class="ar">→</span></a></div>
     </div>
@@ -323,5 +345,6 @@
 </a>
 <script src="js/main.js" defer></script>
 <script src="js/road-scrubber.js" defer></script>
+<script src="js/deck.js" defer></script>
 </body>
 </html>

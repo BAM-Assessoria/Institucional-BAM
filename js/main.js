@@ -8,7 +8,7 @@
   var WHATSAPP = '5511976259165';
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- Intro (home): logo central → sobe → topbar/whats se constroem ---------- */
+  /* ---------- Intro (home): logo central fica até scroll → topbar/whats se constroem ---------- */
   (function () {
     var loader = document.getElementById('loader');
     if (!loader) return;
@@ -16,44 +16,51 @@
     var storeLink = document.querySelector('.store-link');
     var menuLabel = document.getElementById('menuLabel');
 
-    // efeito "tipografia se construindo": embaralha e revela da esquerda p/ direita
-    function scramble(el, finalText, dur) {
+    // digitação da esquerda para a direita: cursor à direita, caracteres adicionados em sequência
+    function typewrite(el, text, msPerChar) {
       if (!el) return;
-      var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%/\\><';
-      var t0 = null;
-      (function step(ts) {
-        if (t0 === null) t0 = ts;
-        var pr = Math.min(1, (ts - t0) / dur);
-        var n = finalText.length, reveal = Math.floor(pr * n), out = '';
-        for (var i = 0; i < n; i++) {
-          out += (i < reveal || finalText.charAt(i) === ' ')
-            ? finalText.charAt(i)
-            : chars.charAt(Math.floor(Math.random() * chars.length));
+      el.textContent = '';
+      var cur = document.createElement('span');
+      cur.className = 'tw-cursor';
+      cur.setAttribute('aria-hidden', 'true');
+      el.appendChild(cur);
+      var i = 0;
+      var iv = setInterval(function () {
+        if (i < text.length) {
+          el.insertBefore(document.createTextNode(text[i++]), cur); // append antes do cursor
+        } else {
+          clearInterval(iv);
+          setTimeout(function () { if (cur.parentNode) cur.parentNode.removeChild(cur); }, 1400);
         }
-        el.textContent = out;
-        if (pr < 1) requestAnimationFrame(step); else el.textContent = finalText;
-      })(performance.now ? performance.now() : 0);
-      // fallback de tempo (caso o 1º ts não venha): garante o texto final
-      setTimeout(function () { el.textContent = finalText; }, dur + 400);
+      }, msPerChar);
     }
 
     // movimento reduzido: sem intro, mostra tudo de imediato
     if (reduceMotion) { loader.classList.add('done'); return; }
 
     body.classList.add('intro-on');
+    var diag = storeLink ? storeLink.textContent.trim() : 'Diagnóstico';
+
     var started = false;
     function run() {
       if (started) return; started = true;
-      var diag = storeLink ? storeLink.textContent.trim() : 'Diagnóstico';
-      setTimeout(function () { loader.classList.add('rise'); }, 1200);   // logo sobe
-      setTimeout(function () {                                            // topbar + textos se constroem
-        loader.classList.add('done');
-        body.classList.add('intro-reveal');
-        scramble(storeLink, diag, 700);
-        scramble(menuLabel, 'Menu', 600);
-      }, 2050);
-      setTimeout(function () { body.classList.add('intro-wa'); }, 2500);  // whats se constrói
-      setTimeout(function () { loader.style.display = 'none'; }, 3100);
+      // logo fica visível até o primeiro scroll (fallback: 6s)
+      var revealed = false;
+      function doReveal() {
+        if (revealed) return; revealed = true;
+        loader.classList.add('rise');
+        setTimeout(function () {
+          loader.classList.add('done');
+          body.classList.add('intro-reveal');
+          typewrite(storeLink, diag, 165);
+          typewrite(menuLabel, 'Menu', 165);
+        }, 850);
+        setTimeout(function () { body.classList.add('intro-wa'); }, 1350);
+        setTimeout(function () { loader.style.display = 'none'; }, 2200);
+      }
+      window.addEventListener('scroll', doReveal, { passive: true });
+      window.addEventListener('touchstart', doReveal, { passive: true });
+      setTimeout(doReveal, 6000); // fallback se não rolar
     }
     if (document.readyState === 'complete') run();
     else window.addEventListener('load', run);

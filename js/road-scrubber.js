@@ -16,7 +16,7 @@
   // Quando a estrada não anima (mobile / movimento reduzido), o slogan
   // aparece inteiro e a placa fica oculta.
   function revealHeroFallback() {
-    var ws = document.querySelectorAll('.hero h1 .hw');
+    var ws = document.querySelectorAll('.road-pin h1 .hw');
     for (var i = 0; i < ws.length; i++) ws[i].classList.add('show');
   }
 
@@ -37,7 +37,7 @@
 
   /* ---------- parâmetros da estrada (AJUSTÁVEIS) ---------- */
   var ROAD = {
-    halfW: 2.2,       // metade da largura da pista
+    halfW: 2.7,       // metade da largura da pista
     camH: 1.4,        // altura da câmera acima da pista
     cols: 6,          // colunas da grade (textura tech da pista)
     seg: 1.4,         // profundidade de cada bloco
@@ -66,8 +66,8 @@
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ROAD.focal = H * 0.88;
-    ROAD.horizon = H * 0.45;
+    ROAD.focal = H * 0.80;
+    ROAD.horizon = H * 0.38;
   }
 
   var camZ = 0, buildFront = 0, current = 0, target = 0, running = false;
@@ -208,20 +208,22 @@
   /* ---------- Slogan montado pelas placas (DOM), dirigido pelo scroll ----------
      Cada palavra "nasce" na placa (à direita) e voa até seu lugar no slogan.
      Função pura do progresso → reversível ao rolar de volta. */
-  var heroWords = [].slice.call(document.querySelectorAll('.hero h1 .hw'));
+  var heroWords = [].slice.call(document.querySelectorAll('.road-pin h1 .hw'));
   var signEl = document.getElementById('roadSign');
   var signWord = document.getElementById('roadSignWord');
   var heroReady = !!(heroWords.length && signEl && signWord);
   var SEG = [[0.12, 0.22], [0.26, 0.37], [0.41, 0.53], [0.57, 0.69], [0.71, 0.82]];
   var SIGN_END = 0.82;
-  var SIGN_FADE = 0.05; // a placa só surge DEPOIS que a estrada começou (não no scroll 0)
   var labels = heroWords.map(function (w) {
     return w.tagName === 'IMG' ? '»»»' : (w.textContent || '').trim().toUpperCase();
   });
   var offs = [];
+  var wordCenters = [];
+  var containerOffset = { left: 0, top: 0 }; // viewport offset of sign's parent
 
   function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
   function smooth(t) { t = clamp01(t); return t * t * (3 - 2 * t); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
 
   function heroMeasure() {
     if (!heroReady) return;
@@ -229,39 +231,92 @@
       heroWords[i].style.transform = 'none';
       heroWords[i].style.opacity = '0';
     }
-    var prevOp = signEl.style.opacity;
-    signEl.style.opacity = '1';
-    var sb = signWord.getBoundingClientRect();
-    var bx = sb.left + sb.width / 2, by = sb.top + sb.height / 2;
-    offs = heroWords.map(function (w) {
+    var cr = signEl.parentElement ? signEl.parentElement.getBoundingClientRect() : { left: 0, top: 0 };
+    containerOffset.left = cr.left;
+    containerOffset.top  = cr.top;
+    wordCenters = heroWords.map(function (w) {
       var r = w.getBoundingClientRect();
-      return { dx: bx - (r.left + r.width / 2), dy: by - (r.top + r.height / 2) };
+      return {
+        cx: r.left + r.width  / 2 - cr.left,
+        cy: r.top  + r.height / 2 - cr.top
+      };
     });
-    signEl.style.opacity = prevOp || '0';
+    offs = heroWords.map(function () { return { dx: 0, dy: 0 }; });
+    // placa começa oculta na posição do horizonte da estrada
+    signEl.style.left      = (W / 2 - containerOffset.left) + 'px';
+    signEl.style.top       = (ROAD.horizon - containerOffset.top) + 'px';
+    signEl.style.transform = 'translate(-50%,-50%) scale(0.1)';
+    signEl.style.opacity   = '0';
   }
 
+  var APPROACH = 0.11; // fração de scroll para a placa se aproximar antes da palavra
+
   function heroUpdate(p) {
-    if (!heroReady || !offs.length) return;
+    if (!heroReady || !wordCenters.length) return;
+
+    // Palavras: materializam conforme a placa passa por elas
     for (var i = 0; i < heroWords.length; i++) {
       var pr = (p - SEG[i][0]) / (SEG[i][1] - SEG[i][0]);
-      var t = smooth(pr);
-      var o = offs[i];
-      heroWords[i].style.transform =
-        'translate(' + (o.dx * (1 - t)).toFixed(1) + 'px,' + (o.dy * (1 - t)).toFixed(1) + 'px) scale(' + (0.42 + 0.58 * t).toFixed(3) + ')';
-      heroWords[i].style.opacity = clamp01(pr * 1.25).toFixed(3);
+      heroWords[i].style.transform = 'scale(' + (0.55 + 0.45 * smooth(pr)).toFixed(3) + ')';
+      heroWords[i].style.opacity   = clamp01(pr * 1.4).toFixed(3);
     }
-    var lbl = '', textOp = 0;
-    for (var j = 0; j < heroWords.length; j++) {
-      var prj = (p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]);
-      if (prj < 1) { lbl = labels[j]; textOp = prj <= 0 ? 1 : (1 - smooth(prj)); break; }
+
+    // Placa: encontra a palavra activa
+    var activeJ = -1;
+    for (var j2 = 0; j2 < heroWords.length; j2++) {
+      if ((p - SEG[j2][0]) / (SEG[j2][1] - SEG[j2][0]) < 1) { activeJ = j2; break; }
     }
-    // a placa surge com fade só após o começo da estrada; some no fim
-    var boxOp = clamp01((p - (SEG[0][0] - SIGN_FADE)) / SIGN_FADE);
-    if (p >= SIGN_END) boxOp = clamp01(1 - (p - SIGN_END) / 0.07);
-    textOp *= boxOp;
-    if (lbl && signWord.textContent !== lbl) signWord.textContent = lbl;
+
+    if (p >= SIGN_END) {
+      var endOp = clamp01(1 - (p - SIGN_END) / 0.07);
+      signEl.style.opacity = endOp.toFixed(3);
+      return;
+    }
+
+    if (activeJ < 0 || !wordCenters[activeJ]) {
+      signEl.style.opacity = '0';
+      return;
+    }
+
+    var j   = activeJ;
+    var wc  = wordCenters[j];
+    var prj = (p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]);
+    var lbl = labels[j];
+
+    // Ponto de partida da placa: acostamento direito da estrada na perspectiva,
+    // convertido para coordenadas do container
+    var shoulderDist = 12; // unidades de profundidade = posição distante no acostamento
+    var sh = project(ROAD.halfW + 0.25, 0, camZ + shoulderDist);
+    var startX = sh.x - containerOffset.left;
+    var startY = sh.y - containerOffset.top;
+
+    var approachT = smooth(clamp01((p - (SEG[j][0] - APPROACH)) / APPROACH));
+
+    var signX, signY, signScale, boxOp, textOp;
+
+    if (prj <= 0) {
+      // Placa se aproxima: viaja do acostamento distante até a palavra
+      signX     = lerp(startX, wc.cx, approachT);
+      signY     = lerp(startY, wc.cy, approachT);
+      signScale = lerp(0.14, 1.0, approachT);
+      boxOp     = approachT;
+      textOp    = approachT;
+    } else {
+      // Palavra materializando: placa continua para frente (mais próxima/maior)
+      var dt    = smooth(prj);
+      signX     = wc.cx;
+      signY     = lerp(wc.cy, wc.cy + 80, dt);
+      signScale = lerp(1.0, 1.35, dt);
+      boxOp     = 1 - dt;
+      textOp    = 1 - dt;
+    }
+
+    if (signWord.textContent !== lbl) signWord.textContent = lbl;
+    signEl.style.left      = signX + 'px';
+    signEl.style.top       = signY + 'px';
+    signEl.style.transform = 'translate(-50%,-50%) scale(' + signScale.toFixed(3) + ')';
+    signEl.style.opacity   = boxOp.toFixed(3);
     signWord.style.opacity = textOp.toFixed(3);
-    signEl.style.opacity = boxOp.toFixed(3);
   }
 
   // Liga/desliga do efeito placa→slogan. Agora a estrada 3D é limpa (sem placas
