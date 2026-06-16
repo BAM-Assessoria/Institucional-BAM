@@ -26,6 +26,21 @@ const SITE = {
   facebook: 'https://www.facebook.com/profile.php?id=100086615574875',
 };
 
+// Cases dos clientes (logo = arquivo em assets/img/clients/ — AJUSTAR p/ o logo correto de cada cliente)
+const CASES = [
+  { client: 'Redomo Energia', year: '2024', metric: '+600%', title: 'Tráfego qualificado', desc: 'Captação para projetos B2B com vendas de maior ticket médio, em 30 dias.', logo: 'client-01.webp' },
+  { client: 'Hygge Games', year: '2024', metric: '+200%', title: 'Engajamento', desc: 'Crescimento no Instagram com conteúdo criativo, elevando a marca no cenário nacional.', logo: 'client-02.webp', photo: 'hygge.jpg' },
+  { client: 'Prompt Serviços', year: '2024', metric: '+80%', title: 'Pedidos de orçamento', desc: 'Posicionamento como solução mais confiável em terceirização para síndicos e gestores.', logo: 'client-03.webp', photo: 'prompt.jpg' },
+  { client: 'Pq. da Cantareira', year: '2024', metric: '+40%', title: 'Leads qualificados', desc: 'Geração de leads sutil e respeitosa, com redução de 25% no custo por lead (CPL).', logo: 'client-04.webp' },
+  { client: 'Kontainers', year: '2024', metric: '+60%', title: 'Ticket médio', desc: 'Projetos comerciais de maior valor, com campanhas focadas em clientes de alto potencial.', logo: 'client-05.webp' },
+  { client: 'Granitos Moredo', year: '2025', metric: '+20%', title: 'Novos clientes', desc: 'Posicionamento fortalecido e entrada consistente de clientes, com visão de longo prazo.', logo: 'client-06.webp', photo: 'moredo.jpeg' },
+];
+const QUOTES = [
+  { q: 'Procuramos a BAM para vender mais, mas <span class="g">recebemos muito mais.</span>', a: 'Sofie Carmind — Hygge', photo: 'hygge.jpg' },
+  { q: 'A confiança que faltava. Resultado expressivo em <span class="g">menos de um mês.</span>', a: 'Carolina — Novu', photo: 'novu.jpg' },
+  { q: 'Mais do que marketing, é uma empresa que <span class="g">se envolve com o negócio.</span>', a: 'Victor Moredo — Granitos Moredo', photo: 'moredo.jpeg' },
+];
+
 const J = (p) => existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : null;
 const team = J('data/team.json') || [];
 const clients = J('data/clients.json') || [];
@@ -105,7 +120,7 @@ const NAV = [
   ['servicos', 'Serviços', 'index.html#servicos'],
   ['cases', 'Cases', 'index.html#cases'],
   ['blog', 'Blog', 'blog/index.html'],
-  ['contato', 'Contato', 'index.html#contato'],
+  ['contato', 'Contato', 'contato.html'],
 ];
 function header(prefix, active) {
   const links = NAV.map(([k, label, href], i) =>
@@ -114,7 +129,7 @@ function header(prefix, active) {
   return `<header class="topbar" id="topbar">
   <a href="${prefix}index.html" aria-label="BAM Assessoria — início"><img src="${prefix}assets/svg/logo-wordmark.svg" alt="BAM Assessoria" class="brand-logo" width="120" height="34"></a>
   <div class="topbar-right">
-    <a href="${prefix}index.html#contato" class="store-link${active === 'contato' ? ' active' : ''}" data-hover>Diagnóstico</a>
+    <a href="${prefix}contato.html" class="store-link${active === 'contato' ? ' active' : ''}" data-hover>Diagnóstico</a>
     <button class="menu-btn" id="menuBtn" data-hover aria-label="Abrir menu" aria-expanded="false"><span id="menuLabel">Menu</span><span class="bars" aria-hidden="true"><span></span><span></span></span></button>
   </div>
 </header>
@@ -143,14 +158,13 @@ function header(prefix, active) {
 
 function loader(prefix) {
   return `<div id="loader">
-  <img src="${prefix}assets/svg/logo-icon.svg" alt="BAM" class="load-logo-img" width="84" height="84">
-  <div class="load-bar"><i id="loadFill"></i></div>
-  <div class="load-meta" id="loadPct">SYS // 00%</div>
+  <img src="${prefix}assets/svg/logo-wordmark.svg" alt="BAM Assessoria" class="intro-logo" width="200" height="56">
+  <div class="intro-arrow" aria-hidden="true"><i></i></div>
 </div>`;
 }
 
 function footer(prefix, active) {
-  const nav = [['sobre', 'Sobre', 'sobre.html'], ['servicos', 'Serviços', 'index.html#servicos'], ['cases', 'Cases', 'index.html#cases'], ['blog', 'Blog', 'blog/index.html'], ['contato', 'Contato', 'index.html#contato']]
+  const nav = [['sobre', 'Sobre', 'sobre.html'], ['servicos', 'Serviços', 'index.html#servicos'], ['cases', 'Cases', 'index.html#cases'], ['blog', 'Blog', 'blog/index.html'], ['contato', 'Contato', 'contato.html']]
     .map(([k, l, h]) => `<a href="${prefix}${h}"${k === active ? ' class="active"' : ''}>${l}</a>`).join('');
   return `<footer class="bigfoot">
   <span class="scene-edge"></span>
@@ -223,15 +237,13 @@ function buildHome() {
 <!-- HERO / ABERTURA DA JORNADA (estrada pinada) -->
 <section class="road-journey" id="roadTrack">
   <div class="road-pin hero">
+    <div class="road-sign" id="roadSign" aria-hidden="true">
+      <div class="road-sign-box"><span class="road-sign-word" id="roadSignWord">Juntos</span></div>
+      <div class="road-sign-pole"></div>
+    </div>
     <div class="wrap">
-      <div class="hero-eyebrow">
-        <span class="tlabel r up in">Assessoria de marketing de performance</span>
-        <span class="mono r up in d1" style="font-size:11px;color:var(--gray)">DESDE 2022 · SÃO PAULO / BR</span>
-      </div>
-      <h1><span class="r clip in">Juntos vamos</span><br><span class="r clip in d1">mais <span class="g">longe</span></span><img src="${ICON(prefix)}" alt="" class="hero-chevsvg r scale in d2" aria-hidden="true"></h1>
+      <h1 class="hero-slogan"><span class="hw">Juntos</span> <span class="hw">vamos</span><br><span class="hw">mais</span> <span class="hw g">longe</span><img src="${ICON(prefix)}" alt="" class="hero-chevsvg hw" aria-hidden="true"></h1>
       <div class="hero-bottom">
-        <p class="hero-sub r up in d2">Performance que vira <span class="g">faturamento</span>.</p>
-        <a href="#contato" class="next-step r up in d3" data-hover><span class="lab">Próximo passo</span><span class="val">Diagnóstico <span class="g">→</span></span></a>
         <div class="scroll-ind">Role <i></i></div>
       </div>
     </div>
@@ -241,26 +253,38 @@ function buildHome() {
 <div class="marquee"><div class="marquee-t" id="marq1"><span>Estratégia</span><span class="dot">›››</span><span>Tráfego Pago</span><span class="dot">›››</span><span>SEO</span><span class="dot">›››</span><span>Conteúdo</span><span class="dot">›››</span><span>Identidade Visual</span><span class="dot">›››</span><span>Dados em Tempo Real</span><span class="dot">›››</span></div></div>
 
 <!-- CASES -->
-<section class="cases-h" id="cases">
+<section class="cases" id="cases">
   <span class="scene-edge"></span>
-  <div class="cases-sticky">
-    <div class="cases-hint">Arraste / role <span class="arrow">→</span></div>
-    <div class="cases-track" id="casesTrack">
-      <div class="cpanel intro">
-        <div class="ctop"><span>02 — Cases</span><span><b>06</b> resultados</span></div>
-        <div><div class="big">RESULTADOS<br><span class="g">EM MOVIMENTO.</span></div><p>Empresas que decidiram tratar o marketing como investimento. Role para o lado.</p></div>
-        <img src="${ICON(prefix)}" alt="" class="chevbg" aria-hidden="true">
-      </div>
-      <div class="cpanel"><div class="cgrid"></div><div class="ctop"><span>Redomo Energia</span><span><b>2024</b></span></div><div class="big"><span class="g">+600%</span></div><div><h3>Tráfego qualificado</h3><p>Captação para projetos B2B com vendas de maior ticket médio, em 30 dias.</p></div><img src="${ICON(prefix)}" alt="" class="chevbg" aria-hidden="true"></div>
-      <div class="cpanel quote"><div class="cgrid"></div><div class="q">"Procuramos a BAM para vender mais, mas <span class="g">recebemos muito mais.</span>"</div><div class="qa">Sofie Carmind — Gerente de Contas Internacional</div></div>
-      <div class="cpanel green"><div class="cgrid"></div><div class="ctop"><span>Hygge Games</span><span><b>2024</b></span></div><div class="big">+200%</div><div><h3>Engajamento</h3><p>Crescimento no Instagram com conteúdo criativo, elevando a marca no cenário nacional.</p></div></div>
-      <div class="cpanel"><div class="cgrid"></div><div class="ctop"><span>Prompt Serviços</span><span><b>2024</b></span></div><div class="big"><span class="g">+80%</span></div><div><h3>Pedidos de orçamento</h3><p>Posicionamento como solução mais confiável em terceirização para síndicos e gestores.</p></div><img src="${ICON(prefix)}" alt="" class="chevbg" aria-hidden="true"></div>
-      <div class="cpanel quote"><div class="cgrid"></div><div class="q">"A confiança que faltava. Resultado expressivo em <span class="g">menos de um mês.</span>"</div><div class="qa">Carol Manhães — Assessora de Marketing</div></div>
-      <div class="cpanel"><div class="cgrid"></div><div class="ctop"><span>Pq. da Cantareira</span><span><b>2024</b></span></div><div class="big"><span class="g">+40%</span></div><div><h3>Leads qualificados</h3><p>Geração de leads sutil e respeitosa, com redução de 25% no custo por lead (CPL).</p></div><img src="${ICON(prefix)}" alt="" class="chevbg" aria-hidden="true"></div>
-      <div class="cpanel green"><div class="cgrid"></div><div class="ctop"><span>Kontainers</span><span><b>2024</b></span></div><div class="big">+60%</div><div><h3>Ticket médio</h3><p>Projetos comerciais de maior valor, com campanhas focadas em clientes de alto potencial.</p></div></div>
-      <div class="cpanel quote"><div class="cgrid"></div><div class="q">"Mais do que marketing, é uma empresa que <span class="g">se envolve com o negócio.</span>"</div><div class="qa">Victor Moredo — Gerente de Marketing</div></div>
-      <div class="cpanel"><div class="cgrid"></div><div class="ctop"><span>Moredo</span><span><b>2025</b></span></div><div class="big"><span class="g">+20%</span></div><div><h3>Novos clientes</h3><p>Posicionamento fortalecido e entrada consistente de clientes, com visão de longo prazo.</p></div><img src="${ICON(prefix)}" alt="" class="chevbg" aria-hidden="true"></div>
-      <div class="cpanel intro"><div class="ctop"><span>Próximo case</span><span><b>VOCÊ</b></span></div><div><div class="big">SEJA O<br><span class="g">PRÓXIMO.</span></div><p>O seu resultado é o nosso próximo case.</p></div><a href="#contato" class="btn" data-hover style="align-self:flex-start"><span>Falar com a BAM</span> <span class="ar">→</span></a></div>
+  <div class="wrap">
+    <div class="shead"><span class="idx r up">02 — Cases</span><h2 class="r up">Resultados<br><span class="g">em movimento.</span></h2><p class="sub r up d1">Empresas que decidiram tratar o marketing como investimento.</p></div>
+    <div class="case-grid">
+      ${CASES.map((c, i) => `<article class="case-card r up${i % 3 === 1 ? ' d1' : i % 3 === 2 ? ' d2' : ''}" tabindex="0" aria-label="${escAttr(c.client)} — ${escAttr(c.metric)} ${escAttr(c.title)}">
+        <div class="case-flip">
+          <div class="case-face case-front">
+            <div class="case-front-top">
+              <img class="case-logo" src="${prefix}assets/img/clients/${c.logo}" alt="${escAttr(c.client)}" loading="lazy" decoding="async" height="56">
+              ${c.photo ? `<img class="case-avatar" src="${prefix}depoimentos/${c.photo}" alt="Depoimento — ${escAttr(c.client)}" loading="lazy" decoding="async">` : ''}
+            </div>
+            <span class="case-client">${esc(c.client)}</span>
+            <span class="case-hint">Ver resultado →</span>
+          </div>
+          <div class="case-face case-back">
+            <div class="cgrid"></div>
+            <div class="case-top"><img class="case-logo" src="${prefix}assets/img/clients/${c.logo}" alt="" loading="lazy" decoding="async" height="30"><span class="case-year">${esc(c.year)}</span></div>
+            <span class="case-client">${esc(c.client)}</span>
+            <div class="case-metric"><span class="g">${esc(c.metric)}</span></div>
+            <h3>${esc(c.title)}</h3>
+            <p>${esc(c.desc)}</p>
+          </div>
+        </div>
+      </article>`).join('\n      ')}
+    </div>
+    <div class="case-quotes">
+      ${QUOTES.map((q) => `<figure class="case-quote r up">${q.photo ? `<img class="quote-photo" src="${prefix}depoimentos/${q.photo}" alt="${escAttr(q.a)}" loading="lazy" decoding="async">` : ''}<blockquote>${q.q}</blockquote><figcaption>${esc(q.a)}</figcaption></figure>`).join('\n      ')}
+    </div>
+    <div class="case-next r up">
+      <div><span class="tlabel">Próximo case</span><h3>Seja o <span class="g">próximo.</span></h3><p>O seu resultado é o nosso próximo case.</p></div>
+      <a href="#contato" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a>
     </div>
   </div>
 </section>
@@ -336,7 +360,7 @@ ${clientsWall(prefix)}
   </div>
 </section>`;
   return page({
-    prefix, title: SITE.name + ' | Inteligência de Crescimento Digital',
+    prefix, bodyClass: 'home', title: SITE.name + ' | Inteligência de Crescimento Digital',
     desc: 'A BAM é a assessoria de marketing de performance que trata o seu marketing como investimento. Estratégia, tráfego pago, SEO, social e dados em tempo real.',
     path: '/', active: 'inicio', hasLoader: true, content,
     extraScripts: `<script src="${prefix}js/road-scrubber.js" defer></script>\n`,
@@ -423,13 +447,99 @@ function buildSobre() {
       <div class="founder r up d2"><span class="role">CMO</span><h3>Lucca Almeida</h3><p>Graduado em Publicidade (FEBASP) · Pós em Marketing (ESPM) · Pós em Marketing Digital (ESPM)</p></div>
       <div class="founder r up d3"><span class="role">CTO</span><h3>Natan Michneves</h3><p>Graduado em Marketing (USP) · MBA em Gestão de Projetos e TI (USP)</p></div>
     </div>
-    <div class="fcta" style="margin-top:48px"><a href="index.html#contato" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a></div>
+    <div class="fcta" style="margin-top:48px"><a href="contato.html" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a></div>
   </div>
 </section>`;
   return page({
     prefix, title: 'Sobre a BAM | Assessoria de Marketing de Performance',
     desc: 'Conheça a BAM: fundada em 2022 para democratizar o marketing de ponta. Missão, visão, valores e o time por trás da inteligência de crescimento.',
     path: '/sobre.html', active: 'sobre', content,
+  });
+}
+
+function buildContato() {
+  const prefix = '';
+  const wa = `https://api.whatsapp.com/send/?phone=${SITE.whats}&text=${encodeURIComponent('Olá, quero falar com a BAM')}`;
+  const maps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('Rua Aviador Gil Guilherme 38, Bloco 2, São Paulo SP');
+  const jsonLd = JSON.stringify({
+    '@context': 'https://schema.org', '@type': 'ContactPage',
+    name: 'Contato — ' + SITE.name, url: SITE.url + '/contato.html',
+    mainEntity: {
+      '@type': 'Organization', name: SITE.name, url: SITE.url + '/',
+      email: SITE.email, telephone: SITE.tel,
+      address: { '@type': 'PostalAddress', streetAddress: 'Rua Aviador Gil Guilherme 38, Bloco 2', addressLocality: 'São Paulo', addressRegion: 'SP', addressCountry: 'BR' },
+      contactPoint: { '@type': 'ContactPoint', telephone: SITE.tel, email: SITE.email, contactType: 'sales', areaServed: 'BR', availableLanguage: 'Portuguese' },
+      sameAs: [SITE.instagram, SITE.linkedin, SITE.facebook],
+    },
+  });
+  const content = `<header class="page-head">
+  <div class="hero-grid" data-par="0.1"></div>
+  <div class="hero-glow"></div>
+  <div class="wrap">
+    <nav class="breadcrumb" aria-label="Você está em"><a href="index.html">Início</a><span class="sep">/</span><span>Contato</span></nav>
+    <h1 class="r up in">Vamos crescer<br><span class="g">juntos?</span></h1>
+    <p class="lead r up in d1">Conte sobre o momento do seu negócio e receba um diagnóstico estratégico gratuito. Escolha o canal que preferir — respondemos rápido, com foco em resultado e retorno sobre investimento.</p>
+  </div>
+</header>
+
+<!-- CANAIS DIRETOS -->
+<section class="section">
+  <div class="wrap">
+    <div class="shead"><span class="idx r up">01 — Canais diretos</span><h2 class="r up">Fale com a BAM<br>do seu <span class="g">jeito.</span></h2></div>
+    <div class="channels">
+      <a class="channel r up d1" href="${wa}" target="_blank" rel="noopener noreferrer" data-hover><span class="cnum">01 — WhatsApp</span><h3>WhatsApp</h3><p>O canal mais rápido. Fale agora com o time comercial.</p><span class="val">Abrir conversa <span class="ar">→</span></span></a>
+      <a class="channel r up d2" href="mailto:${SITE.email}" data-hover><span class="cnum">02 — E-mail</span><h3>E-mail</h3><p>Para propostas, parcerias e assuntos comerciais.</p><span class="val">${SITE.email} <span class="ar">→</span></span></a>
+      <a class="channel r up d3" href="tel:${SITE.tel}" data-hover><span class="cnum">03 — Telefone</span><h3>Telefone</h3><p>Prefere ligar? Estamos no horário comercial.</p><span class="val">${SITE.telDisplay} <span class="ar">→</span></span></a>
+      <a class="channel r up d1" href="${maps}" target="_blank" rel="noopener noreferrer" data-hover><span class="cnum">04 — Endereço</span><h3>Visite-nos</h3><p>${SITE.addr}</p><span class="val">Ver no mapa <span class="ar">→</span></span></a>
+    </div>
+  </div>
+</section>
+
+<!-- FORMULÁRIO + INFORMAÇÕES -->
+<section class="section alt" id="form">
+  <div class="wrap">
+    <div class="shead"><span class="idx r up">02 — Diagnóstico gratuito</span><h2 class="r up">Conte o seu <span class="g">momento.</span></h2><p class="sub r up d1">Sem compromisso. Nosso time prepara uma leitura estratégica do seu negócio antes mesmo da primeira conversa.</p></div>
+    <div class="cwrap">
+      <div class="ccopy r left d1">
+        <span class="tlabel">Fale com um especialista</span>
+        <p>Preencha o formulário e enviaremos seu contato direto ao nosso WhatsApp comercial com os dados já preenchidos.</p>
+        <div class="pts"><div>Diagnóstico estratégico gratuito</div><div>Plano de crescimento sob medida</div><div>Acompanhamento em tempo real pelo app</div></div>
+        <div class="contact-info">
+          <div class="ci"><span class="lab">Atendimento</span><span>Seg a Sex · 9h às 18h (horário de Brasília)</span></div>
+          <div class="ci"><span class="lab">E-mail</span><a href="mailto:${SITE.email}">${SITE.email}</a></div>
+          <div class="ci"><span class="lab">Telefone / WhatsApp</span><a href="tel:${SITE.tel}">${SITE.telDisplay}</a></div>
+          <div class="ci"><span class="lab">Endereço</span><span>${SITE.addr}</span></div>
+          <div class="ci"><span class="lab">Redes sociais</span><div class="contact-socials"><a href="${SITE.instagram}" target="_blank" rel="noopener noreferrer">Instagram</a><a href="${SITE.linkedin}" target="_blank" rel="noopener noreferrer">LinkedIn</a><a href="${SITE.facebook}" target="_blank" rel="noopener noreferrer">Facebook</a></div></div>
+        </div>
+      </div>
+      <form class="r right d2" id="leadForm" aria-label="Formulário de contato">
+        <div class="field"><label for="nome">Nome completo*</label><input id="nome" type="text" name="nome" required placeholder="Seu nome" autocomplete="name"></div>
+        <div class="field"><label for="email">Email corporativo*</label><input id="email" type="email" name="email" required placeholder="voce@empresa.com" autocomplete="email"></div>
+        <div class="field"><label for="telefone">Telefone*</label><input id="telefone" type="tel" name="telefone" required placeholder="(11) 9 0000-0000" autocomplete="tel"></div>
+        <div class="field"><label for="empresa">Nome / Segmento da empresa*</label><input id="empresa" type="text" name="empresa" required placeholder="Empresa e segmento" autocomplete="organization"></div>
+        <div class="field"><label for="mensagem">Mensagem*</label><textarea id="mensagem" name="mensagem" required placeholder="Conte um pouco sobre seu momento atual..."></textarea></div>
+        <button type="submit" class="btn" data-hover><span>Quero falar com a BAM</span> <span class="ar">→</span></button>
+        <p class="form-note">Ao enviar você será direcionado ao nosso WhatsApp com seus dados preenchidos.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSPARÊNCIA / APP -->
+<section class="section">
+  <div class="wrap">
+    <div class="feature r scale">
+      <span class="tlabel">App exclusivo · em tempo real</span>
+      <h2>Transparência <span class="g">total.</span></h2>
+      <p>Ao se tornar cliente, você acompanha 24/7 quanto foi investido, em quê e qual retorno cada campanha gera — direto no nosso aplicativo exclusivo. Sem relatórios complicados, sem espera.</p>
+      <div class="chips"><span>Investimento ao vivo</span><span>Retorno por campanha</span><span>Sem relatório confuso</span><span>24/7</span></div>
+    </div>
+  </div>
+</section>`;
+  return page({
+    prefix, title: 'Contato | ' + SITE.name,
+    desc: 'Fale com a BAM Assessoria: WhatsApp, e-mail, telefone e formulário para um diagnóstico estratégico gratuito do seu negócio. São Paulo / BR.',
+    path: '/contato.html', active: 'contato', jsonLd, content,
   });
 }
 
@@ -591,7 +701,7 @@ ${p.bodyHtml}
     <div class="article-cta article">
       <h3>Quer resultados como esses no seu <span class="g">negócio?</span></h3>
       <p>Receba um diagnóstico estratégico gratuito e descubra como tratar o seu marketing como investimento.</p>
-      <a href="${prefix}index.html#contato" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a>
+      <a href="${prefix}contato.html" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a>
     </div>
   </div>
 </article>`;
@@ -631,7 +741,7 @@ function buildPostViewer() {
     <div class="article-cta article">
       <h3>Quer resultados como esses no seu <span class="g">negócio?</span></h3>
       <p>Receba um diagnóstico estratégico gratuito e descubra como tratar o seu marketing como investimento.</p>
-      <a href="${prefix}index.html#contato" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a>
+      <a href="${prefix}contato.html" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a>
     </div>
   </div>
 </article>`;
@@ -648,9 +758,10 @@ function buildPostViewer() {
 mkdirSync('blog', { recursive: true });
 writeFileSync('index.html', buildHome());
 writeFileSync('sobre.html', buildSobre());
+writeFileSync('contato.html', buildContato());
 writeFileSync('privacidade.html', buildPrivacidade());
 writeFileSync('blog/post.html', buildPostViewer()); // visualizador de posts dinâmicos
-let n = 4;
+let n = 5;
 if (posts.length) {
   writeFileSync('blog/index.html', buildBlogIndex());
   n++;
@@ -666,6 +777,7 @@ const today = new Date().toISOString().slice(0, 10);
 const urls = [
   { loc: '/', lastmod: today, prio: '1.0' },
   { loc: '/sobre.html', lastmod: today, prio: '0.8' },
+  { loc: '/contato.html', lastmod: today, prio: '0.8' },
   { loc: '/privacidade.html', lastmod: today, prio: '0.3' },
 ];
 if (posts.length) {

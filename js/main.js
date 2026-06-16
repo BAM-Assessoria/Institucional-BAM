@@ -8,27 +8,56 @@
   var WHATSAPP = '5511976259165';
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- Preloader (apenas onde existe #loader) ---------- */
+  /* ---------- Intro (home): logo central → sobe → topbar/whats se constroem ---------- */
   (function () {
     var loader = document.getElementById('loader');
     if (!loader) return;
-    var fill = document.getElementById('loadFill');
-    var pct = document.getElementById('loadPct');
-    var p = 0;
-    var t = setInterval(function () {
-      p += Math.random() * 18;
-      if (p > 100) p = 100;
-      if (fill) fill.style.width = p + '%';
-      if (pct) pct.textContent = 'SYS // ' + String(Math.floor(p)).padStart(2, '0') + '%';
-      if (p >= 100) {
-        clearInterval(t);
-        setTimeout(function () { loader.classList.add('done'); }, 300);
-      }
-    }, 110);
-    // segurança: nunca prender a tela
-    window.addEventListener('load', function () {
-      setTimeout(function () { loader.classList.add('done'); }, 600);
-    });
+    var body = document.body;
+    var storeLink = document.querySelector('.store-link');
+    var menuLabel = document.getElementById('menuLabel');
+
+    // efeito "tipografia se construindo": embaralha e revela da esquerda p/ direita
+    function scramble(el, finalText, dur) {
+      if (!el) return;
+      var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%/\\><';
+      var t0 = null;
+      (function step(ts) {
+        if (t0 === null) t0 = ts;
+        var pr = Math.min(1, (ts - t0) / dur);
+        var n = finalText.length, reveal = Math.floor(pr * n), out = '';
+        for (var i = 0; i < n; i++) {
+          out += (i < reveal || finalText.charAt(i) === ' ')
+            ? finalText.charAt(i)
+            : chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        el.textContent = out;
+        if (pr < 1) requestAnimationFrame(step); else el.textContent = finalText;
+      })(performance.now ? performance.now() : 0);
+      // fallback de tempo (caso o 1º ts não venha): garante o texto final
+      setTimeout(function () { el.textContent = finalText; }, dur + 400);
+    }
+
+    // movimento reduzido: sem intro, mostra tudo de imediato
+    if (reduceMotion) { loader.classList.add('done'); return; }
+
+    body.classList.add('intro-on');
+    var started = false;
+    function run() {
+      if (started) return; started = true;
+      var diag = storeLink ? storeLink.textContent.trim() : 'Diagnóstico';
+      setTimeout(function () { loader.classList.add('rise'); }, 1200);   // logo sobe
+      setTimeout(function () {                                            // topbar + textos se constroem
+        loader.classList.add('done');
+        body.classList.add('intro-reveal');
+        scramble(storeLink, diag, 700);
+        scramble(menuLabel, 'Menu', 600);
+      }, 2050);
+      setTimeout(function () { body.classList.add('intro-wa'); }, 2500);  // whats se constrói
+      setTimeout(function () { loader.style.display = 'none'; }, 3100);
+    }
+    if (document.readyState === 'complete') run();
+    else window.addEventListener('load', run);
+    setTimeout(run, 1500); // segurança se o 'load' demorar
   })();
 
   /* ---------- Topbar + barra de progresso ---------- */
@@ -118,43 +147,6 @@
     window.addEventListener('scroll', up, { passive: true });
     window.addEventListener('resize', up);
     up();
-  })();
-
-  /* ---------- Cases horizontais (scroll → translateX) ---------- */
-  (function () {
-    var sec = document.getElementById('cases');
-    var track = document.getElementById('casesTrack');
-    if (!sec || !track) return;
-    function isMobile() {
-      return window.innerWidth < 1025 || window.innerHeight < 660 ||
-        window.matchMedia('(pointer: coarse)').matches;
-    }
-    function onScroll() {
-      if (document.body.classList.contains('no-hscroll')) return;
-      var rect = sec.getBoundingClientRect();
-      var total = sec.offsetHeight - window.innerHeight;
-      var prog = total > 0 ? (-rect.top) / total : 0;
-      prog = Math.max(0, Math.min(1, prog));
-      var maxX = track.scrollWidth - window.innerWidth;
-      track.style.transform = 'translateX(' + (-prog * maxX) + 'px)';
-    }
-    function setup() {
-      if (reduceMotion || isMobile()) {
-        document.body.classList.add('no-hscroll');
-        sec.style.height = ''; track.style.transform = '';
-        return;
-      }
-      document.body.classList.remove('no-hscroll');
-      var travel = track.scrollWidth - window.innerWidth;
-      if (travel < 0) travel = 0;
-      sec.style.height = (travel + window.innerHeight) + 'px';
-      onScroll();
-    }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    var rt;
-    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(setup, 180); });
-    window.addEventListener('load', setup);
-    setTimeout(setup, 400);
   })();
 
   /* ---------- Marquee duplicado ---------- */
