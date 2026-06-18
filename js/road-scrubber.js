@@ -51,15 +51,19 @@
     wave: 1.4,        // defasagem da montagem (onda matriz)
     length: 92,       // comprimento TOTAL
     base: 6,          // trecho já montado no início
-    branchLen: 30,    // últimos N: a estrada se BIFURCA em vários caminhos (o destino)
-    branchHalfW: 1.0, // largura de cada caminho da bifurcação (largo = lê como estrada)
-    branchCols: 4,    // colunas por caminho
-    spread: 0.085,    // o quanto os caminhos se abrem (leque)
-    arriveGap: 44,    // a câmera para antes do fim → você "chega" e vê a bifurcação à frente
+    curve: 0.009,     // curvatura da pista (positivo = varre p/ DIREITA, abrindo a esquerda)
+    branchLen: 28,    // últimos N: a estrada se abre num LEQUE de caminhos (o destino)
+    branchHalfW: 0.62,// largura de cada caminho do leque
+    branchCols: 3,    // colunas por caminho
+    spread: 0.05,     // o quanto os caminhos se abrem (leque)
+    arriveGap: 34,    // a câmera para antes do fim → você "chega" e vê o leque à frente
     focal: 0,
     horizon: 0
   };
   var GREEN = '#00FFAE';
+
+  // debug: ?roadc= sobrescreve a curvatura para calibrar visualmente (inerte sem o parâmetro)
+  (function () { var m = /[?&]roadc=(-?[0-9.]+)/.exec(location.search); if (m) ROAD.curve = parseFloat(m[1]); })();
 
   function resize() {
     W = window.innerWidth; H = window.innerHeight;
@@ -82,6 +86,8 @@
   }
 
   function scrollProgress() {
+    var dbg = /[?&]roadp=([0-9.]+)/.exec(location.search);
+    if (dbg) return Math.min(1, Math.max(0, parseFloat(dbg[1])));
     if (track) {
       var r = track.getBoundingClientRect();
       var total = track.offsetHeight - window.innerHeight;
@@ -112,20 +118,36 @@
     rg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = rg;
     ctx.fillRect(0, 0, W, H);
+
+    // glow do "destino": acende no horizonte (deslocado pela curva) conforme você chega ao fim
+    if (current > 0.5) {
+      var gi = clamp01((current - 0.5) / 0.5);
+      var dz = camZ + ROAD.draw * 0.6;
+      var dcx = W / 2 + ROAD.curve * (dz - camZ) * ROAD.focal;
+      var R = H * (0.15 + 0.32 * gi);
+      var dg = ctx.createRadialGradient(dcx, ROAD.horizon, 0, dcx, ROAD.horizon, R);
+      dg.addColorStop(0, 'rgba(0,255,174,' + (0.12 + 0.3 * gi).toFixed(3) + ')');
+      dg.addColorStop(0.45, 'rgba(0,255,174,' + (0.04 + 0.1 * gi).toFixed(3) + ')');
+      dg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = dg;
+      ctx.fillRect(0, 0, W, H);
+    }
   }
 
   // ---- faixas: estrada principal + a bifurcação em vários caminhos no fim ----
   var BRANCH_START = ROAD.length - ROAD.branchLen;
   var MAIN = { x0: 0, dir: 0, spread: 0, zStart: 0, zEnd: BRANCH_START + ROAD.seg, halfW: ROAD.halfW, cols: ROAD.cols, dropMul: 1 };
-  var BRANCHES = [
-    { x0: -1.5, dir: -1, spread: ROAD.spread, zStart: BRANCH_START, zEnd: ROAD.length, halfW: ROAD.branchHalfW, cols: ROAD.branchCols, dropMul: 0.25 },
-    { x0: 0, dir: 0, spread: 0, zStart: BRANCH_START, zEnd: ROAD.length, halfW: ROAD.branchHalfW, cols: ROAD.branchCols, dropMul: 0.25 },
-    { x0: 1.5, dir: 1, spread: ROAD.spread, zStart: BRANCH_START, zEnd: ROAD.length, halfW: ROAD.branchHalfW, cols: ROAD.branchCols, dropMul: 0.25 }
-  ];
+  function branch(x0, dir) {
+    return { x0: x0, dir: dir, spread: ROAD.spread, zStart: BRANCH_START, zEnd: ROAD.length, halfW: ROAD.branchHalfW, cols: ROAD.branchCols, dropMul: 0.25 };
+  }
+  // o destino: a pista se abre num LEQUE de 5 caminhos (várias direções de crescimento)
+  var BRANCHES = [ branch(-1.7, -1.9), branch(-0.85, -1.0), branch(0, 0), branch(0.85, 1.0), branch(1.7, 1.9) ];
   function laneCenter(lane, z) {
     return z <= lane.zStart ? lane.x0 : lane.x0 + lane.dir * lane.spread * (z - lane.zStart);
   }
-  function px(lane, lx, y, z) { return project(laneCenter(lane, z) + lx, y, z); }
+  // curvatura da pista: deslocamento lateral cresce com a distância (perspectiva curva)
+  function curveOffset(z) { var d = z - camZ; if (d < 0) d = 0; return ROAD.curve * d * d; }
+  function px(lane, lx, y, z) { return project(laneCenter(lane, z) + lx + curveOffset(z), y, z); }
 
   // uma célula (bloco) da faixa: topo + espessura 3D + grade sutil + bordas neon
   function drawCell(lane, ll, lr, z0, z1, y, op, i, c) {
@@ -283,10 +305,10 @@
     var prj = (p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]);
     var lbl = labels[j];
 
-    // Ponto de partida da placa: acostamento direito da estrada na perspectiva,
+    // Ponto de partida da placa: acostamento ESQUERDO da estrada (acompanha a curva),
     // convertido para coordenadas do container
     var shoulderDist = 12; // unidades de profundidade = posição distante no acostamento
-    var sh = project(ROAD.halfW + 0.25, 0, camZ + shoulderDist);
+    var sh = project(-(ROAD.halfW + 0.7) + curveOffset(camZ + shoulderDist), 0, camZ + shoulderDist);
     var startX = sh.x - containerOffset.left;
     var startY = sh.y - containerOffset.top;
 
