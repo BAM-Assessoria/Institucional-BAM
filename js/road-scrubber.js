@@ -45,18 +45,18 @@
     cellGap: 0.06,    // folga lateral (pequena → vira estrada, não blocos)
     edgeW: 0.18,      // espessura das bordas neon (definem a estrada)
     thick: 0.45,      // espessura 3D do bloco
-    draw: 38,         // distância de desenho
+    draw: 74,         // distância de desenho — revela a ladeira LONGA que sobe ao longe (estrada comprida rumo ao topo)
     riseBand: 7,      // faixa na qual o bloco encaixa
     drop: 2.2,        // quanto o bloco nasce abaixo (menor → mais pista, menos "voando")
     wave: 1.4,        // defasagem da montagem (onda matriz)
-    length: 92,       // comprimento TOTAL
+    length: 150,      // comprimento TOTAL (estrada longa — há muito caminho pela frente)
     base: 6,          // trecho já montado no início
     curve: 0.009,     // curvatura da pista (positivo = varre p/ DIREITA, abrindo a esquerda)
-    branchLen: 28,    // últimos N: a estrada se abre num LEQUE de caminhos (o destino)
-    branchHalfW: 0.62,// largura de cada caminho do leque
-    branchCols: 3,    // colunas por caminho
-    spread: 0.05,     // o quanto os caminhos se abrem (leque)
-    arriveGap: 34,    // a câmera para antes do fim → você "chega" e vê o leque à frente
+    curveCap: 16,     // teto suave da curva ao longe → a estrada longa não foge da tela
+    arriveGap: 92,    // a câmera para no pé da subida (mesmo enquadramento) e deixa MUITO caminho à frente
+    rise: 5.5,        // altura ganha a cada "riseRun" de subida (mundo)
+    riseStart: 62,    // z onde a ladeira começa (antes disso a pista é plana, sob a câmera)
+    riseRun: 26,      // 1ª parte da subida; depois a estrada SEGUE subindo (ladeira longa, sem fim à vista)
     focal: 0,
     horizon: 0
   };
@@ -119,35 +119,44 @@
     ctx.fillStyle = rg;
     ctx.fillRect(0, 0, W, H);
 
-    // glow do "destino": acende no horizonte (deslocado pela curva) conforme você chega ao fim
+    // glow do "destino": brilha LONGE, no alto da subida — sem cobrir a estrada que segue subindo
     if (current > 0.5) {
       var gi = clamp01((current - 0.5) / 0.5);
-      var dz = camZ + ROAD.draw * 0.6;
-      var dcx = W / 2 + ROAD.curve * (dz - camZ) * ROAD.focal;
-      var R = H * (0.15 + 0.32 * gi);
-      var dg = ctx.createRadialGradient(dcx, ROAD.horizon, 0, dcx, ROAD.horizon, R);
-      dg.addColorStop(0, 'rgba(0,255,174,' + (0.12 + 0.3 * gi).toFixed(3) + ')');
-      dg.addColorStop(0.45, 'rgba(0,255,174,' + (0.04 + 0.1 * gi).toFixed(3) + ')');
+      var zc = camZ + ROAD.draw * 0.7;                     // ponto distante da pista, já bem no alto
+      var cp = project(curveOffset(zc), roadRise(zc), zc);
+      var R = H * (0.14 + 0.28 * gi);
+      var dg = ctx.createRadialGradient(cp.x, cp.y, 0, cp.x, cp.y, R);
+      dg.addColorStop(0, 'rgba(0,255,174,' + (0.10 + 0.26 * gi).toFixed(3) + ')');
+      dg.addColorStop(0.5, 'rgba(0,255,174,' + (0.03 + 0.08 * gi).toFixed(3) + ')');
       dg.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = dg;
       ctx.fillRect(0, 0, W, H);
     }
   }
 
-  // ---- faixas: estrada principal + a bifurcação em vários caminhos no fim ----
-  var BRANCH_START = ROAD.length - ROAD.branchLen;
-  var MAIN = { x0: 0, dir: 0, spread: 0, zStart: 0, zEnd: BRANCH_START + ROAD.seg, halfW: ROAD.halfW, cols: ROAD.cols, dropMul: 1 };
-  function branch(x0, dir) {
-    return { x0: x0, dir: dir, spread: ROAD.spread, zStart: BRANCH_START, zEnd: ROAD.length, halfW: ROAD.branchHalfW, cols: ROAD.branchCols, dropMul: 0.25 };
-  }
-  // o destino: a pista se abre num LEQUE de 5 caminhos (várias direções de crescimento)
-  var BRANCHES = [ branch(-1.7, -1.9), branch(-0.85, -1.0), branch(0, 0), branch(0.85, 1.0), branch(1.7, 1.9) ];
+  // ---- a estrada principal corre inteira e, no fim, SOBE numa ladeira rumo ao topo ----
+  var MAIN = { x0: 0, dir: 0, spread: 0, zStart: 0, zEnd: ROAD.length, halfW: ROAD.halfW, cols: ROAD.cols, dropMul: 1 };
   function laneCenter(lane, z) {
     return z <= lane.zStart ? lane.x0 : lane.x0 + lane.dir * lane.spread * (z - lane.zStart);
   }
-  // curvatura da pista: deslocamento lateral cresce com a distância (perspectiva curva)
-  function curveOffset(z) { var d = z - camZ; if (d < 0) d = 0; return ROAD.curve * d * d; }
-  function px(lane, lx, y, z) { return project(laneCenter(lane, z) + lx + curveOffset(z), y, z); }
+  // curvatura da pista: cresce com a distância, com TETO suave ao longe (não foge da tela)
+  function curveOffset(z) {
+    var d = z - camZ; if (d < 0) d = 0;
+    var o = ROAD.curve * d * d, cap = ROAD.curveCap;
+    return o > cap ? cap + (o - cap) * 0.22 : o;
+  }
+  // SUBIDA: a partir de riseStart a pista ganha altura e SEGUE subindo cada vez MAIS forte.
+  // A 1ª rampa é suave (smoothstep, sob a câmera/placas). Depois dela a altura cresce de forma
+  // SUPER-LINEAR (termo e²): isso vence a compressão da perspectiva (1/distância), então a pista
+  // continua SUBINDO na tela rumo ao topo no fim da rolagem — em vez de achatar perto do horizonte.
+  function roadRise(z) {
+    var d = z - ROAD.riseStart; if (d <= 0) return 0;
+    var u = d / ROAD.riseRun;
+    if (u < 1) return ROAD.rise * u * u * (3 - 2 * u);   // arranque suave (pista plana sob a câmera)
+    var e = u - 1;
+    return ROAD.rise * (1 + e * 0.85 + e * e * 0.5);     // ladeira longa que acelera rumo ao alto
+  }
+  function px(lane, lx, y, z) { return project(laneCenter(lane, z) + lx + curveOffset(z), y + roadRise(z), z); }
 
   // uma célula (bloco) da faixa: topo + espessura 3D + grade sutil + bordas neon
   function drawCell(lane, ll, lr, z0, z1, y, op, i, c) {
@@ -221,8 +230,6 @@
 
   function draw() {
     background();
-    // bifurcação (mais distante) primeiro, depois a estrada principal por cima
-    for (var b = 0; b < BRANCHES.length; b++) drawLane(BRANCHES[b]);
     drawLane(MAIN);
     heroUpdate(target);
   }
@@ -301,44 +308,26 @@
     }
 
     var j   = activeJ;
-    var wc  = wordCenters[j];
-    var prj = (p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]);
+    var prj = clamp01((p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]));
     var lbl = labels[j];
 
-    // Ponto de partida da placa: acostamento ESQUERDO da estrada (acompanha a curva),
-    // convertido para coordenadas do container
-    var shoulderDist = 12; // unidades de profundidade = posição distante no acostamento
-    var sh = project(-(ROAD.halfW + 0.7) + curveOffset(camZ + shoulderDist), 0, camZ + shoulderDist);
-    var startX = sh.x - containerOffset.left;
-    var startY = sh.y - containerOffset.top;
-
-    var approachT = smooth(clamp01((p - (SEG[j][0] - APPROACH)) / APPROACH));
-
-    var signX, signY, signScale, boxOp, textOp;
-
-    if (prj <= 0) {
-      // Placa se aproxima: viaja do acostamento distante até a palavra
-      signX     = lerp(startX, wc.cx, approachT);
-      signY     = lerp(startY, wc.cy, approachT);
-      signScale = lerp(0.14, 1.0, approachT);
-      boxOp     = approachT;
-      textOp    = approachT;
-    } else {
-      // Palavra materializando: placa continua para frente (mais próxima/maior)
-      var dt    = smooth(prj);
-      signX     = wc.cx;
-      signY     = lerp(wc.cy, wc.cy + 80, dt);
-      signScale = lerp(1.0, 1.35, dt);
-      boxOp     = 1 - dt;
-      textOp    = 1 - dt;
-    }
+    // A PLACA fica plantada no ACOSTAMENTO (lado direito) da estrada, à frente.
+    // Conforme você avança (prj), a distância DIMINUI: ela cresce e se aproxima —
+    // como dirigir até a placa — em vez de subir do nada. Cada placa que você passa
+    // monta uma palavra do slogan (que aparece, à esquerda, no seu lugar).
+    var dist  = lerp(14, 3.0, smooth(prj));
+    var pt    = project(ROAD.halfW + 0.8 + curveOffset(camZ + dist), 0.7, camZ + dist);
+    var signX = pt.x - containerOffset.left;
+    var signY = pt.y - containerOffset.top;
+    var signScale = Math.max(0.18, Math.min(1.28, 3.8 / dist));   // perspectiva: longe pequena, perto grande
+    var boxOp = smooth(clamp01(prj / 0.16)) * (1 - smooth(clamp01((prj - 0.82) / 0.18))); // aparece longe, some ao passar
 
     if (signWord.textContent !== lbl) signWord.textContent = lbl;
     signEl.style.left      = signX + 'px';
     signEl.style.top       = signY + 'px';
     signEl.style.transform = 'translate(-50%,-50%) scale(' + signScale.toFixed(3) + ')';
     signEl.style.opacity   = boxOp.toFixed(3);
-    signWord.style.opacity = textOp.toFixed(3);
+    signWord.style.opacity = boxOp.toFixed(3);
   }
 
   // Liga/desliga do efeito placa→slogan. Agora a estrada 3D é limpa (sem placas

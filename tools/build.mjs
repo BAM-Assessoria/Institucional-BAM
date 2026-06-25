@@ -118,7 +118,6 @@ const NAV = [
   ['inicio', 'Início', 'index.html'],
   ['sobre', 'Sobre', 'sobre.html'],
   ['servicos', 'Serviços', 'index.html#servicos'],
-  ['cases', 'Cases', 'index.html#cases'],
   ['blog', 'Blog', 'blog/index.html'],
   ['contato', 'Contato', 'contato.html'],
 ];
@@ -164,7 +163,7 @@ function loader(prefix) {
 }
 
 function footer(prefix, active) {
-  const nav = [['sobre', 'Sobre', 'sobre.html'], ['servicos', 'Serviços', 'index.html#servicos'], ['cases', 'Cases', 'index.html#cases'], ['blog', 'Blog', 'blog/index.html'], ['contato', 'Contato', 'contato.html']]
+  const nav = [['sobre', 'Sobre', 'sobre.html'], ['servicos', 'Serviços', 'index.html#servicos'], ['blog', 'Blog', 'blog/index.html'], ['contato', 'Contato', 'contato.html']]
     .map(([k, l, h]) => `<a href="${prefix}${h}"${k === active ? ' class="active"' : ''}>${l}</a>`).join('');
   return `<footer class="bigfoot">
   <span class="scene-edge"></span>
