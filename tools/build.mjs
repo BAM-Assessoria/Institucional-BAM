@@ -28,17 +28,16 @@ const SITE = {
 
 // Cases dos clientes (logo = arquivo em assets/img/clients/ — AJUSTAR p/ o logo correto de cada cliente)
 const CASES = [
-  { client: 'Redomo Energia', year: '2024', metric: '+600%', title: 'Tráfego qualificado', desc: 'Captação para projetos B2B com vendas de maior ticket médio, em 30 dias.', logo: 'client-01.webp' },
-  { client: 'Hygge Games', year: '2024', metric: '+200%', title: 'Engajamento', desc: 'Crescimento no Instagram com conteúdo criativo, elevando a marca no cenário nacional.', logo: 'client-02.webp', photo: 'hygge.jpg' },
-  { client: 'Prompt Serviços', year: '2024', metric: '+80%', title: 'Pedidos de orçamento', desc: 'Posicionamento como solução mais confiável em terceirização para síndicos e gestores.', logo: 'client-03.webp', photo: 'prompt.jpg' },
-  { client: 'Pq. da Cantareira', year: '2024', metric: '+40%', title: 'Leads qualificados', desc: 'Geração de leads sutil e respeitosa, com redução de 25% no custo por lead (CPL).', logo: 'client-04.webp' },
-  { client: 'Kontainers', year: '2024', metric: '+60%', title: 'Ticket médio', desc: 'Projetos comerciais de maior valor, com campanhas focadas em clientes de alto potencial.', logo: 'client-05.webp' },
-  { client: 'Granitos Moredo', year: '2025', metric: '+20%', title: 'Novos clientes', desc: 'Posicionamento fortalecido e entrada consistente de clientes, com visão de longo prazo.', logo: 'client-06.webp', photo: 'moredo.jpeg' },
+  { client: 'Hygge Games', year: '2024', metric: '+200%', title: 'Engajamento', desc: 'Crescimento no Instagram com conteúdo criativo, elevando a marca no cenário nacional.', sub: 'Marca internacional de jogos (origem escandinava)', logo: 'Hygge games.webp', photo: 'hygge.jpg' },
+  { client: 'Prompt Serviços', year: '2024', metric: '+80%', title: 'Pedidos de orçamento', desc: 'Posicionamento como solução mais confiável em terceirização para síndicos e gestores.', sub: 'Terceirização de portaria e limpeza', logo: 'Prompt.webp', photo: 'prompt.jpg' },
+  { client: 'Granitos Moredo', year: '2025', metric: '+20%', title: 'Novos clientes', desc: 'Posicionamento fortalecido e entrada consistente de clientes, com visão de longo prazo.', sub: 'Marmoraria de granitos e mármores desde 1959', logo: 'Granitos moredo.webp', photo: 'moredo.jpeg' },
+  { client: 'Novu', year: '2025', metric: 'ROI 50%', title: 'Retorno sobre investimento', desc: 'Com a nova estratégia, resultado expressivo em menos de um mês — o faturamento já superou o investimento.', sub: 'Parceira da BAM em estratégia e performance', logo: '', photo: 'novu.jpg' },
 ];
 const QUOTES = [
-  { q: 'Procuramos a BAM para vender mais, mas <span class="g">recebemos muito mais.</span>', a: 'Sofie Carmind — Hygge', photo: 'hygge.jpg' },
-  { q: 'A confiança que faltava. Resultado expressivo em <span class="g">menos de um mês.</span>', a: 'Carolina — Novu', photo: 'novu.jpg' },
-  { q: 'Mais do que marketing, é uma empresa que <span class="g">se envolve com o negócio.</span>', a: 'Victor Moredo — Granitos Moredo', photo: 'moredo.jpeg' },
+  { q: '“Procuramos a BAM para vender mais, mas <span class="g">recebemos muito mais</span>. Eles nos deram um direcionamento criativo que revitalizou nossa comunicação.”', name: 'Sofie Carmind', role: 'Gerente de Contas Internacional', company: 'Hygge Games', result: '<span class="g">+400%</span> de seguidores engajados', photo: 'hygge.jpg' },
+  { q: '“Gostaria de parabenizar todos vocês pelo trabalho incrível que vêm fazendo nas campanhas de Ads! O desempenho tem sido cada vez mais consistente, e os <span class="g">resultados falam por si só</span>.”', name: 'Fábio Mansur', role: 'Vice-presidente', company: 'Prompt Serviços', result: '<span class="g">Grande impacto</span> no faturamento e no caixa da empresa', photo: 'prompt.jpg' },
+  { q: '“A BAM é uma parceira estratégica importante para a Moredo. Entende bem nosso posicionamento, respeita nossa identidade e entrega um trabalho consistente, com visão de longo prazo. Mais do que marketing, é uma empresa que <span class="g">se envolve com o negócio</span> e contribui para decisões mais assertivas.”', name: 'Victor Moredo', role: 'Gerente de Marketing', company: 'Granitos Moredo', result: '<span class="g">+20%</span> na entrada de novos clientes', photo: 'moredo.jpeg' },
+  { q: '“A parceria com a BAM nos trouxe <span class="g">a confiança que faltava</span>. Com a nova estratégia, vimos um resultado expressivo em menos de um mês, com um faturamento que já superou o investimento.”', name: 'Carol Manhães', role: 'Assessora de Marketing', company: 'Novu', result: '<span class="g">ROI de 50%</span> em menos de dois meses', photo: 'novu.jpg' },
 ];
 
 const J = (p) => existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : null;
@@ -261,15 +260,16 @@ function buildHome() {
         <div class="case-flip">
           <div class="case-face case-front">
             <div class="case-front-top">
-              <img class="case-logo" src="${prefix}assets/img/clients/${c.logo}" alt="${escAttr(c.client)}" loading="lazy" decoding="async" height="56">
+              ${c.logo ? `<img class="case-logo" src="${prefix}assets/img/clients/${c.logo}" alt="${escAttr(c.client)}" loading="lazy" decoding="async" height="56">` : ''}
               ${c.photo ? `<img class="case-avatar" src="${prefix}depoimentos/${c.photo}" alt="Depoimento — ${escAttr(c.client)}" loading="lazy" decoding="async">` : ''}
             </div>
             <span class="case-client">${esc(c.client)}</span>
+            ${c.sub ? `<span class="case-sub">${esc(c.sub)}</span>` : ''}
             <span class="case-hint">Ver resultado →</span>
           </div>
           <div class="case-face case-back">
             <div class="cgrid"></div>
-            <div class="case-top"><img class="case-logo" src="${prefix}assets/img/clients/${c.logo}" alt="" loading="lazy" decoding="async" height="30"><span class="case-year">${esc(c.year)}</span></div>
+            <div class="case-top">${c.logo ? `<img class="case-logo" src="${prefix}assets/img/clients/${c.logo}" alt="" loading="lazy" decoding="async" height="30">` : ''}<span class="case-year">${esc(c.year)}</span></div>
             <span class="case-client">${esc(c.client)}</span>
             <div class="case-metric"><span class="g">${esc(c.metric)}</span></div>
             <h3>${esc(c.title)}</h3>
@@ -279,7 +279,7 @@ function buildHome() {
       </article>`).join('\n      ')}
     </div>
     <div class="case-quotes">
-      ${QUOTES.map((q) => `<figure class="case-quote r up">${q.photo ? `<img class="quote-photo" src="${prefix}depoimentos/${q.photo}" alt="${escAttr(q.a)}" loading="lazy" decoding="async">` : ''}<blockquote>${q.q}</blockquote><figcaption>${esc(q.a)}</figcaption></figure>`).join('\n      ')}
+      ${QUOTES.map((q) => `<figure class="case-quote r up">${q.photo ? `<img class="quote-photo" src="${prefix}depoimentos/${q.photo}" alt="${escAttr(q.name + ' — ' + q.company)}" loading="lazy" decoding="async">` : ''}<blockquote>${q.q}</blockquote>${q.result ? `<div class="quote-result">${q.result}</div>` : ''}<figcaption>${esc(q.name)} — ${esc(q.role)} · ${esc(q.company)}</figcaption></figure>`).join('\n      ')}
     </div>
     <div class="case-next r up">
       <div><span class="tlabel">Próximo case</span><h3>Seja o <span class="g">próximo.</span></h3><p>O seu resultado é o nosso próximo case.</p></div>

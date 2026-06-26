@@ -156,10 +156,24 @@
     up();
   })();
 
-  /* ---------- Marquee duplicado ---------- */
+  /* ---------- Marquee em loop infinito (preenche a tela e monta 2 metades) ---------- */
   (function () {
     var m = document.getElementById('marq1');
-    if (m) m.innerHTML = m.innerHTML + m.innerHTML;
+    if (!m) return;
+    var unit = m.innerHTML;
+    function fill() {
+      var vw = Math.max(window.innerWidth, document.documentElement.clientWidth || 0);
+      m.innerHTML = unit;
+      var one = m.scrollWidth || 1;
+      var n = Math.max(2, Math.ceil((vw * 1.4) / one));
+      var half = '';
+      for (var i = 0; i < n; i++) half += unit;
+      m.innerHTML = half + half;
+    }
+    fill();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fill);
+    var t;
+    window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(fill, 200); });
   })();
 
   /* ---------- Formulários → WhatsApp ---------- */
