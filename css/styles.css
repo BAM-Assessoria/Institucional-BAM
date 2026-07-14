@@ -121,7 +121,10 @@ body.intro-reveal .menu-btn .bars span:nth-child(2){animation:barDraw .38s .13s 
 /* Palavras do slogan: cada uma "voa" da placa até o lugar (posição/opacidade via JS no scroll) */
 .hero h1 .hw{display:inline-block;opacity:0;will-change:transform,opacity;transform-origin:50% 50%}
 .hero h1 .hw.show{opacity:1;transform:none}
-.hero-chevsvg{height:clamp(38px,6.5vw,96px);width:auto;margin-left:.12em;vertical-align:baseline}
+/* chevron do slogan: 20% menor que o tamanho original e 15px acima da linha de base.
+   Sobe via position/top (não transform) porque o scrubber escreve transform:scale()
+   inline nos .hw a cada frame e sobrescreveria um transform vindo do CSS. */
+.hero-chevsvg{height:clamp(30px,5.2vw,77px);width:auto;margin-left:.12em;vertical-align:baseline;position:relative;top:-5px}
 /* puxa o slogan para a esquerda, deixando a estrada/placa respirarem à direita */
 @media(min-width:1100px){.hero h1,.hero-eyebrow{max-width:64%}}
 
@@ -168,11 +171,19 @@ body.journey-on .scene,body.journey-on .cases{background:var(--black)}
 @media (prefers-reduced-motion:reduce){.road-stage{display:none}}
 /* road-pin typography — mirrors .hero h1 rules without requiring .hero parent */
 .road-pin .wrap{position:relative;z-index:2;padding-top:clamp(110px,16vh,148px);margin-left:0;margin-right:auto}
-.road-pin h1{font-family:var(--disp);font-weight:700;text-transform:uppercase;overflow-wrap:break-word;font-size:clamp(34px,7.6vw,108px);line-height:1.02;letter-spacing:-.012em;padding-top:.08em;padding-bottom:.12em}
+/* slogan da home 20% menor que o padrão .hero h1 (clamp 34/7.6vw/108) — o chevron
+   .hero-chevsvg foi reduzido na mesma proporção, então a relação texto↔logo se mantém */
+.road-pin h1{font-family:var(--disp);font-weight:700;text-transform:uppercase;overflow-wrap:break-word;font-size:clamp(27px,6.08vw,86px);line-height:1.02;letter-spacing:-.012em;padding-top:.08em;padding-bottom:.12em}
 .road-pin h1 .g{color:var(--green)}
 .road-pin h1 .hw{display:inline-block;opacity:0;will-change:transform,opacity;transform-origin:50% 50%}
 .road-pin h1 .hw.show{opacity:1;transform:none}
-@media(min-width:1025px){.road-pin h1{max-width:64%}}
+/* Desktop: o slogan desce até a faixa que a placa varre (a placa nasce no horizonte
+   e desce/cresce até ~57% da altura da tela). Assim ela passa POR CIMA das letras,
+   no acostamento esquerdo, deixando cada palavra materializada ao passar. */
+@media(min-width:1025px){
+  .road-pin h1{max-width:64%}
+  .road-pin .wrap{padding-top:clamp(150px,33vh,360px)}
+}
 
 /* marquee */
 .marquee{display:flex;overflow:hidden;white-space:nowrap;padding:16px 0;background:var(--green);color:#000;position:relative;z-index:1}
@@ -804,3 +815,40 @@ a.svc-shot:hover .svc-shot-go{transform:translateX(4px)}
 @media(max-width:900px){.svc-grid2{grid-template-columns:1fr}.svc-shots{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.svc-shots{grid-template-columns:1fr}}
 
+
+/* =============================================================
+   CONTADORES — consolidado das contas gerenciadas (Tráfego Pago).
+   Os valores ficam nos data-count do HTML; js/counters.js anima no scroll.
+   ============================================================= */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(12px,1.4vw,18px)}
+.stat{border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.02);padding:clamp(22px,2.6vw,36px) clamp(18px,2vw,26px);display:flex;flex-direction:column;gap:12px;transition:border-color .3s,background .3s}
+.stat:hover{border-color:var(--green);background:rgba(0,255,174,.04)}
+/* tabular-nums: os dígitos não "dançam" de largura enquanto o número sobe */
+.stat-num{font-family:var(--disp);font-weight:700;font-size:clamp(30px,4.2vw,60px);line-height:1;letter-spacing:-.02em;color:var(--green);font-variant-numeric:tabular-nums}
+.stat-lab{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--gray);line-height:1.5}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.stats{grid-template-columns:1fr}}
+
+/* =============================================================
+   GALERIA DE REELS — embeds nativos do Instagram (Campanhas Sob Medida).
+   iframe puro (/embed) em vez do embed.js do Instagram: mantém o player
+   original (as views seguem contando no perfil) sem abrir a CSP para um
+   script de terceiro nem pesar no PageSpeed.
+   ============================================================= */
+.reels{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2vw,26px)}
+.reel{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);transition:border-color .3s}
+.reel:hover{border-color:var(--green)}
+
+/* Altura do embed do Instagram = 1.25 × largura + 208px (header 54 + mídia 1.25W +
+   rodapé 154). NÃO é proporcional — tem uma constante —, então aspect-ratio sozinho
+   não serve: ele decepa o rodapé nas colunas estreitas. O padding-top em % é medido
+   sobre a LARGURA do elemento, então calc(125% + 208px) reproduz a fórmula exata e
+   o embed aparece inteiro em qualquer breakpoint.
+   (O embed é cross-origin: não dá para medir o interior nem estilizá-lo. Se a Meta
+   mudar o chrome, ajuste os 208px — a falha é benigna: sobra ou falta um pouco de
+   fundo, nunca corta o vídeo.) */
+.reel-media{position:relative;padding-top:calc(125% + 208px);background:#000}
+.reel-media iframe{position:absolute;inset:0;display:block;width:100%;height:100%;border:0}
+.reel-cap{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--gray);padding:14px 16px;border-top:1px solid var(--line)}
+@media(max-width:1024px){.reels{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.reels{grid-template-columns:1fr}}
