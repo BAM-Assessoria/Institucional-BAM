@@ -128,11 +128,19 @@ body.intro-reveal .menu-btn .bars span:nth-child(2){animation:barDraw .38s .13s 
 /* puxa o slogan para a esquerda, deixando a estrada/placa respirarem à direita */
 @media(min-width:1100px){.hero h1,.hero-eyebrow{max-width:64%}}
 
-/* Placa (outdoor) na estrada — origem das palavras do slogan (visual da placa "MAIS") */
+/* Placa (outdoor) na estrada — origem das palavras do slogan (visual da placa "MAIS").
+   O js/road-scrubber.js mede a caixa (offsetWidth) para escalar a placa até ela COBRIR
+   a palavra no instante da passagem: manter a caixa com largura de conteúdo (sem
+   width fixa) é o que faz essa conta bater. */
 .road-sign{position:absolute;top:0;left:0;z-index:2;display:flex;flex-direction:column;align-items:center;opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(0.1);will-change:left,top,transform,opacity}
-.road-sign-box{border:2.5px solid var(--green);border-radius:12px;padding:24px 46px;background:rgba(4,6,5,.72);box-shadow:0 0 36px rgba(0,255,174,.38),0 0 90px rgba(0,255,174,.14),inset 0 0 26px rgba(0,255,174,.1)}
+.road-sign-box{display:flex;align-items:center;justify-content:center;border:2.5px solid var(--green);border-radius:12px;padding:24px 46px;background:rgba(4,6,5,.72);box-shadow:0 0 36px rgba(0,255,174,.38),0 0 90px rgba(0,255,174,.14),inset 0 0 26px rgba(0,255,174,.1)}
 .road-sign-word{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:clamp(28px,3vw,52px);letter-spacing:.02em;color:rgba(228,238,233,.55);text-shadow:0 0 18px rgba(0,255,174,.35);white-space:nowrap}
-.road-sign-pole{width:2px;height:74px;background:linear-gradient(var(--green),rgba(0,255,174,0));box-shadow:0 0 12px rgba(0,255,174,.5)}
+/* placa da logo: mesma altura visual da palavra, para a caixa não mudar de porte */
+.road-sign-logo{display:block;height:clamp(28px,3vw,52px);width:auto;filter:drop-shadow(0 0 16px rgba(0,255,174,.45))}
+.road-sign-logo[hidden],.road-sign-word[hidden]{display:none}
+/* poste FORA do fluxo: assim a altura da placa é a da caixa, e o translate(-50%,-50%)
+   do scrubber centra a CAIXA (não caixa+poste) exatamente sobre a vaga da palavra */
+.road-sign-pole{position:absolute;top:100%;left:50%;transform:translateX(-50%);width:2px;height:74px;background:linear-gradient(var(--green),rgba(0,255,174,0));box-shadow:0 0 12px rgba(0,255,174,.5)}
 @media(max-width:1024px){.road-sign{display:none}}
 
 /* hero: agrupa sub + CTA à esquerda, tirando o "Próximo passo" do centro/estrada */

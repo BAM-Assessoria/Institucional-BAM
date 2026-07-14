@@ -235,32 +235,57 @@
   }
 
   /* ---------- Slogan montado pelas placas (DOM), dirigido pelo scroll ----------
-     Cada palavra "nasce" na placa (à direita) e voa até seu lugar no slogan.
-     Função pura do progresso → reversível ao rolar de volta. */
+     Cada palavra tem o SEU outdoor, plantado no mundo numa posição própria — não
+     todos na mesma faixa da tela. A posição de cada placa é RESOLVIDA a partir da
+     vaga que a palavra ocupa no slogan: procuramos o ponto (x,y) do mundo que, a
+     D_PASS metros da câmera, projeta exatamente em cima dessa vaga. Como a placa é
+     um objeto estático e só a distância diminui, ela percorre a reta que sai do
+     ponto de fuga e passa pela vaga: nasce no horizonte, cresce, COBRE a palavra e
+     segue varrendo para fora de cena — deixando a palavra materializada ali.
+     Cada vaga está numa altura/lado diferente ⇒ cada outdoor vem por um caminho
+     diferente. Função pura do progresso → reversível ao rolar de volta. */
   var heroWords = [].slice.call(document.querySelectorAll('.road-pin h1 .hw'));
-  var signEl = document.getElementById('roadSign');
+  var signEl   = document.getElementById('roadSign');
+  var signBox  = document.getElementById('roadSignBox');
   var signWord = document.getElementById('roadSignWord');
-  var heroReady = !!(heroWords.length && signEl && signWord);
+  var signLogo = document.getElementById('roadSignLogo');
+  var heroReady = !!(heroWords.length && signEl && signBox && signWord);
   var SEG = [[0.12, 0.22], [0.26, 0.37], [0.41, 0.53], [0.57, 0.69], [0.71, 0.82]];
   var SIGN_END = 0.82;
-  // Coreografia "a placa passa e deixa a palavra":
-  // SIGN_FADE — prj em que a placa começa a sumir (já raspando pela câmera).
-  // WORD_LEAD/WORD_TAIL — janela do reveal da palavra em torno do FIM do segmento
-  // (o instante em que a placa passa). O lead curto cruza com o fade-out da placa;
-  // o tail termina de assentar a palavra com a placa já fora de cena.
-  var SIGN_FADE = 0.80;
-  var WORD_LEAD = 0.015;
-  var WORD_TAIL = 0.030;
-  var labels = heroWords.map(function (w) {
-    return w.tagName === 'IMG' ? '»»»' : (w.textContent || '').trim().toUpperCase();
-  });
-  var offs = [];
-  var wordCenters = [];
+
+  // Coreografia, em fração do segmento da palavra (prj) e em metros de mundo:
+  //   D_FAR → D_PASS → D_EXIT = distância da placa até a câmera.
+  // PASS é o instante em que a placa está EXATAMENTE sobre a vaga da palavra; dali
+  // em diante ela continua vindo (cresce e varre para fora) enquanto a palavra
+  // emerge por baixo — é a placa que "deixa" a palavra no lugar, não a palavra que
+  // aparece sozinha. FADE começa depois de PASS para a placa ainda estar visível no
+  // momento em que cobre a vaga.
+  var D_FAR = 16, D_PASS = 3.4, D_EXIT = 1.9;
+  var PASS = 0.78;
+  var FADE = 0.86;
+  var REVEAL = 0.20;   // largura (em prj) do surgimento da palavra, a partir de PASS
+  var COVER = 1.14;    // a placa cobre 114% da largura da palavra ao passar
+
+  var signs = [];      // um outdoor por palavra: âncora no mundo + escala alvo
+  var signLabelIdx = -1;
   var containerOffset = { left: 0, top: 0 }; // viewport offset of sign's parent
 
   function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
   function smooth(t) { t = clamp01(t); return t * t * (3 - 2 * t); }
   function lerp(a, b, t) { return a + (b - a) * t; }
+
+  // A última palavra do slogan é a logo (<img>), não texto: a placa dela carrega a
+  // própria logo. As demais carregam a palavra em caixa alta.
+  function setSignLabel(i) {
+    var isLogo = heroWords[i].tagName === 'IMG';
+    if (signLogo) signLogo.hidden = !isLogo;
+    signWord.hidden = isLogo;
+    if (!isLogo) {
+      var t = (heroWords[i].textContent || '').trim().toUpperCase();
+      if (signWord.textContent !== t) signWord.textContent = t;
+    }
+    signLabelIdx = i;
+  }
 
   function heroMeasure() {
     if (!heroReady) return;
@@ -271,75 +296,67 @@
     var cr = signEl.parentElement ? signEl.parentElement.getBoundingClientRect() : { left: 0, top: 0 };
     containerOffset.left = cr.left;
     containerOffset.top  = cr.top;
-    wordCenters = heroWords.map(function (w) {
-      var r = w.getBoundingClientRect();
+
+    var sPass = ROAD.focal / D_PASS;   // fator de projeção no instante da passagem
+    signs = heroWords.map(function (w, i) {
+      var r  = w.getBoundingClientRect();
+      var tx = r.left + r.width  / 2;  // vaga da palavra, em coordenadas de viewport
+      var ty = r.top  + r.height / 2;
+      // inverso de project(): que ponto do mundo cai sobre esta vaga a D_PASS metros?
+      setSignLabel(i);                 // a caixa muda de largura conforme o rótulo
+      var boxW = signBox.offsetWidth || 1;
       return {
-        cx: r.left + r.width  / 2 - cr.left,
-        cy: r.top  + r.height / 2 - cr.top
+        x: (tx - W / 2) / sPass,
+        y: ROAD.camH - (ty - ROAD.horizon) / sPass,
+        scale: Math.max(0.45, Math.min(2.6, (r.width * COVER) / boxW))
       };
     });
-    offs = heroWords.map(function () { return { dx: 0, dy: 0 }; });
-    // placa começa oculta na posição do horizonte da estrada
+
+    // placa começa oculta, no horizonte
     signEl.style.left      = (W / 2 - containerOffset.left) + 'px';
     signEl.style.top       = (ROAD.horizon - containerOffset.top) + 'px';
     signEl.style.transform = 'translate(-50%,-50%) scale(0.1)';
     signEl.style.opacity   = '0';
   }
 
-  var APPROACH = 0.11; // fração de scroll para a placa se aproximar antes da palavra
-
   function heroUpdate(p) {
-    if (!heroReady || !wordCenters.length) return;
+    if (!heroReady || !signs.length) return;
 
-    // Palavras: a palavra só se materializa DEPOIS que a placa passa por ela — é o
-    // texto que estava NA PLACA que "fica para trás", virando o slogan. Por isso o
-    // reveal é ancorado no FIM do segmento (SEG[i][1] = ponto em que a placa passa
-    // raspando pela câmera): começa WORD_LEAD antes (crossfade curto com o fade-out
-    // da placa) e termina WORD_TAIL depois, com a placa já fora de cena.
+    // Palavras: cada uma só se materializa DEPOIS que a SUA placa passou por cima da
+    // vaga dela (prj ≥ PASS) — é o texto que estava na placa que "fica para trás".
     for (var i = 0; i < heroWords.length; i++) {
-      var rev = smooth(clamp01((p - (SEG[i][1] - WORD_LEAD)) / (WORD_LEAD + WORD_TAIL)));
-      heroWords[i].style.transform = 'scale(' + (0.82 + 0.18 * rev).toFixed(3) + ')';
+      var pi  = (p - SEG[i][0]) / (SEG[i][1] - SEG[i][0]);
+      var rev = smooth(clamp01((pi - PASS) / REVEAL));
+      heroWords[i].style.transform = 'scale(' + (0.88 + 0.12 * rev).toFixed(3) + ')';
       heroWords[i].style.opacity   = rev.toFixed(3);
     }
 
-    // Placa: encontra a palavra activa
+    // Placa ativa: a da primeira palavra que ainda não fechou o seu segmento
     var activeJ = -1;
     for (var j2 = 0; j2 < heroWords.length; j2++) {
       if ((p - SEG[j2][0]) / (SEG[j2][1] - SEG[j2][0]) < 1) { activeJ = j2; break; }
     }
-
-    if (p >= SIGN_END) {
-      var endOp = clamp01(1 - (p - SIGN_END) / 0.07);
-      signEl.style.opacity = endOp.toFixed(3);
-      return;
-    }
-
-    if (activeJ < 0 || !wordCenters[activeJ]) {
-      signEl.style.opacity = '0';
-      return;
-    }
+    if (p >= SIGN_END || activeJ < 0) { signEl.style.opacity = '0'; return; }
 
     var j   = activeJ;
     var prj = clamp01((p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]));
-    var lbl = labels[j];
+    var sg  = signs[j];
 
-    // A PLACA fica plantada no ACOSTAMENTO ESQUERDO da estrada, à frente.
-    // Conforme você avança (prj), a distância DIMINUI: ela cresce, se aproxima e
-    // varre a tela rumo à esquerda — passando POR CIMA do slogan. Cada placa que
-    // passa "deixa" a sua palavra materializada no lugar por onde ela passou.
-    var dist  = lerp(14, 3.0, smooth(prj));
-    var pt    = project(-(ROAD.halfW + 0.8) + curveOffset(camZ + dist), 0.7, camZ + dist);
-    var signX = pt.x - containerOffset.left;
-    var signY = pt.y - containerOffset.top;
-    var signScale = Math.max(0.18, Math.min(1.28, 3.8 / dist));   // perspectiva: longe pequena, perto grande
-    var boxOp = smooth(clamp01(prj / 0.16)) * (1 - smooth(clamp01((prj - SIGN_FADE) / (1 - SIGN_FADE)))); // aparece longe, some ao passar
+    // distância: longe → cobre a vaga (D_PASS) → continua vindo e sai de cena (D_EXIT)
+    var dist = prj <= PASS
+      ? lerp(D_FAR, D_PASS, smooth(prj / PASS))
+      : lerp(D_PASS, D_EXIT, (prj - PASS) / (1 - PASS));
 
-    if (signWord.textContent !== lbl) signWord.textContent = lbl;
-    signEl.style.left      = signX + 'px';
-    signEl.style.top       = signY + 'px';
-    signEl.style.transform = 'translate(-50%,-50%) scale(' + signScale.toFixed(3) + ')';
-    signEl.style.opacity   = boxOp.toFixed(3);
-    signWord.style.opacity = boxOp.toFixed(3);
+    var pt = project(sg.x, sg.y, camZ + dist);
+    // escala em perspectiva ancorada na passagem: em D_PASS a placa cobre a palavra
+    var scale = sg.scale * (D_PASS / dist);
+    var op = smooth(clamp01(prj / 0.14)) * (1 - smooth(clamp01((prj - FADE) / (1 - FADE))));
+
+    if (signLabelIdx !== j) setSignLabel(j);
+    signEl.style.left      = (pt.x - containerOffset.left) + 'px';
+    signEl.style.top       = (pt.y - containerOffset.top) + 'px';
+    signEl.style.transform = 'translate(-50%,-50%) scale(' + scale.toFixed(3) + ')';
+    signEl.style.opacity   = op.toFixed(3);
   }
 
   // Liga/desliga do efeito placa→slogan. Agora a estrada 3D é limpa (sem placas
