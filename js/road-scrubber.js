@@ -55,14 +55,14 @@
     riseBand: 7,      // faixa na qual o bloco encaixa
     drop: 2.2,        // quanto o bloco nasce abaixo (menor → mais pista, menos "voando")
     wave: 1.4,        // defasagem da montagem (onda matriz)
-    length: 150,      // comprimento TOTAL (estrada longa — há muito caminho pela frente)
+    length: 240,      // comprimento TOTAL — estrada LONGA: os outdoors são blocos fixos no mundo e precisam de espaçamento p/ aparecer um de cada vez
     base: 6,          // trecho já montado no início
     curve: 0.009,     // curvatura da pista (positivo = varre p/ DIREITA, abrindo a esquerda)
     curveCap: 16,     // teto suave da curva ao longe → a estrada longa não foge da tela
-    arriveGap: 92,    // a câmera para no pé da subida (mesmo enquadramento) e deixa MUITO caminho à frente
-    rise: 5.5,        // altura ganha a cada "riseRun" de subida (mundo)
-    riseStart: 62,    // z onde a ladeira começa (antes disso a pista é plana, sob a câmera)
-    riseRun: 26,      // 1ª parte da subida; depois a estrada SEGUE subindo (ladeira longa, sem fim à vista)
+    arriveGap: 92,    // a câmera para no pé da subida; com a estrada longa o avanço por scroll fica ~2.5× mais rápido (os outdoors, fixos no mundo, nascem mais longe)
+    rise: 8,          // altura ganha a cada "riseRun" de subida (mundo)
+    riseStart: 154,   // z onde a ladeira começa — logo além do fim do percurso da câmera (240−92=148): ela PARA no pé da subida
+    riseRun: 34,      // 1ª parte da subida; depois a estrada SEGUE subindo (ladeira longa, sem fim à vista)
     shiftFrac: 0.13,  // desloca SÓ a pista p/ a direita (fração de W): tira a estrada de baixo dos outdoors do centro/direita (vamos, longe), que vinham "dentro da pista". Como o outdoor emerge do centro e não recebe o shift, quanto maior o shift mais folga entre placa e pista
     focal: 0,
     horizon: 0,
@@ -306,7 +306,7 @@
   // um outdoor. Mobile/retrato: PÓRTICO — centrada sobre a pista, acima da câmera,
   // como os painéis suspensos de rodovia.
   var SIGN_ROAD_X = MOBILE ? 0 : -(ROAD.halfW + 1.15);
-  var SIGN_ROAD_Y = MOBILE ? 2.3 : 1.0;
+  var SIGN_ROAD_Y = MOBILE ? 1.75 : 1.0;   // retrato mais baixo: a placa vinha alta demais
   var FADE = 0.66;
   // Surgimento da palavra sincronizado com a passagem: ele TERMINA no instante em que a
   // placa cobre a vaga (pi = PASS), começando REVEAL_LEAD antes. Assim a palavra já está
@@ -447,69 +447,73 @@
     ctx.closePath();
   }
 
-  // Desenha o outdoor NO CANVAS (mesma camada da estrada). Geometria idêntica à do
-  // efeito anterior — objeto fixo no mundo, seguindo curva/subida, pousando na vaga —
-  // só que agora pintado no <canvas> em vez de posicionar um elemento DOM por cima.
+  // Desenha os outdoors NO CANVAS, como PARTE DA ESTRADA: cada placa é um BLOCO fixo
+  // no mundo, gerado pelo MESMO método das células da pista — nasce quando a frente
+  // de construção a alcança (com uma defasagem por placa, como a "wave" dos blocos),
+  // sobe/encaixa com o mesmo smoothstep/drop e usa o mesmo véu de horizonte. Sendo
+  // fixa no mundo, a distância dela só diminui porque a câmera avança: move-se POR
+  // DEFINIÇÃO na velocidade da estrada, o tempo todo. Pode haver duas em cena (a
+  // anterior saindo + a próxima recém-construída ao fundo); a mais funda vem antes.
   function drawSignCanvas(p) {
     if (!heroReady || !signs.length) return;
+    if (p >= SIGN_END) return;
+    for (var j = heroWords.length - 1; j >= 0; j--) drawOneSign(p, j);
+  }
 
-    var activeJ = -1;
-    for (var j2 = 0; j2 < heroWords.length; j2++) {
-      if ((p - SEG[j2][0]) / (SEG[j2][1] - SEG[j2][0]) < 1) { activeJ = j2; break; }
-    }
-    if (p >= SIGN_END || activeJ < 0) return;
+  // A placa j só "constrói" depois que a anterior PASSOU: é a defasagem (phase) que
+  // faz os outdoors aparecerem um de cada vez, mesmo com a frente de construção da
+  // pista já muito à frente.
+  function signBorn(j) {
+    if (j === 0) return 0.055;
+    return SEG[j - 1][0] + PASS * (SEG[j - 1][1] - SEG[j - 1][0]) + 0.015;
+  }
 
-    var j   = activeJ;
-    var prj = clamp01((p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]));
-    var sg  = signs[j];
-
-    // ---- distância: nasce NO FUNDO e vem crescendo por perspectiva ----
-    // O quão fundo a placa pode nascer é limitado pela frente de construção da pista no
-    // início do segmento (não pode flutuar sobre trecho ainda não montado): nas primeiras
-    // palavras a estrada existe ~15 m à frente; nas últimas, ~60 m — os outdoors vêm de
-    // cada vez mais longe conforme a estrada cresce. Depois de PASS vira objeto fixo no
-    // mundo: a distância diminui só porque a câmera avança (varre no ritmo da estrada).
+  function drawOneSign(p, j) {
+    if (p >= SEG[j][1]) return;
+    var sg    = signs[j];
+    var prj   = (p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]);   // <0 antes do segmento
     var pPass = SEG[j][0] + PASS * (SEG[j][1] - SEG[j][0]);
-    var p0    = SEG[j][0];
     var run   = ROAD.length - ROAD.arriveGap;
-    var dFar  = Math.max(10, Math.min(ROAD.draw * 0.8,
-                (ROAD.base + p0 * (ROAD.length - ROAD.base)) - p0 * run - 1.5));
-    var dist;
-    if (prj <= PASS) {
-      dist = lerp(dFar, D_PASS, smooth(prj / PASS));
-    } else {
-      dist = D_PASS - (camZ - pPass * run);
-      if (dist < 0.3) dist = 0.3;
-    }
 
-    // ---- posição: mescla "outdoor de beira de estrada" → "pouso na vaga" ----
-    // Longe, a placa é um objeto DA CENA: plantada no acostamento esquerdo, com a MESMA
-    // curva/subida e o MESMO deslocamento lateral (ROAD.shift) da pista — compartilha o
-    // ponto de fuga da estrada e vem no fluxo dela. Perto, a trajetória converge para
-    // pousar EXATAMENTE na vaga da palavra no slogan (que não recebe o shift).
+    // ---- BLOCO fixo no mundo: z escolhido para dar D_PASS exatos na passagem ----
+    var zSign = pPass * run + D_PASS;
+    var dist  = zSign - camZ;
+    if (dist < 0.3) dist = 0.3;
+
+    // ---- geração pelo método dos blocos da pista ----
+    // t = (frente de construção − defasagem − z) / riseBand → mesmo gatilho, mesmo
+    // easing e o mesmo "nasce abaixo e sobe/encaixa" (drop) das células da estrada.
+    var bfNow  = ROAD.base + p           * (ROAD.length - ROAD.base);
+    var bfBorn = ROAD.base + signBorn(j) * (ROAD.length - ROAD.base);
+    var phase  = Math.max(0, bfBorn - zSign);
+    var tB = (bfNow - phase - zSign) / ROAD.riseBand;
+    if (tB <= 0) return;
+    if (tB > 1) tB = 1;
+    var eB   = tB * tB * (3 - 2 * tB);
+    var yOff = -(1 - eB) * ROAD.drop * 0.8;
+
+    // ---- posição: mescla "objeto da estrada" → "pouso na vaga" ----
+    // Ao longe, a placa tem a MESMA curva/subida e o MESMO deslocamento lateral da
+    // pista (compartilha o ponto de fuga). Perto, converge para pousar EXATAMENTE na
+    // vaga da palavra no slogan (que não recebe o shift).
     var z  = camZ + dist, zp = camZ + D_PASS;
-    var ptRoad = project(SIGN_ROAD_X + curveOffset(z), SIGN_ROAD_Y + roadRise(z), z);
+    var ptRoad = project(SIGN_ROAD_X + curveOffset(z), SIGN_ROAD_Y + roadRise(z) + yOff, z);
     var ptSlot = project(sg.x + (curveOffset(z) - curveOffset(zp)),
-                         sg.y + (roadRise(z)   - roadRise(zp)), z);
-    var wMix = prj >= PASS ? 1 : smooth(prj / PASS);
+                         sg.y + (roadRise(z)   - roadRise(zp)) + yOff, z);
+    var wMix = prj >= PASS ? 1 : smooth(clamp01(prj / PASS));
     var pt = { x: lerp(ptRoad.x + ROAD.shift, ptSlot.x, wMix),
                y: lerp(ptRoad.y,              ptSlot.y, wMix) };
 
-    // CHÃO sob a placa, na MESMA distância z: o poste é plantado aqui (não tem mais
-    // comprimento fixo). Antes, o poste terminava a 74px×escala da caixa — e como a
-    // caixa mistura duas alturas de mundo (acostamento → vaga), a folga da base até o
-    // solo variava conforme a aproximação. Projetando o plano do chão (y=0 + a mesma
-    // subida) para cada candidato e misturando com o MESMO wMix, a base fica cravada
-    // no plano em que a estrada assenta, em qualquer ponto do trajeto.
+    // CHÃO sob a placa, na MESMA distância z (plano y=0 + a mesma subida, misturado
+    // com o MESMO wMix): pernas/poste plantados no plano em que os blocos assentam.
     var gRoad = project(SIGN_ROAD_X + curveOffset(z), roadRise(z), z);
     var gSlot = project(sg.x + (curveOffset(z) - curveOffset(zp)),
                         roadRise(z) - roadRise(zp), z);
     var groundY = lerp(gRoad.y, gSlot.y, wMix);
 
-    // opacidade: nada de "surgir por fade" — a placa entra minúscula e cresce; só um
-    // anti-pop curtíssimo no início, o véu do horizonte (a MESMA queda usada nos blocos
-    // da pista ao longe) e a saída depois de FADE.
-    var op = smooth(clamp01(prj / 0.08))
+    // opacidade: construção (o MESMO easing dos blocos — nada de fade próprio) ×
+    // véu do horizonte (o mesmo dos blocos ao longe) × saída depois de FADE.
+    var op = eB
            * clamp01((ROAD.draw - dist) / 11)
            * (1 - smooth(clamp01((prj - FADE) / (1 - FADE))));
     if (op <= 0.004) return;
@@ -525,18 +529,28 @@
 
     // poste plantado no CHÃO (groundY): comprimento = caixa→solo, não mais fixo.
     // Gradiente ainda esmaece, mas termina visível — a base "toca" o plano da estrada.
-    // Desktop: um poste central (outdoor de acostamento). Mobile: DUAS pernas nas
-    // bordas da caixa, atravessando a pista — leitura de pórtico de rodovia.
+    // Desktop: um poste central (outdoor de acostamento). Mobile: PÓRTICO ABERTO —
+    // as pernas ficam nas MARGENS da pista (fora das bordas neon, mais largas que a
+    // placa), com uma travessa sob a caixa; ao pousar (wMix→1) recolhem p/ a caixa.
     var poleH = Math.max(0, groundY - (y + boxH)), poleW = Math.max(1, 2 * scale);
     if (poleH > 0.5) {
       var pg = ctx.createLinearGradient(0, y + boxH, 0, y + boxH + poleH);
       pg.addColorStop(0, 'rgba(0,255,174,.85)');
       pg.addColorStop(1, 'rgba(0,255,174,.18)');
-      ctx.fillStyle = pg;
       if (MOBILE) {
-        ctx.fillRect(x + boxW * 0.08 - poleW / 2, y + boxH, poleW, poleH);
-        ctx.fillRect(x + boxW * 0.92 - poleW / 2, y + boxH, poleW, poleH);
+        var shored = ROAD.halfW + 0.35;   // margem: um pouco além da borda neon
+        var shL = project(-shored + curveOffset(z), roadRise(z) + yOff, z).x + ROAD.shift;
+        var shR = project( shored + curveOffset(z), roadRise(z) + yOff, z).x + ROAD.shift;
+        var legL = lerp(shL, x + boxW * 0.08, wMix);
+        var legR = lerp(shR, x + boxW * 0.92, wMix);
+        // travessa que sustenta a caixa (vai de perna a perna)
+        ctx.fillStyle = 'rgba(0,255,174,.55)';
+        ctx.fillRect(Math.min(legL, legR), y + boxH - poleW, Math.abs(legR - legL), Math.max(1, poleW * 0.9));
+        ctx.fillStyle = pg;
+        ctx.fillRect(legL - poleW / 2, y + boxH, poleW, poleH);
+        ctx.fillRect(legR - poleW / 2, y + boxH, poleW, poleH);
       } else {
+        ctx.fillStyle = pg;
         ctx.fillRect(cx - poleW / 2, y + boxH, poleW, poleH);
       }
     }
