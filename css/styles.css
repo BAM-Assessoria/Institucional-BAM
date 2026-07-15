@@ -874,8 +874,17 @@ a.svc-shot:hover .svc-shot-go{transform:translateX(4px)}
    (O embed é cross-origin: não dá para medir o interior nem estilizá-lo. Se a Meta
    mudar o chrome, ajuste os 208px — a falha é benigna: sobra ou falta um pouco de
    fundo, nunca corta o vídeo.) */
-.reel-media{position:relative;padding-top:calc(125% + 208px);background:#000}
-.reel-media iframe{position:absolute;inset:0;display:block;width:100%;height:100%;border:0}
+.reel-media{position:relative;padding-top:calc(125% + 208px);background:#0a0f0d;overflow:hidden}
+/* Estado de carregamento: o embed do Instagram é lazy e cross-origin, então leva um
+   tempo até aparecer. Em vez de o card ficar VAZIO (parecendo travado), estas duas
+   camadas ficam ATRÁS do iframe (z-index 0): um shimmer verde correndo + um spinner
+   central. Quando o embed pinta (fundo branco), ele cobre as duas naturalmente — sem
+   precisar de JS nem de evento onload (que a CSP bloquearia). */
+.reel-media::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(100deg,#0a0f0d 30%,rgba(0,255,174,.07) 50%,#0a0f0d 70%);background-size:220% 100%;animation:reelShimmer 1.5s ease-in-out infinite}
+.reel-media::after{content:"";position:absolute;top:50%;left:50%;width:40px;height:40px;margin:-20px 0 0 -20px;z-index:0;border:3px solid rgba(0,255,174,.22);border-top-color:var(--green);border-radius:50%;animation:reelSpin .8s linear infinite}
+.reel-media iframe{position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;border:0}
+@keyframes reelShimmer{from{background-position:220% 0}to{background-position:-220% 0}}
+@keyframes reelSpin{to{transform:rotate(360deg)}}
 .reel-cap{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--gray);padding:14px 16px;border-top:1px solid var(--line)}
 @media(max-width:1024px){.reels{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.reels{grid-template-columns:1fr}}
