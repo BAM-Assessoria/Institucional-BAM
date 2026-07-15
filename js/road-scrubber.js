@@ -255,16 +255,22 @@
 
   // Coreografia, em fração do segmento da palavra (prj) e em metros de mundo:
   //   D_FAR → D_PASS → D_EXIT = distância da placa até a câmera.
-  // PASS é o instante em que a placa está EXATAMENTE sobre a vaga da palavra; dali
-  // em diante ela continua vindo (cresce e varre para fora) enquanto a palavra
-  // emerge por baixo — é a placa que "deixa" a palavra no lugar, não a palavra que
-  // aparece sozinha. FADE começa depois de PASS para a placa ainda estar visível no
-  // momento em que cobre a vaga.
-  var D_FAR = 16, D_PASS = 3.4, D_EXIT = 1.9;
-  var PASS = 0.78;
-  var FADE = 0.86;
-  var REVEAL = 0.20;   // largura (em prj) do surgimento da palavra, a partir de PASS
-  var COVER = 1.14;    // a placa cobre 114% da largura da palavra ao passar
+  // PASS é o instante em que a placa está EXATAMENTE sobre a vaga da palavra. Ele fica
+  // ~no MEIO do segmento de propósito: assim, DEPOIS de passar, ainda sobra bastante
+  // rolagem (1 − PASS) para a placa CONTINUAR VINDO — ela cresce até D_EXIT (bem perto
+  // da câmera) e varre para fora de cena — enquanto a palavra, revelada na passagem,
+  // FICA para trás. É a placa que "deixa" a palavra ali, não a palavra que aparece
+  // sozinha. FADE começa só depois de PASS, então a placa ainda está sólida no
+  // instante em que cobre a vaga, e só se apaga já saindo de quadro.
+  var D_FAR = 16, D_PASS = 3.2, D_EXIT = 1.05;
+  var PASS = 0.52;
+  var FADE = 0.66;
+  var REVEAL = 0.16;   // largura (em prj) do surgimento da palavra, a partir de PASS
+  // A escala é ancorada no CONTEÚDO da placa (a palavra/logo impressa), não na moldura:
+  // no instante da passagem a palavra DENTRO da placa tem exatamente a largura da vaga
+  // no slogan (× COVER). Assim, quando a placa "solta" a palavra, ela assenta no mesmo
+  // tamanho — sem o salto que havia quando a âncora era a caixa (palavra + padding).
+  var COVER = 1.06;    // a palavra na placa cobre 106% da largura da vaga ao passar
 
   var signs = [];      // um outdoor por palavra: âncora no mundo + escala alvo
   var signLabelIdx = -1;
@@ -303,12 +309,18 @@
       var tx = r.left + r.width  / 2;  // vaga da palavra, em coordenadas de viewport
       var ty = r.top  + r.height / 2;
       // inverso de project(): que ponto do mundo cai sobre esta vaga a D_PASS metros?
-      setSignLabel(i);                 // a caixa muda de largura conforme o rótulo
-      var boxW = signBox.offsetWidth || 1;
+      setSignLabel(i);                 // o conteúdo (palavra/logo) muda de largura
+      // âncora de escala = largura do CONTEÚDO (não da caixa): na passagem a palavra
+      // impressa na placa fica do tamanho da vaga, então assenta sem salto.
+      // offsetWidth (largura de layout) e NÃO getBoundingClientRect: este último
+      // inclui o transform:scale() que o scrubber escreve na placa a cada frame, o
+      // que distorceria a medida (a placa da logo saía gigante por causa disso).
+      var inner  = (w.tagName === 'IMG' && signLogo) ? signLogo : signWord;
+      var innerW = inner.offsetWidth || signBox.offsetWidth || 1;
       return {
         x: (tx - W / 2) / sPass,
         y: ROAD.camH - (ty - ROAD.horizon) / sPass,
-        scale: Math.max(0.45, Math.min(2.6, (r.width * COVER) / boxW))
+        scale: Math.max(0.35, Math.min(3.4, (r.width * COVER) / innerW))
       };
     });
 
