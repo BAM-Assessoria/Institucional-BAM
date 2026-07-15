@@ -306,8 +306,8 @@
   // o shift da pista e a curva no pass — ver drawOneSign): a do "juntos" vem na mesma
   // lateral que a do "mais" porém mais alta; a do "vamos" na mesma altura porém mais
   // perto da pista — a formação viaja com a estrada já no arranjo em que vai pousar.
-  // No retrato, a altura de viagem tem um piso (o pórtico fica suspenso sobre a pista).
-  var SIGN_MIN_Y_MOBILE = 1.6;
+  // No retrato a mecânica é a MESMA (a placa viaja na altura da própria vaga e passa
+  // por cima do texto); muda só o suporte (L invertido alternando os lados).
   var FADE = 0.66;
   // Surgimento da palavra sincronizado com a passagem: ele TERMINA no instante em que a
   // placa cobre a vaga (pi = PASS), começando REVEAL_LEAD antes. Assim a palavra já está
@@ -509,14 +509,7 @@
     var c0    = ROAD.curve * D_PASS * D_PASS;   // curveOffset no ponto de passagem
     var ax = (sg.slotX - ROAD.shift - W / 2) / sPass - c0;
     var ay = sg.y;
-    var yTravel = ay;
-    if (MOBILE) {
-      // retrato: o pórtico viaja suspenso (piso de altura) e desce para a vaga só no
-      // fim — o ajuste é apenas VERTICAL; lateralmente segue a pista sempre
-      var wMix = prj >= PASS ? 1 : smooth(clamp01(prj / PASS));
-      yTravel = lerp(Math.max(ay, SIGN_MIN_Y_MOBILE), ay, wMix);
-    }
-    var pt = project(ax + curveOffset(z), yTravel + roadRise(z) + yOff, z);
+    var pt = project(ax + curveOffset(z), ay + roadRise(z) + yOff, z);
     pt.x += ROAD.shift;
 
     // CHÃO sob a placa (mesma âncora, plano y=0 + a mesma subida): pernas/poste
@@ -539,28 +532,32 @@
     ctx.save();
     ctx.globalAlpha = op;
 
-    // poste plantado no CHÃO (groundY): comprimento = caixa→solo, não mais fixo.
-    // Gradiente ainda esmaece, mas termina visível — a base "toca" o plano da estrada.
-    // Desktop: um poste central (outdoor de acostamento). Mobile: PÓRTICO ABERTO —
-    // as pernas ficam CRAVADAS nas MARGENS da pista (mundo fixo, fora das bordas
-    // neon) o percurso INTEIRO: a abertura cresce só por perspectiva, sem encolher
-    // no pouso (as pernas não perseguem a caixa).
-    var poleH = Math.max(0, groundY - (y + boxH)), poleW = Math.max(1, 2 * scale);
-    if (poleH > 0.5) {
-      var pg = ctx.createLinearGradient(0, y + boxH, 0, y + boxH + poleH);
-      pg.addColorStop(0, 'rgba(0,255,174,.85)');
-      pg.addColorStop(1, 'rgba(0,255,174,.18)');
-      if (MOBILE) {
-        var shored = ROAD.halfW + 0.35;   // margem: um pouco além da borda neon
-        var legL = project(-shored + curveOffset(z), roadRise(z) + yOff, z).x + ROAD.shift;
-        var legR = project( shored + curveOffset(z), roadRise(z) + yOff, z).x + ROAD.shift;
-        // travessa que sustenta a caixa (vai de perna a perna)
-        ctx.fillStyle = 'rgba(0,255,174,.55)';
-        ctx.fillRect(Math.min(legL, legR), y + boxH - poleW, Math.abs(legR - legL), Math.max(1, poleW * 0.9));
-        ctx.fillStyle = pg;
-        ctx.fillRect(legL - poleW / 2, y + boxH, poleW, poleH);
-        ctx.fillRect(legR - poleW / 2, y + boxH, poleW, poleH);
-      } else {
+    // suporte plantado no CHÃO (groundY) — o comprimento é caixa→solo, nunca fixo.
+    // Desktop: um poste central sob a caixa (outdoor de acostamento). Mobile: braço
+    // em L INVERTIDO de UM lado só, alternando (esquerda no "juntos", direita no
+    // "vamos"...): o poste sobe do chão ao lado da caixa e o braço horizontal
+    // conecta na LATERAL dela, na altura do centro.
+    var poleW = Math.max(1, 2 * scale);
+    if (MOBILE) {
+      var ladoEsq = (j % 2 === 0);
+      var arm  = Math.max(6, 24 * scale);                 // braço horizontal do L
+      var poX  = ladoEsq ? (x - arm) : (x + boxW + arm);  // onde o poste desce
+      var lpH  = Math.max(0, groundY - cy);               // poste: centro da caixa → chão
+      if (lpH > 0.5) {
+        var pgm = ctx.createLinearGradient(0, cy, 0, cy + lpH);
+        pgm.addColorStop(0, 'rgba(0,255,174,.85)');
+        pgm.addColorStop(1, 'rgba(0,255,174,.18)');
+        ctx.fillStyle = 'rgba(0,255,174,.75)';            // braço: poste → lateral da caixa
+        ctx.fillRect(ladoEsq ? poX : x + boxW, cy - poleW / 2, arm, Math.max(1, poleW * 0.9));
+        ctx.fillStyle = pgm;
+        ctx.fillRect(poX - poleW / 2, cy, poleW, lpH);
+      }
+    } else {
+      var poleH = Math.max(0, groundY - (y + boxH));
+      if (poleH > 0.5) {
+        var pg = ctx.createLinearGradient(0, y + boxH, 0, y + boxH + poleH);
+        pg.addColorStop(0, 'rgba(0,255,174,.85)');
+        pg.addColorStop(1, 'rgba(0,255,174,.18)');
         ctx.fillStyle = pg;
         ctx.fillRect(cx - poleW / 2, y + boxH, poleW, poleH);
       }

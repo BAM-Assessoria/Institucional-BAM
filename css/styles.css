@@ -189,8 +189,11 @@ body.journey-on .road-stage{display:block}
    curto (rolagem de polegar é mais cara que scroll de mouse).
    ============================================================= */
 body.journey-m .road-journey{height:300vh}
+/* frase alinhada à ESQUERDA (como no PC), mas com o BLOCO centralizado no topo:
+   o wrap centra (text-align:center) o h1 encolhido (inline-block), e o h1 realinha
+   o conteúdo à esquerda. (display:table engolia os espaços entre as palavras.) */
 body.journey-m .road-pin .wrap{margin-left:auto;margin-right:auto;text-align:center;padding-top:clamp(96px,15vh,150px)}
-body.journey-m .road-pin h1{max-width:100%;font-size:clamp(38px,10.5vw,64px)}
+body.journey-m .road-pin h1{display:inline-block;text-align:left;max-width:100%;font-size:clamp(38px,10.5vw,64px)}
 body.journey-m .hero-chevsvg{height:clamp(34px,9vw,54px)}
 /* road-pin typography — mirrors .hero h1 rules without requiring .hero parent */
 .road-pin .wrap{position:relative;z-index:2;padding-top:clamp(110px,16vh,148px);margin-left:0;margin-right:auto}
