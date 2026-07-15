@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'sha256-gxmvl5BwA71zfBiZr2t+bNral5YVpzbGI/VxEGsEyZ8='; connect-src 'self'; form-action 'self' https://api.whatsapp.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'sha256-gxmvl5BwA71zfBiZr2t+bNral5YVpzbGI/VxEGsEyZ8='; connect-src 'self'; frame-src https://www.instagram.com; form-action 'self' https://api.whatsapp.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Campanhas Sob Medida | BAM Assessoria</title>
 <meta name="description" content="Campanhas de marketing pontuais para lançamentos, Black Friday, Natal e datas sazonais. Projetos sob medida para o momento do seu negócio, com foco em resultado.">
@@ -72,6 +72,48 @@
     <div class="fcta r up in d2" style="margin-top:26px"><a href="../contato.html" class="btn" data-hover><span>Quero esse serviço</span> <span class="ar">→</span></a></div>
   </div>
 </header>
+
+<!-- ============================================================
+     GALERIA DE CAMPANHAS — Reels do Instagram via iframe nativo (/embed).
+     Requer o "frame-src https://www.instagram.com" na CSP do <head> desta
+     página (já adicionado). loading="lazy" evita que os 6 vídeos carreguem
+     de uma vez e derrubem o PageSpeed inicial.
+
+     Para trocar/adicionar um vídeo: pegue o código da URL do post
+     (instagram.com/reel/CODIGO/) e monte o src como .../CODIGO/embed
+     — mantendo /reel/ ou /p/ conforme a URL original.
+     ============================================================ -->
+<section class="section" id="campanhas">
+  <div class="wrap">
+    <div class="shead"><span class="idx r up">Campanhas</span><h2 class="r up">Ações que já colocamos <span class="g">na rua</span></h2><p class="sub r up d1">Um recorte das campanhas sazonais e ativações que a BAM executou.</p></div>
+    <div class="reels">
+      <div class="reel r up">
+        <div class="reel-media"><iframe src="https://www.instagram.com/reel/DNqIDv4JxeV/embed" loading="lazy" scrolling="no" allowtransparency="true" title="Reel: Ação Hygge na Paulista"></iframe></div>
+        <div class="reel-cap">Ação Hygge na Paulista</div>
+      </div>
+      <div class="reel r up d1">
+        <div class="reel-media"><iframe src="https://www.instagram.com/reel/DSNF44AAk22/embed" loading="lazy" scrolling="no" allowtransparency="true" title="Reel: Ação Hygge na Prefeitura de São Paulo"></iframe></div>
+        <div class="reel-cap">Ação Hygge — Prefeitura de SP</div>
+      </div>
+      <div class="reel r up d2">
+        <div class="reel-media"><iframe src="https://www.instagram.com/reel/DVeERKWjvKk/embed" loading="lazy" scrolling="no" allowtransparency="true" title="Reel: BAM na Marmomac"></iframe></div>
+        <div class="reel-cap">BAM na Marmomac</div>
+      </div>
+      <div class="reel r up">
+        <div class="reel-media"><iframe src="https://www.instagram.com/p/DUQ1yyGEjdA/embed" loading="lazy" scrolling="no" allowtransparency="true" title="Reel: BAM na Mil Milhas"></iframe></div>
+        <div class="reel-cap">BAM na Mil Milhas</div>
+      </div>
+      <div class="reel r up d1">
+        <div class="reel-media"><iframe src="https://www.instagram.com/reel/DQmyaa_kn9I/embed" loading="lazy" scrolling="no" allowtransparency="true" title="Reel: BAM Finados (CPC)"></iframe></div>
+        <div class="reel-cap">BAM Finados (CPC)</div>
+      </div>
+      <div class="reel r up d2">
+        <div class="reel-media"><iframe src="https://www.instagram.com/reel/Dac8zPBD75x/embed" loading="lazy" scrolling="no" allowtransparency="true" title="Reel: BAM Freeport — Copa Coca-Cola"></iframe></div>
+        <div class="reel-cap">BAM Freeport — Copa Coca-Cola</div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section class="section">
   <div class="wrap">

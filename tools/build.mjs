@@ -31,7 +31,7 @@ const CASES = [
   { client: 'Hygge Games', year: '2024', metric: '+200%', title: 'Engajamento', desc: 'Crescimento no Instagram com conteúdo criativo, elevando a marca no cenário nacional.', sub: 'Marca internacional de jogos (origem escandinava)', logo: 'Hygge games.webp', photo: 'hygge.jpg' },
   { client: 'Prompt Serviços', year: '2024', metric: '+80%', title: 'Pedidos de orçamento', desc: 'Posicionamento como solução mais confiável em terceirização para síndicos e gestores.', sub: 'Terceirização de portaria e limpeza', logo: 'Prompt.webp', photo: 'prompt.jpg' },
   { client: 'Granitos Moredo', year: '2025', metric: '+20%', title: 'Novos clientes', desc: 'Posicionamento fortalecido e entrada consistente de clientes, com visão de longo prazo.', sub: 'Marmoraria de granitos e mármores desde 1959', logo: 'Granitos moredo.webp', photo: 'moredo.jpeg' },
-  { client: 'Novu', year: '2025', metric: 'ROI 50%', title: 'Retorno sobre investimento', desc: 'Com a nova estratégia, resultado expressivo em menos de um mês — o faturamento já superou o investimento.', sub: 'Parceira da BAM em estratégia e performance', logo: '', photo: 'novu.jpg' },
+  { client: 'Novu', year: '2025', metric: 'ROI 50%', title: 'Retorno sobre investimento', desc: 'Com a nova estratégia, resultado expressivo em menos de um mês — o faturamento já superou o investimento.', sub: 'Parceira da BAM em estratégia e performance', logo: '', photo: 'novu.jpg', aria: 'ROI de 50% em menos de dois meses' },
 ];
 const QUOTES = [
   { q: '“Procuramos a BAM para vender mais, mas <span class="g">recebemos muito mais</span>. Eles nos deram um direcionamento criativo que revitalizou nossa comunicação.”', name: 'Sofie Carmind', role: 'Gerente de Contas Internacional', company: 'Hygge Games', result: '<span class="g">+400%</span> de seguidores engajados', photo: 'hygge.jpg' },
@@ -117,11 +117,13 @@ const NAV = [
   ['inicio', 'Início', 'index.html'],
   ['sobre', 'Sobre', 'sobre.html'],
   ['servicos', 'Serviços', 'index.html#servicos'],
+  ['portfolio', 'Portfólio', 'portifolio.html'],
   ['blog', 'Blog', 'blog/index.html'],
   ['contato', 'Contato', 'contato.html'],
 ];
-function header(prefix, active) {
-  const links = NAV.map(([k, label, href], i) =>
+function header(prefix, active, portfolio = true) {
+  const items = portfolio ? NAV : NAV.filter(([k]) => k !== 'portfolio');
+  const links = items.map(([k, label, href], i) =>
     `<a href="${prefix}${href}" data-menu${k === active ? ' class="active"' : ''}>${label} <span>${String(i).padStart(2, '0')}</span></a>`
   ).join('\n      ');
   return `<header class="topbar" id="topbar">
@@ -161,8 +163,9 @@ function loader(prefix) {
 </div>`;
 }
 
-function footer(prefix, active) {
-  const nav = [['sobre', 'Sobre', 'sobre.html'], ['servicos', 'Serviços', 'index.html#servicos'], ['blog', 'Blog', 'blog/index.html'], ['contato', 'Contato', 'contato.html']]
+function footer(prefix, active, portfolio = true) {
+  const items = [['sobre', 'Sobre', 'sobre.html'], ['servicos', 'Serviços', 'index.html#servicos'], ['portfolio', 'Portfólio', 'portifolio.html'], ['blog', 'Blog', 'blog/index.html'], ['contato', 'Contato', 'contato.html']];
+  const nav = (portfolio ? items : items.filter(([k]) => k !== 'portfolio'))
     .map(([k, l, h]) => `<a href="${prefix}${h}"${k === active ? ' class="active"' : ''}>${l}</a>`).join('');
   return `<footer class="bigfoot">
   <span class="scene-edge"></span>
@@ -185,7 +188,7 @@ function waFloat() {
 </a>`;
 }
 
-function page({ prefix, bodyClass = '', title, desc, path, active, hasLoader = false, jsonLd, ogType, content, firebase = false, noindex = false, extraScripts = '' }) {
+function page({ prefix, bodyClass = '', title, desc, path, active, hasLoader = false, jsonLd, ogType, content, firebase = false, noindex = false, extraScripts = '', portfolio = true }) {
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -194,12 +197,12 @@ ${head({ prefix, title, desc, path, jsonLd, ogType, firebase, noindex })}
 <body${bodyClass ? ` class="${bodyClass}"` : ''}>
 <a class="skip-link" href="#main">Pular para o conteúdo</a>
 <div class="progress" id="progress" aria-hidden="true"></div>
-${hasLoader ? loader(prefix) + '\n' : ''}${header(prefix, active)}
+${hasLoader ? loader(prefix) + '\n' : ''}${header(prefix, active, portfolio)}
 <span id="top"></span>
 <main id="main">
 ${content}
 </main>
-${footer(prefix, active)}
+${footer(prefix, active, portfolio)}
 ${waFloat()}
 <script src="${prefix}js/main.js" defer></script>
 ${extraScripts}</body>
@@ -210,10 +213,20 @@ ${extraScripts}</body>
 /* ===================== conteúdo das páginas ===================== */
 const ICON = (prefix) => `${prefix}assets/svg/logo-icon.svg`;
 
+// Logos reais dos clientes na ordem da faixa (arquivos em assets/img/clients/).
+// Mantido aqui (e não em data/clients.json) para preservar a ordem curada e os nomes reais.
+const CLIENT_LOGOS = [
+  'Adrifer.webp', 'Atlas.webp', 'Biosensu.webp', 'Cemiterio cantareira.webp', 'Croasonho.webp',
+  'Eccho.webp', 'Elage.webp', 'Electro-tec.webp', 'Engenheiro murilo.webp', 'Gli Consórcios.webp',
+  'Grance.webp', 'Granitos moredo.webp', 'Habitech.webp', 'Hygge games.webp', 'Kontainers Construções.webp',
+  'MGl .webp', 'O que será.webp', 'Planet korea.webp', 'Promanage.webp', 'Prompt.webp',
+  'Solar café.webp', 'STS Logistica.webp', 'Tomazini.webp', 'Café sao francisco.webp',
+];
+
 function clientsWall(prefix) {
-  const img = (f) => `<img src="${prefix}assets/img/clients/${f}" alt="Cliente BAM" loading="lazy" decoding="async" height="42">`;
+  const img = (f) => `<img src="${prefix}assets/img/clients/${f}" alt="${escAttr(f.replace(/\.webp$/, '').trim())}" loading="lazy" decoding="async" height="42">`;
   // uma única faixa com todos os clientes (duplicada para o loop contínuo)
-  const row = clients.map(img).join('') + clients.map(img).join('');
+  const row = CLIENT_LOGOS.map(img).join('') + CLIENT_LOGOS.map(img).join('');
   return `<section class="flow clients">
   <span class="scene-edge"></span>
   <div class="wrap" style="margin-bottom:34px"><span class="tlabel r up">Clientes &amp; parcerias — marcas que crescem com a BAM</span></div>
@@ -221,28 +234,55 @@ function clientsWall(prefix) {
 </section>`;
 }
 
-const ROAD_FRAMES = 140; // Fase 1: frames placeholder (assets/road/)
-
 function buildHome() {
   const prefix = '';
-  const content = `<!-- A ESTRADA (fundo cinematográfico em scroll) -->
+  const content = `<!-- CANVAS ESTRADA (desktop) -->
 <div class="road-stage" aria-hidden="true">
-  <img class="road-poster" src="${prefix}assets/road/poster.webp" alt="" width="1600" height="900" fetchpriority="high" decoding="async">
-  <canvas id="roadCanvas" data-frames="${ROAD_FRAMES}" data-src="${prefix}assets/road/" role="presentation"></canvas>
+  <canvas id="roadCanvas"></canvas>
   <div class="road-scrim"></div>
 </div>
 
-<!-- HERO / ABERTURA DA JORNADA (estrada pinada) -->
+<!-- HERO + ESTRADA 3D -->
 <section class="road-journey" id="roadTrack">
-  <div class="road-pin hero">
-    <div class="road-sign" id="roadSign" aria-hidden="true">
-      <div class="road-sign-box"><span class="road-sign-word" id="roadSignWord">Juntos</span></div>
-      <div class="road-sign-pole"></div>
-    </div>
+  <div class="road-pin">
     <div class="wrap">
-      <h1 class="hero-slogan"><span class="hw">Juntos</span> <span class="hw">vamos</span><br><span class="hw">mais</span> <span class="hw g">longe</span><img src="${ICON(prefix)}" alt="" class="hero-chevsvg hw" aria-hidden="true"></h1>
-      <div class="hero-bottom">
-        <div class="scroll-ind">Role <i></i></div>
+      <h1>
+        <span class="hw">Juntos</span> <span class="hw">vamos</span><br>
+        <span class="hw">mais</span> <span class="hw g">longe</span><img src="${ICON(prefix)}" alt="" class="hw hero-chevsvg" aria-hidden="true">
+      </h1>
+      <!-- Outdoor da estrada: carrega a palavra da vez. Na última placa o conteúdo
+           é a logo (o mesmo chevron que fecha o slogan), não texto. -->
+      <div id="roadSign" class="road-sign">
+        <div id="roadSignBox" class="road-sign-box">
+          <span id="roadSignWord" class="road-sign-word"></span>
+          <img id="roadSignLogo" class="road-sign-logo" src="${ICON(prefix)}" alt="" aria-hidden="true" hidden>
+        </div>
+        <div class="road-sign-pole"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3D PORTFOLIO DECK -->
+<section class="deck-journey" id="deckTrack">
+  <div class="deck-pin">
+    <div class="wrap deck-head-wrap">
+      <span class="idx tlabel r up">02 — Portfolio</span>
+      <h2 class="r up d1" style="font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:clamp(24px,3.6vw,52px);line-height:1.06;margin-top:10px">Cases que <span class="g">falam por si.</span></h2>
+      <a href="${prefix}portifolio.html" class="btn ghost r up d2" data-hover style="margin-top:18px"><span>Ver portfólio completo</span> <span class="ar">→</span></a>
+    </div>
+    <div class="deck-scene">
+      <div class="deck-group" id="deckGroup">
+        <div class="deck-card"><img src="${prefix}portifolio/web/kontainers.webp" alt="Kontainers — Logística" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Kontainers</div><div class="deck-card-metric">+60% Ticket médio</div></div></div>
+        <div class="deck-card"><img src="${prefix}portifolio/web/jogo-verao.webp" alt="Hygge Games — Jogo de Verão" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Hygge Games</div><div class="deck-card-metric">+200% Engajamento</div></div></div>
+        <div class="deck-card"><img src="${prefix}portifolio/web/experiencia-do-cliente.webp" alt="FreePort — Experiência do Cliente" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">FreePort</div><div class="deck-card-metric">Varejo &amp; alimentação</div></div></div>
+        <div class="deck-card"><img src="${prefix}portifolio/web/o-futuro-comeca.webp" alt="Parque da Cantareira — O Futuro Começa" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Pq. da Cantareira</div><div class="deck-card-metric">+40% Leads</div></div></div>
+        <div class="deck-card"><img src="${prefix}portifolio/web/graos-que-geram-renda.webp" alt="Granitos Moredo — Grãos que Geram Renda" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Granitos Moredo</div><div class="deck-card-metric">+20% Novos clientes</div></div></div>
+        <div class="deck-card"><img src="${prefix}portifolio/web/escopo-claro.webp" alt="Prompt Serviços — Escopo Claro" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Prompt Serviços</div><div class="deck-card-metric">+80% Orçamentos</div></div></div>
+        <div class="deck-card"><img src="${prefix}portifolio/web/coca-cola-segunda-guerra.webp" alt="Coca-Cola na Segunda Guerra — Conteúdo editorial" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Coca-Cola</div><div class="deck-card-metric">Conteúdo editorial</div></div></div>
+        <div class="deck-card"><img src="${prefix}portifolio/web/cada-homenagem.webp" alt="Cada Homenagem — Campanha sazonal" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Cada Homenagem</div><div class="deck-card-metric">Campanha sazonal</div></div></div>
+        <div class="deck-card"><img src="${prefix}portifolio/web/variedade-e-frescor.webp" alt="Variedade e Frescor — Varejo" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Variedade &amp; Frescor</div><div class="deck-card-metric">Varejo &amp; alimentação</div></div></div>
+        <div class="deck-card"><img src="${prefix}portifolio/web/espaco-acolhimento-paz.webp" alt="Espaço de Acolhimento e Paz — Branding" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Acolhimento &amp; Paz</div><div class="deck-card-metric">Branding</div></div></div>
       </div>
     </div>
   </div>
@@ -256,12 +296,11 @@ function buildHome() {
   <div class="wrap">
     <div class="shead"><span class="idx r up">02 — Cases</span><h2 class="r up">Resultados<br><span class="g">em movimento.</span></h2><p class="sub r up d1">Empresas que decidiram tratar o marketing como investimento.</p></div>
     <div class="case-grid">
-      ${CASES.map((c, i) => `<article class="case-card r up${i % 3 === 1 ? ' d1' : i % 3 === 2 ? ' d2' : ''}" tabindex="0" aria-label="${escAttr(c.client)} — ${escAttr(c.metric)} ${escAttr(c.title)}">
+      ${CASES.map((c, i) => `<article class="case-card r up${i % 3 === 1 ? ' d1' : i % 3 === 2 ? ' d2' : ''}" tabindex="0" aria-label="${escAttr(c.client)} — ${c.aria ? escAttr(c.aria) : `${escAttr(c.metric)} ${escAttr(c.title)}`}">
         <div class="case-flip">
           <div class="case-face case-front">
             <div class="case-front-top">
-              ${c.logo ? `<img class="case-logo" src="${prefix}assets/img/clients/${c.logo}" alt="${escAttr(c.client)}" loading="lazy" decoding="async" height="56">` : ''}
-              ${c.photo ? `<img class="case-avatar" src="${prefix}depoimentos/${c.photo}" alt="Depoimento — ${escAttr(c.client)}" loading="lazy" decoding="async">` : ''}
+              ${c.logo ? `<img class="case-logo" src="${prefix}assets/img/clients/${c.logo}" alt="${escAttr(c.client)}" loading="lazy" decoding="async" height="56">\n              ` : ''}${c.photo ? `<img class="case-avatar" src="${prefix}depoimentos/${c.photo}" alt="Depoimento — ${escAttr(c.client)}" loading="lazy" decoding="async">` : ''}
             </div>
             <span class="case-client">${esc(c.client)}</span>
             ${c.sub ? `<span class="case-sub">${esc(c.sub)}</span>` : ''}
@@ -279,7 +318,12 @@ function buildHome() {
       </article>`).join('\n      ')}
     </div>
     <div class="case-quotes">
-      ${QUOTES.map((q) => `<figure class="case-quote r up">${q.photo ? `<img class="quote-photo" src="${prefix}depoimentos/${q.photo}" alt="${escAttr(q.name + ' — ' + q.company)}" loading="lazy" decoding="async">` : ''}<blockquote>${q.q}</blockquote>${q.result ? `<div class="quote-result">${q.result}</div>` : ''}<figcaption>${esc(q.name)} — ${esc(q.role)} · ${esc(q.company)}</figcaption></figure>`).join('\n      ')}
+      ${QUOTES.map((q) => `<figure class="case-quote r up">
+        <img class="quote-photo" src="${prefix}depoimentos/${q.photo}" alt="${escAttr(q.name + ' — ' + q.company)}" loading="lazy" decoding="async">
+        <blockquote>${q.q}</blockquote>
+        <div class="quote-result">${q.result}</div>
+        <figcaption>${esc(q.name)} — ${esc(q.role)} · ${esc(q.company)}</figcaption>
+      </figure>`).join('\n      ')}
     </div>
     <div class="case-next r up">
       <div><span class="tlabel">Próximo case</span><h3>Seja o <span class="g">próximo.</span></h3><p>O seu resultado é o nosso próximo case.</p></div>
@@ -306,12 +350,12 @@ function buildHome() {
   <div class="wrap">
     <div class="shead"><span class="idx r up">03.1 — Capacidades</span><h2 class="r up">Não fazemos posts.<br>Desenhamos <span class="g">planos de negócio.</span></h2><p class="sub r up d1">Passe o mouse para ver o que cada frente entrega.</p></div>
     <div class="caps">
-      <div class="cap r up d1" data-hover><span class="cnum">S—01</span><div><h3>Tráfego Pago</h3><div class="out">Google, Meta, TikTok e LinkedIn Ads. Campanhas que reduzem o custo por venda e maximizam o retorno.</div></div><span class="cdef">Ads / Performance</span></div>
-      <div class="cap r up d2" data-hover><span class="cnum">S—02</span><div><h3>Landing Pages</h3><div class="out">Páginas desenhadas para converter. Design persuasivo + copy de vendas que geram leads qualificados.</div></div><span class="cdef">Conversão</span></div>
-      <div class="cap r up d3" data-hover><span class="cnum">S—03</span><div><h3>SEO</h3><div class="out">Topo do Google de forma orgânica. Autoridade e um fluxo de clientes que não depende só de anúncios.</div></div><span class="cdef">Orgânico</span></div>
-      <div class="cap r up d1" data-hover><span class="cnum">S—04</span><div><h3>Design &amp; Identidade</h3><div class="out">Sua marca precisa transmitir confiança antes de vender. Identidade e peças que valorizam o produto.</div></div><span class="cdef">Branding</span></div>
-      <div class="cap r up d2" data-hover><span class="cnum">S—05</span><div><h3>Redes Sociais</h3><div class="out">Muito além de likes: relacionamento, autoridade e uma comunidade que compra de você de novo.</div></div><span class="cdef">Social</span></div>
-      <div class="cap r up d3" data-hover><span class="cnum">S—06</span><div><h3>Campanhas Sob Medida</h3><div class="out">Lançamentos, datas sazonais e ações de branding. Projetos para o momento específico do negócio.</div></div><span class="cdef">Projetos</span></div>
+      <a class="cap r up d1" href="${prefix}servicos/trafego-pago.html" data-hover><span class="cnum">S—01</span><div><h3>Tráfego Pago</h3><div class="out">Google, Meta, TikTok e LinkedIn Ads. Campanhas que reduzem o custo por venda e maximizam o retorno.</div></div><span class="cdef">Ads / Performance</span></a>
+      <a class="cap r up d2" href="${prefix}servicos/landing-pages.html" data-hover><span class="cnum">S—02</span><div><h3>Landing Pages</h3><div class="out">Páginas desenhadas para converter. Design persuasivo + copy de vendas que geram leads qualificados.</div></div><span class="cdef">Conversão</span></a>
+      <a class="cap r up d3" href="${prefix}servicos/seo.html" data-hover><span class="cnum">S—03</span><div><h3>SEO</h3><div class="out">Topo do Google de forma orgânica. Autoridade e um fluxo de clientes que não depende só de anúncios.</div></div><span class="cdef">Orgânico</span></a>
+      <a class="cap r up d1" href="${prefix}servicos/design-identidade.html" data-hover><span class="cnum">S—04</span><div><h3>Design &amp; Identidade</h3><div class="out">Sua marca precisa transmitir confiança antes de vender. Identidade e peças que valorizam o produto.</div></div><span class="cdef">Branding</span></a>
+      <a class="cap r up d2" href="${prefix}servicos/redes-sociais.html" data-hover><span class="cnum">S—05</span><div><h3>Redes Sociais</h3><div class="out">Muito além de likes: relacionamento, autoridade e uma comunidade que compra de você de novo.</div></div><span class="cdef">Social</span></a>
+      <a class="cap r up d3" href="${prefix}servicos/campanhas-sob-medida.html" data-hover><span class="cnum">S—06</span><div><h3>Campanhas Sob Medida</h3><div class="out">Lançamentos, datas sazonais e ações de branding. Projetos para o momento específico do negócio.</div></div><span class="cdef">Projetos</span></a>
     </div>
   </div>
 </section>
@@ -324,7 +368,7 @@ function buildHome() {
     <div class="feature r scale">
       <span class="tlabel">App exclusivo · em tempo real</span>
       <h2>Transparência <span class="g">total.</span></h2>
-      <p>Confiança se constrói com transparência. No nosso aplicativo exclusivo você acompanha 24/7 quanto foi investido, em quê e qual retorno cada campanha gera. Sem relatórios complicados, sem espera.</p>
+      <p>Confiança se constrói com transparência. No nosso aplicativo exclusivo você acompanha 24/7 quanto foi investido, em quê e qual retorno cada campanha gera. Sem espera.</p>
       <div class="chips"><span>Investimento ao vivo</span><span>Retorno por campanha</span><span>Sem relatório confuso</span><span>24/7</span></div>
       <div class="fcta"><a href="#contato" class="btn" data-hover><span>Quero essa visibilidade</span> <span class="ar">→</span></a></div>
     </div>
@@ -357,12 +401,96 @@ ${clientsWall(prefix)}
       </form>
     </div>
   </div>
+</section>
+
+<!-- ===== BLOG (computador / janela do navegador) — após o formulário ===== -->
+<section class="flow blogwide" id="blog-destaque">
+  <span class="scene-edge"></span>
+  <div class="wrap">
+    <div class="shead">
+      <span class="idx r up">04 — Do blog</span>
+      <h2 class="r up">Quem entende,<br><span class="g">compartilha.</span></h2>
+      <p class="sub r up d1">Estratégia, dados e bastidores de marketing — direto da nossa redação.</p>
+    </div>
+
+    <!-- janela do navegador -->
+    <div class="blogwin r up d1" data-hover>
+      <!-- chrome / barra do navegador -->
+      <div class="blogwin-bar">
+        <span class="bw-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="bw-addr">
+          <svg class="bw-lock" width="11" height="11" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor"/></svg>
+          <span class="bw-addr-txt">blog.bamassessoria.com</span>
+          <i class="bw-live" aria-hidden="true"></i>
+        </span>
+        <a class="bw-tabgo" href="${prefix}blog/index.html">Ver tudo →</a>
+      </div>
+
+      <!-- conteúdo da janela -->
+      <div class="blogwin-body">
+        <div class="cgrid" aria-hidden="true"></div>
+
+        <!-- DESTAQUE = post mais novo -->
+        <a class="bw-feature" href="${prefix}blog/instagram-seo-respondemos-as-perguntas-mais-frequentes-e-montamos-um-checklist-final.html" data-hover>
+          <span class="bw-cover">
+            <img src="${prefix}assets/img/blog/instagram-seo-respondemos-as-perguntas-mais-frequentes-e-montamos-um-checklist-final.webp" alt="Instagram + SEO: checklist final" loading="lazy" decoding="async">
+            <span class="bw-badge">Destaque</span>
+          </span>
+          <span class="bw-fbody">
+            <span class="bw-meta"><span class="pcat">Blog</span><span class="date">26 Ago 2025</span></span>
+            <h3>Instagram + SEO: Perguntas Frequentes e Checklist Final</h3>
+            <p>Encerrando a série sobre indexação do Instagram no Google: as dúvidas mais comuns e um checklist prático para ser encontrado pelos buscadores.</p>
+            <span class="bw-go">Ler artigo <span class="ar">→</span></span>
+          </span>
+        </a>
+
+        <!-- ÚLTIMAS = próximos posts mais recentes -->
+        <div class="bw-list">
+          <span class="bw-list-label">Últimas no blog</span>
+
+          <a class="bw-row" href="${prefix}blog/seus-reels-no-google-o-guia-completo-para-criar-conteudo-que-o-algoritmo-ama-e-indexa.html" data-hover>
+            <span class="bw-no">02</span>
+            <span class="bw-rthumb"><img src="${prefix}assets/img/blog/seus-reels-no-google-o-guia-completo-para-criar-conteudo-que-o-algoritmo-ama-e-indexa.webp" alt="" loading="lazy" decoding="async"></span>
+            <span class="bw-rtext"><span class="date">19 Ago 2025</span><h4>Seus Reels no Google: o guia completo do algoritmo</h4></span>
+            <span class="bw-chev" aria-hidden="true">›</span>
+          </a>
+
+          <a class="bw-row" href="${prefix}blog/otimizacao-de-instagram-para-google-5-estrategias-de-seo-alem-das-hashtags.html" data-hover>
+            <span class="bw-no">03</span>
+            <span class="bw-rthumb"><img src="${prefix}assets/img/blog/otimizacao-de-instagram-para-google-5-estrategias-de-seo-alem-das-hashtags.webp" alt="" loading="lazy" decoding="async"></span>
+            <span class="bw-rtext"><span class="date">12 Ago 2025</span><h4>Instagram para Google: 5 estratégias de SEO além das hashtags</h4></span>
+            <span class="bw-chev" aria-hidden="true">›</span>
+          </a>
+
+          <a class="bw-row" href="${prefix}blog/a-indexacao-do-instagram-pelo-google-uma-nova-fronteira-para-a-visibilidade-online.html" data-hover>
+            <span class="bw-no">04</span>
+            <span class="bw-rthumb"><img src="${prefix}assets/img/blog/a-indexacao-do-instagram-pelo-google-uma-nova-fronteira-para-a-visibilidade-online.webp" alt="" loading="lazy" decoding="async"></span>
+            <span class="bw-rtext"><span class="date">05 Ago 2025</span><h4>A indexação do Instagram pelo Google: nova fronteira</h4></span>
+            <span class="bw-chev" aria-hidden="true">›</span>
+          </a>
+
+          <a class="bw-row" href="${prefix}blog/marketing-de-afiliados-o-que-e-e-como-implementar.html" data-hover>
+            <span class="bw-no">05</span>
+            <span class="bw-rthumb"><img src="${prefix}assets/img/blog/marketing-de-afiliados-o-que-e-e-como-implementar.webp" alt="" loading="lazy" decoding="async"></span>
+            <span class="bw-rtext"><span class="date">24 Jun 2025</span><h4>Marketing de Afiliados: o que é e como implementar</h4></span>
+            <span class="bw-chev" aria-hidden="true">›</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- rodapé da janela -->
+      <div class="blogwin-foot">
+        <span class="bw-crumb">~/blog · novos artigos toda semana</span>
+        <a class="btn" href="${prefix}blog/index.html" data-hover><span>Ler o blog</span> <span class="ar">→</span></a>
+      </div>
+    </div>
+  </div>
 </section>`;
   return page({
     prefix, bodyClass: 'home', title: SITE.name + ' | Inteligência de Crescimento Digital',
     desc: 'A BAM é a assessoria de marketing de performance que trata o seu marketing como investimento. Estratégia, tráfego pago, SEO, social e dados em tempo real.',
     path: '/', active: 'inicio', hasLoader: true, content,
-    extraScripts: `<script src="${prefix}js/road-scrubber.js" defer></script>\n`,
+    extraScripts: `<script src="${prefix}js/road-scrubber.js" defer></script>\n<script src="${prefix}js/deck.js" defer></script>\n`,
   });
 }
 
@@ -459,7 +587,6 @@ function buildSobre() {
 function buildContato() {
   const prefix = '';
   const wa = `https://api.whatsapp.com/send/?phone=${SITE.whats}&text=${encodeURIComponent('Olá, quero falar com a BAM')}`;
-  const maps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('Rua Aviador Gil Guilherme 38, Bloco 2, São Paulo SP');
   const jsonLd = JSON.stringify({
     '@context': 'https://schema.org', '@type': 'ContactPage',
     name: 'Contato — ' + SITE.name, url: SITE.url + '/contato.html',
@@ -489,7 +616,6 @@ function buildContato() {
       <a class="channel r up d1" href="${wa}" target="_blank" rel="noopener noreferrer" data-hover><span class="cnum">01 — WhatsApp</span><h3>WhatsApp</h3><p>O canal mais rápido. Fale agora com o time comercial.</p><span class="val">Abrir conversa <span class="ar">→</span></span></a>
       <a class="channel r up d2" href="mailto:${SITE.email}" data-hover><span class="cnum">02 — E-mail</span><h3>E-mail</h3><p>Para propostas, parcerias e assuntos comerciais.</p><span class="val">${SITE.email} <span class="ar">→</span></span></a>
       <a class="channel r up d3" href="tel:${SITE.tel}" data-hover><span class="cnum">03 — Telefone</span><h3>Telefone</h3><p>Prefere ligar? Estamos no horário comercial.</p><span class="val">${SITE.telDisplay} <span class="ar">→</span></span></a>
-      <a class="channel r up d1" href="${maps}" target="_blank" rel="noopener noreferrer" data-hover><span class="cnum">04 — Endereço</span><h3>Visite-nos</h3><p>${SITE.addr}</p><span class="val">Ver no mapa <span class="ar">→</span></span></a>
     </div>
   </div>
 </section>
@@ -707,7 +833,7 @@ ${p.bodyHtml}
   return page({
     prefix, title: p.title + ' | Blog BAM Assessoria',
     desc: p.excerpt || ('Artigo do blog da BAM Assessoria: ' + p.title),
-    path: '/blog/' + p.slug + '.html', active: 'blog', ogType: 'article', jsonLd, content,
+    path: '/blog/' + p.slug + '.html', active: 'blog', ogType: 'article', jsonLd, content, portfolio: false,
   });
 }
 
@@ -748,7 +874,7 @@ function buildPostViewer() {
     prefix, title: 'Artigo | Blog BAM Assessoria',
     desc: 'Artigo do blog da BAM Assessoria em Marketing.',
     path: '/blog/post.html', active: 'blog', ogType: 'article',
-    firebase: true, noindex: true, content,
+    firebase: true, noindex: true, content, portfolio: false,
     extraScripts: `<script type="module" src="${prefix}js/post-view.js"></script>\n`,
   });
 }
@@ -772,17 +898,23 @@ if (posts.length) {
   });
 }
 // ---- sitemap.xml + robots.txt ----
-const today = new Date().toISOString().slice(0, 10);
+// Datas de lastmod fixas (última revisão real de cada página). Portfólio e as
+// páginas de serviços não são geradas por este build, mas são incluídas no
+// sitemap para não regredir o que já está no ar.
+const REV = '2026-06-16';
 const urls = [
-  { loc: '/', lastmod: today, prio: '1.0' },
-  { loc: '/sobre.html', lastmod: today, prio: '0.8' },
-  { loc: '/contato.html', lastmod: today, prio: '0.8' },
-  { loc: '/privacidade.html', lastmod: today, prio: '0.3' },
+  { loc: '/', lastmod: REV, prio: '1.0' },
+  { loc: '/sobre.html', lastmod: REV, prio: '0.8' },
+  { loc: '/contato.html', lastmod: REV, prio: '0.8' },
+  { loc: '/portifolio.html', lastmod: '2026-06-17', prio: '0.9' },
+  { loc: '/privacidade.html', lastmod: REV, prio: '0.3' },
 ];
 if (posts.length) {
-  urls.push({ loc: '/blog/index.html', lastmod: today, prio: '0.7' });
-  posts.forEach(p => urls.push({ loc: '/blog/' + p.slug + '.html', lastmod: p.date || today, prio: '0.6' }));
+  urls.push({ loc: '/blog/index.html', lastmod: REV, prio: '0.7' });
+  posts.forEach(p => urls.push({ loc: '/blog/' + p.slug + '.html', lastmod: p.date || REV, prio: '0.6' }));
 }
+['trafego-pago', 'landing-pages', 'seo', 'design-identidade', 'redes-sociais', 'campanhas-sob-medida']
+  .forEach(s => urls.push({ loc: '/servicos/' + s + '.html', lastmod: '2026-06-24', prio: '0.8' }));
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(u => `  <url><loc>${SITE.url}${u.loc}</loc><lastmod>${u.lastmod}</lastmod><priority>${u.prio}</priority></url>`).join('\n')}
