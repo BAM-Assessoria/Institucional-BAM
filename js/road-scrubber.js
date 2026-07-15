@@ -57,13 +57,18 @@
     rise: 5.5,        // altura ganha a cada "riseRun" de subida (mundo)
     riseStart: 62,    // z onde a ladeira começa (antes disso a pista é plana, sob a câmera)
     riseRun: 26,      // 1ª parte da subida; depois a estrada SEGUE subindo (ladeira longa, sem fim à vista)
+    shiftFrac: 0.094, // desloca SÓ a pista p/ a direita (fração de W) — tira a estrada de baixo do outdoor da logo
     focal: 0,
-    horizon: 0
+    horizon: 0,
+    shift: 0          // shiftFrac × W, calculado no resize (px de tela)
   };
   var GREEN = '#00FFAE';
 
-  // debug: ?roadc= sobrescreve a curvatura para calibrar visualmente (inerte sem o parâmetro)
-  (function () { var m = /[?&]roadc=(-?[0-9.]+)/.exec(location.search); if (m) ROAD.curve = parseFloat(m[1]); })();
+  // debug: ?roadc= sobrescreve a curvatura; ?roads= sobrescreve o shift lateral da pista (px) p/ calibrar
+  (function () {
+    var m = /[?&]roadc=(-?[0-9.]+)/.exec(location.search); if (m) ROAD.curve = parseFloat(m[1]);
+    var s = /[?&]roads=(-?[0-9.]+)/.exec(location.search); if (s) ROAD._shiftPx = parseFloat(s[1]);
+  })();
 
   function resize() {
     W = window.innerWidth; H = window.innerHeight;
@@ -72,6 +77,7 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ROAD.focal = H * 0.80;
     ROAD.horizon = H * 0.38;
+    ROAD.shift = (typeof ROAD._shiftPx === 'number') ? ROAD._shiftPx : Math.round(W * ROAD.shiftFrac);
   }
 
   var camZ = 0, buildFront = 0, current = 0, target = 0, running = false;
@@ -229,8 +235,16 @@
   }
 
   function draw() {
+    // A PISTA desloca lateralmente (ROAD.shift), mas os OUTDOORS não: eles ficam
+    // ancorados nas vagas do slogan (DOM, via heroUpdate). Assim a estrada sai de
+    // baixo do outdoor da logo sem desalinhar o efeito placa→palavra.
+    ctx.fillStyle = '#040605';
+    ctx.fillRect(0, 0, W, H);           // limpa a tela inteira (antes do translate)
+    ctx.save();
+    ctx.translate(ROAD.shift, 0);
     background();
     drawLane(MAIN);
+    ctx.restore();
     heroUpdate(target);
   }
 
@@ -265,7 +279,12 @@
   var D_FAR = 16, D_PASS = 3.2, D_EXIT = 1.05;
   var PASS = 0.52;
   var FADE = 0.66;
-  var REVEAL = 0.16;   // largura (em prj) do surgimento da palavra, a partir de PASS
+  // Surgimento da palavra sincronizado com a passagem: ele TERMINA no instante em que a
+  // placa cobre a vaga (pi = PASS), começando REVEAL_LEAD antes. Assim a palavra já está
+  // plena no momento da passagem — e não "logo depois". (Antes o surgimento começava em
+  // PASS e levava REVEAL para completar, o que lia como um atraso.)
+  var REVEAL = 0.14;       // duração (em prj) do surgimento da palavra
+  var REVEAL_LEAD = 0.12;  // quanto do surgimento acontece ANTES da passagem (≈REVEAL → plena no pass)
   // A escala é ancorada no CONTEÚDO da placa (a palavra/logo impressa), não na moldura:
   // no instante da passagem a palavra DENTRO da placa tem exatamente a largura da vaga
   // no slogan (× COVER). Assim, quando a placa "solta" a palavra, ela assenta no mesmo
@@ -338,8 +357,8 @@
     // vaga dela (prj ≥ PASS) — é o texto que estava na placa que "fica para trás".
     for (var i = 0; i < heroWords.length; i++) {
       var pi  = (p - SEG[i][0]) / (SEG[i][1] - SEG[i][0]);
-      var rev = smooth(clamp01((pi - PASS) / REVEAL));
-      heroWords[i].style.transform = 'scale(' + (0.88 + 0.12 * rev).toFixed(3) + ')';
+      var rev = smooth(clamp01((pi - (PASS - REVEAL_LEAD)) / REVEAL));
+      heroWords[i].style.transform = 'scale(' + (0.9 + 0.1 * rev).toFixed(3) + ')';
       heroWords[i].style.opacity   = rev.toFixed(3);
     }
 
@@ -354,10 +373,13 @@
     var prj = clamp01((p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]));
     var sg  = signs[j];
 
-    // distância: longe → cobre a vaga (D_PASS) → continua vindo e sai de cena (D_EXIT)
+    // distância: longe → cobre a vaga (D_PASS) → continua vindo e sai de cena (D_EXIT).
+    // Na saída uso ease-OUT (t*(2−t)): a placa DESCOBRE a vaga rápido logo após passar,
+    // então a palavra (já plena no pass) aparece em sincronia, sem esperar a placa varrer.
+    var te = (prj - PASS) / (1 - PASS);
     var dist = prj <= PASS
       ? lerp(D_FAR, D_PASS, smooth(prj / PASS))
-      : lerp(D_PASS, D_EXIT, (prj - PASS) / (1 - PASS));
+      : lerp(D_PASS, D_EXIT, te * (2 - te));
 
     var pt = project(sg.x, sg.y, camZ + dist);
     // escala em perspectiva ancorada na passagem: em D_PASS a placa cobre a palavra
