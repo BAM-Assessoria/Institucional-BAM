@@ -248,7 +248,8 @@ function buildHome() {
     <div class="wrap">
       <h1>
         <span class="hw">Juntos</span> <span class="hw">vamos</span><br>
-        <span class="hw">mais</span> <span class="hw g">longe</span><img src="${ICON(prefix)}" alt="" class="hw hero-chevsvg" aria-hidden="true">
+        <span class="hw">mais</span> <span class="hw g">longe</span><br>
+        <img src="${ICON(prefix)}" alt="" class="hw hero-chevsvg" aria-hidden="true">
       </h1>
       <!-- Outdoor da estrada: carrega a palavra da vez. Na última placa o conteúdo
            é a logo (o mesmo chevron que fecha o slogan), não texto. -->

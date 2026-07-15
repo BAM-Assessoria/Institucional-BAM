@@ -57,7 +57,7 @@
     rise: 5.5,        // altura ganha a cada "riseRun" de subida (mundo)
     riseStart: 62,    // z onde a ladeira começa (antes disso a pista é plana, sob a câmera)
     riseRun: 26,      // 1ª parte da subida; depois a estrada SEGUE subindo (ladeira longa, sem fim à vista)
-    shiftFrac: 0.094, // desloca SÓ a pista p/ a direita (fração de W) — tira a estrada de baixo do outdoor da logo
+    shiftFrac: 0,     // desloca SÓ a pista lateralmente (fração de W). 0 = centralizada: a logo saiu de baixo da pista indo p/ a própria linha, então a estrada volta ao centro e os outdoors seguem o fluxo dela
     focal: 0,
     horizon: 0,
     shift: 0          // shiftFrac × W, calculado no resize (px de tela)
@@ -381,7 +381,15 @@
       ? lerp(D_FAR, D_PASS, smooth(prj / PASS))
       : lerp(D_PASS, D_EXIT, te * (2 - te));
 
-    var pt = project(sg.x, sg.y, camZ + dist);
+    // O outdoor VEM NO FLUXO DA ESTRADA (não num ângulo próprio): recebe a MESMA curva
+    // lateral e a MESMA subida da pista, medidas em relação ao instante da passagem —
+    // então ao longe ele acompanha a curva/ladeira da estrada e, ao chegar em D_PASS,
+    // os termos zeram e ele assenta exatamente na vaga da palavra.
+    var z  = camZ + dist;
+    var zp = camZ + D_PASS;
+    var roadCx = curveOffset(z) - curveOffset(zp);   // segue a curva da estrada
+    var roadRy = roadRise(z)   - roadRise(zp);        // segue a subida da estrada
+    var pt = project(sg.x + roadCx, sg.y + roadRy, z);
     // escala em perspectiva ancorada na passagem: em D_PASS a placa cobre a palavra
     var scale = sg.scale * (D_PASS / dist);
     var op = smooth(clamp01(prj / 0.14)) * (1 - smooth(clamp01((prj - FADE) / (1 - FADE))));
