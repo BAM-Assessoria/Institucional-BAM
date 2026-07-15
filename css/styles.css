@@ -200,12 +200,13 @@ body.journey-m .hero-chevsvg{height:clamp(34px,9vw,54px)}
 .road-pin h1 .g{color:var(--green)}
 .road-pin h1 .hw{display:inline-block;opacity:0;will-change:transform,opacity;transform-origin:50% 50%}
 .road-pin h1 .hw.show{opacity:1;transform:none}
-/* Desktop: o slogan desce até a faixa que a placa varre (a placa nasce no horizonte
-   e desce/cresce até ~57% da altura da tela). Assim ela passa POR CIMA das letras,
-   no acostamento esquerdo, deixando cada palavra materializada ao passar. */
+/* Desktop: o slogan fica na faixa que a placa varre, mas ACIMA da linha do chão da
+   estrada na passagem — senão a caixa da última placa (a logo, linha 3) encosta no
+   chão e o outdoor fica sem poste. O 26vh (era 33vh) sobe o conjunto o suficiente
+   para todas as placas pousarem com poste visível. */
 @media(min-width:1025px){
   .road-pin h1{max-width:64%}
-  .road-pin .wrap{padding-top:clamp(150px,33vh,360px)}
+  .road-pin .wrap{padding-top:clamp(120px,26vh,290px)}
 }
 
 /* marquee */
