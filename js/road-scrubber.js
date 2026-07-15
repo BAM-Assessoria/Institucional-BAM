@@ -77,7 +77,12 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ROAD.focal = H * 0.80;
     ROAD.horizon = H * 0.38;
-    ROAD.shift = (typeof ROAD._shiftPx === 'number') ? ROAD._shiftPx : Math.round(W * ROAD.shiftFrac);
+    // shift BASE (estético). O shift efetivo pode ser MAIOR: heroMeasure() o eleva até
+    // a pista ficar fora da área dos outdoors — a largura da pista em px escala com a
+    // ALTURA da tela (focal = H·0.8) enquanto o slogan escala com a LARGURA, então em
+    // janelas estreitas o desvio fixo não bastava e a placa caía no meio da estrada.
+    ROAD.shiftBase = (typeof ROAD._shiftPx === 'number') ? ROAD._shiftPx : Math.round(W * ROAD.shiftFrac);
+    ROAD.shift = ROAD.shiftBase;
   }
 
   var camZ = 0, buildFront = 0, current = 0, target = 0, running = false;
@@ -351,6 +356,7 @@
       return {
         x: (tx - W / 2) / sPass,
         y: ROAD.camH - (ty - ROAD.horizon) / sPass,
+        slotX: tx, slotY: ty,            // vaga em px de tela (p/ o teste pista×placa)
         targetInnerW: r.width * COVER,   // largura on-screen do CONTEÚDO na passagem (× COVER da vaga)
         innerW0: innerW,                 // largura do conteúdo na medida CSS (p/ derivar a escala)
         boxWR: boxW0 / innerW,           // caixa relativa à largura do conteúdo (preserva o padding)
@@ -361,6 +367,40 @@
       };
     });
     if (signEl) signEl.style.opacity = '0';   // a placa DOM fica oculta: agora é canvas
+    fitShiftToSigns();
+  }
+
+  // Borda ESQUERDA da pista (sem shift) na linha y da tela, com a pista plana — que é
+  // o caso em todo o trecho em que há outdoors ativos (a subida começa em riseStart,
+  // além do alcance da câmera durante as placas). Acima do horizonte a pista converge
+  // para o ponto de fuga; o clamp de dy cobre isso.
+  function roadEdgeXAt(y) {
+    var dy = y - ROAD.horizon; if (dy < 8) dy = 8;
+    var d = ROAD.camH * ROAD.focal / dy;          // distância da pista nessa linha
+    var s = ROAD.focal / d;                       // fator de projeção (= dy / camH)
+    return W / 2 + (-ROAD.halfW + curveOffset(camZ + d)) * s;
+  }
+
+  // A pista NÃO pode passar por baixo dos outdoors em nenhum tamanho de tela: a largura
+  // da pista em px escala com a ALTURA (focal), o slogan com a LARGURA — em janelas
+  // estreitas o shift estético não basta. Aqui calculamos, para a caixa de cada placa
+  // na posição de pouso (a pior: é onde ela é maior), o quanto falta para a borda
+  // esquerda da pista ficar à direita dela, e elevamos o shift até cobrir todas.
+  function fitShiftToSigns() {
+    var need = 0, MARGIN = 26;
+    for (var i = 0; i < signs.length; i++) {
+      var sg = signs[i];
+      var boxW = sg.targetInnerW * sg.boxWR;
+      var boxH = sg.targetInnerW * sg.boxHR;
+      var right = sg.slotX + boxW / 2 + MARGIN;
+      var yTop = sg.slotY - boxH / 2;
+      var yBot = sg.slotY + boxH / 2 + 20;        // um pouco do poste abaixo da caixa
+      for (var yy = yTop; yy <= yBot; yy += 10) {
+        var falta = right - roadEdgeXAt(yy);
+        if (falta > need) need = falta;
+      }
+    }
+    ROAD.shift = Math.max(ROAD.shiftBase, Math.ceil(need));
   }
 
   // Reveal das palavras do slogan (DOM). O outdoor (canvas) carrega a palavra até a
@@ -386,55 +426,38 @@
     ctx.closePath();
   }
 
-  // Desenha os outdoors NO CANVAS (mesma camada da estrada). Cada placa tem a SUA
-  // janela: nasce logo depois da PASSAGEM da anterior (como outdoors reais — você passa
-  // um e o próximo já aparece lá no fundo), o que dá ~2× mais rolagem de aproximação.
-  // Pode haver duas em cena (a anterior saindo + a próxima minúscula ao fundo); a mais
-  // funda é desenhada primeiro.
+  // Desenha o outdoor NO CANVAS (mesma camada da estrada). Geometria idêntica à do
+  // efeito anterior — objeto fixo no mundo, seguindo curva/subida, pousando na vaga —
+  // só que agora pintado no <canvas> em vez de posicionar um elemento DOM por cima.
   function drawSignCanvas(p) {
     if (!heroReady || !signs.length) return;
-    if (p >= SIGN_END) return;
-    for (var j = heroWords.length - 1; j >= 0; j--) drawOneSign(p, j);
-  }
 
-  function signBorn(j) {
-    if (j === 0) return Math.max(0.03, SEG[0][0] - 0.05);
-    return SEG[j - 1][0] + PASS * (SEG[j - 1][1] - SEG[j - 1][0]) + 0.015;
-  }
+    var activeJ = -1;
+    for (var j2 = 0; j2 < heroWords.length; j2++) {
+      if ((p - SEG[j2][0]) / (SEG[j2][1] - SEG[j2][0]) < 1) { activeJ = j2; break; }
+    }
+    if (p >= SIGN_END || activeJ < 0) return;
 
-  function drawOneSign(p, j) {
-    var pBorn = signBorn(j);
-    if (p < pBorn || p >= SEG[j][1]) return;
-    var sg    = signs[j];
-    var prj   = (p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]);   // pode ser <0 antes do segmento
+    var j   = activeJ;
+    var prj = clamp01((p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]));
+    var sg  = signs[j];
+
+    // ---- distância: nasce NO FUNDO e vem crescendo por perspectiva ----
+    // O quão fundo a placa pode nascer é limitado pela frente de construção da pista no
+    // início do segmento (não pode flutuar sobre trecho ainda não montado): nas primeiras
+    // palavras a estrada existe ~15 m à frente; nas últimas, ~60 m — os outdoors vêm de
+    // cada vez mais longe conforme a estrada cresce. Depois de PASS vira objeto fixo no
+    // mundo: a distância diminui só porque a câmera avança (varre no ritmo da estrada).
     var pPass = SEG[j][0] + PASS * (SEG[j][1] - SEG[j][0]);
-    var tA    = clamp01((p - pBorn) / (pPass - pBorn));      // fração da APROXIMAÇÃO
+    var p0    = SEG[j][0];
     var run   = ROAD.length - ROAD.arriveGap;
-
-    // ---- distância: nasce NO FUNDO e desacelera até o RITMO DA ESTRADA ----
-    // baseDist é o trilho de objeto FIXO no mundo (z fixo que dá D_PASS na passagem):
-    // sobre ele a distância só diminui porque a câmera avança — velocidade da estrada.
-    // `extra` é o excedente "vindo do fundo", que decai com (1−tA)³: o cubo concentra a
-    // velocidade extra no CAMPO DISTANTE (onde quase não há movimento de tela) e zera
-    // valor E derivada antes do campo próximo — o trecho final inteiro roda em cima do
-    // trilho fixo, exatamente no fluxo da pista (era o "vem mais rápido que a estrada").
-    // O quão fundo pode nascer é limitado pela frente de construção da pista no
-    // nascimento (não pode flutuar sobre trecho ainda não montado): nas primeiras
-    // palavras a estrada existe ~15 m à frente; nas últimas, ~60 m.
-    var baseDist = (pPass * run + D_PASS) - camZ;
+    var dFar  = Math.max(10, Math.min(ROAD.draw * 0.8,
+                (ROAD.base + p0 * (ROAD.length - ROAD.base)) - p0 * run - 1.5));
     var dist;
-    if (p <= pPass) {
-      var czB  = pBorn * run;
-      var dFar = Math.max(10, Math.min(ROAD.draw * 0.8,
-                 (ROAD.base + pBorn * (ROAD.length - ROAD.base)) - czB - 1.5));
-      var win  = (pPass - pBorn) * run;
-      // teto do excedente proporcional à janela: placas com janela curta (a logo) não
-      // podem nascer fundas demais, senão o excesso de velocidade vaza p/ o campo próximo
-      var A    = Math.min(Math.max(0, dFar - (D_PASS + win)), 5 * win);
-      var k    = 1 - tA;
-      dist = baseDist + A * k * k * k;
+    if (prj <= PASS) {
+      dist = lerp(dFar, D_PASS, smooth(prj / PASS));
     } else {
-      dist = baseDist;
+      dist = D_PASS - (camZ - pPass * run);
       if (dist < 0.3) dist = 0.3;
     }
 
@@ -447,14 +470,14 @@
     var ptRoad = project(SIGN_ROAD_X + curveOffset(z), SIGN_ROAD_Y + roadRise(z), z);
     var ptSlot = project(sg.x + (curveOffset(z) - curveOffset(zp)),
                          sg.y + (roadRise(z)   - roadRise(zp)), z);
-    var wMix = p >= pPass ? 1 : smooth(clamp01(prj / PASS));
+    var wMix = prj >= PASS ? 1 : smooth(prj / PASS);
     var pt = { x: lerp(ptRoad.x + ROAD.shift, ptSlot.x, wMix),
                y: lerp(ptRoad.y,              ptSlot.y, wMix) };
 
     // opacidade: nada de "surgir por fade" — a placa entra minúscula e cresce; só um
-    // anti-pop curtíssimo no nascimento, o véu do horizonte (a MESMA queda usada nos
-    // blocos da pista ao longe) e a saída depois de FADE.
-    var op = smooth(clamp01(tA / 0.12))
+    // anti-pop curtíssimo no início, o véu do horizonte (a MESMA queda usada nos blocos
+    // da pista ao longe) e a saída depois de FADE.
+    var op = smooth(clamp01(prj / 0.08))
            * clamp01((ROAD.draw - dist) / 11)
            * (1 - smooth(clamp01((prj - FADE) / (1 - FADE))));
     if (op <= 0.004) return;
