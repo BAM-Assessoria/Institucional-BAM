@@ -21,18 +21,24 @@
   }
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function isMobile() {
-    return window.innerWidth < 1025 || window.matchMedia('(pointer: coarse)').matches;
-  }
-  if (reduceMotion || isMobile()) { revealHeroFallback(); return; }
+  if (reduceMotion) { revealHeroFallback(); return; }
+
+  // Dois modos de composição:
+  //  - DESKTOP (≥1025px): outdoor de acostamento, pista deslocada p/ a direita.
+  //  - MOBILE/retrato (<1025px): PÓRTICO — pista centralizada e as placas vêm POR CIMA
+  //    da estrada (como painéis de rodovia), pousando no slogan centralizado.
+  // O modo é decidido no boot; girar o aparelho recarrega a cena (ver resize handler).
+  var MOBILE = window.innerWidth < 1025;
 
   document.body.classList.add('journey-on');
-  // no desktop a cena 3D substitui o poster estático
+  if (MOBILE) document.body.classList.add('journey-m');
+  // a cena 3D substitui o poster estático
   var poster = document.querySelector('.road-poster');
   if (poster) poster.style.display = 'none';
 
   var ctx = canvas.getContext('2d');
-  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // celular: teto de DPR menor — canvas 2D com glow é caro em telas 3x
+  var dpr = Math.min(window.devicePixelRatio || 1, MOBILE ? 1.5 : 2);
   var W = 0, H = 0;
 
   /* ---------- parâmetros da estrada (AJUSTÁVEIS) ---------- */
@@ -63,6 +69,16 @@
     shift: 0          // shiftFrac × W, calculado no resize (px de tela)
   };
   var GREEN = '#00FFAE';
+
+  // Perfil MOBILE/retrato: pista mais estreita e centralizada (o pórtico passa por
+  // cima dela), menos colunas e menos distância de desenho (custo por frame).
+  if (MOBILE) {
+    ROAD.halfW = 1.35;
+    ROAD.cols = 4;
+    ROAD.draw = 52;
+    ROAD.curve = 0.005;
+    ROAD.shiftFrac = 0;
+  }
 
   // debug: ?roadc= sobrescreve a curvatura; ?roads= sobrescreve o shift lateral da pista (px) p/ calibrar
   (function () {
@@ -286,8 +302,11 @@
   // a palavra, revelada na passagem, FICA para trás. FADE começa só depois de PASS.
   var D_PASS = 3.2;   // distância (mundo) da placa à câmera no instante da passagem
   var PASS = 0.52;
-  var SIGN_ROAD_X = -(ROAD.halfW + 1.15); // acostamento esquerdo (mundo): onde a placa "mora" ao longe
-  var SIGN_ROAD_Y = 1.0;                  // altura do centro da placa acima da pista (mundo)
+  // Onde a placa "mora" ao longe (mundo). Desktop: acostamento esquerdo, na altura de
+  // um outdoor. Mobile/retrato: PÓRTICO — centrada sobre a pista, acima da câmera,
+  // como os painéis suspensos de rodovia.
+  var SIGN_ROAD_X = MOBILE ? 0 : -(ROAD.halfW + 1.15);
+  var SIGN_ROAD_Y = MOBILE ? 2.3 : 1.0;
   var FADE = 0.66;
   // Surgimento da palavra sincronizado com a passagem: ele TERMINA no instante em que a
   // placa cobre a vaga (pi = PASS), começando REVEAL_LEAD antes. Assim a palavra já está
@@ -387,6 +406,8 @@
   // na posição de pouso (a pior: é onde ela é maior), o quanto falta para a borda
   // esquerda da pista ficar à direita dela, e elevamos o shift até cobrir todas.
   function fitShiftToSigns() {
+    // No retrato o pórtico passa POR CIMA da estrada de propósito: pista centralizada.
+    if (MOBILE) { ROAD.shift = 0; return; }
     var need = 0, MARGIN = 26;
     for (var i = 0; i < signs.length; i++) {
       var sg = signs[i];
@@ -474,6 +495,17 @@
     var pt = { x: lerp(ptRoad.x + ROAD.shift, ptSlot.x, wMix),
                y: lerp(ptRoad.y,              ptSlot.y, wMix) };
 
+    // CHÃO sob a placa, na MESMA distância z: o poste é plantado aqui (não tem mais
+    // comprimento fixo). Antes, o poste terminava a 74px×escala da caixa — e como a
+    // caixa mistura duas alturas de mundo (acostamento → vaga), a folga da base até o
+    // solo variava conforme a aproximação. Projetando o plano do chão (y=0 + a mesma
+    // subida) para cada candidato e misturando com o MESMO wMix, a base fica cravada
+    // no plano em que a estrada assenta, em qualquer ponto do trajeto.
+    var gRoad = project(SIGN_ROAD_X + curveOffset(z), roadRise(z), z);
+    var gSlot = project(sg.x + (curveOffset(z) - curveOffset(zp)),
+                        roadRise(z) - roadRise(zp), z);
+    var groundY = lerp(gRoad.y, gSlot.y, wMix);
+
     // opacidade: nada de "surgir por fade" — a placa entra minúscula e cresce; só um
     // anti-pop curtíssimo no início, o véu do horizonte (a MESMA queda usada nos blocos
     // da pista ao longe) e a saída depois de FADE.
@@ -491,13 +523,23 @@
     ctx.save();
     ctx.globalAlpha = op;
 
-    // poste (gradiente verde → transparente), atrás da caixa
-    var poleH = 74 * scale, poleW = Math.max(1, 2 * scale);
-    var pg = ctx.createLinearGradient(0, y + boxH, 0, y + boxH + poleH);
-    pg.addColorStop(0, 'rgba(0,255,174,.85)');
-    pg.addColorStop(1, 'rgba(0,255,174,0)');
-    ctx.fillStyle = pg;
-    ctx.fillRect(cx - poleW / 2, y + boxH, poleW, poleH);
+    // poste plantado no CHÃO (groundY): comprimento = caixa→solo, não mais fixo.
+    // Gradiente ainda esmaece, mas termina visível — a base "toca" o plano da estrada.
+    // Desktop: um poste central (outdoor de acostamento). Mobile: DUAS pernas nas
+    // bordas da caixa, atravessando a pista — leitura de pórtico de rodovia.
+    var poleH = Math.max(0, groundY - (y + boxH)), poleW = Math.max(1, 2 * scale);
+    if (poleH > 0.5) {
+      var pg = ctx.createLinearGradient(0, y + boxH, 0, y + boxH + poleH);
+      pg.addColorStop(0, 'rgba(0,255,174,.85)');
+      pg.addColorStop(1, 'rgba(0,255,174,.18)');
+      ctx.fillStyle = pg;
+      if (MOBILE) {
+        ctx.fillRect(x + boxW * 0.08 - poleW / 2, y + boxH, poleW, poleH);
+        ctx.fillRect(x + boxW * 0.92 - poleW / 2, y + boxH, poleW, poleH);
+      } else {
+        ctx.fillRect(cx - poleW / 2, y + boxH, poleW, poleH);
+      }
+    }
 
     // caixa: fundo escuro + glow externo
     roundRectPath(x, y, boxW, boxH, 12 * scale);
@@ -546,8 +588,37 @@
   var HERO_SIGN_FX = true;
   if (!HERO_SIGN_FX || !heroReady) { heroReady = false; revealHeroFallback(); }
 
+  /* ---------- watchdog de desempenho (mobile) ----------
+     Se o aparelho não sustenta a cena (frames consecutivos acima de ~34ms nos
+     primeiros 60 quadros de animação), desliga tudo e volta ao layout estático —
+     celular fraco nunca vê a animação engasgada. Mede só rajadas contínuas de rAF
+     (gap > 200ms é ociosidade entre scrolls, não lentidão). */
+  var wdFrames = 0, wdSlow = 0, wdLast = 0, wdDead = !MOBILE;
+  function watchdog(now) {
+    if (wdDead) return false;
+    if (wdLast && now - wdLast < 200) {
+      wdFrames++;
+      if (now - wdLast > 34) wdSlow++;
+      if (wdFrames >= 60) {
+        wdDead = true;
+        if (wdSlow > 24) { abortScene(); return true; }
+      }
+    }
+    wdLast = now;
+    return false;
+  }
+  function abortScene() {
+    heroReady = false;
+    canvas.style.display = 'none';
+    document.body.classList.remove('journey-on', 'journey-m');
+    if (poster) poster.style.display = '';
+    revealHeroFallback();
+    window.removeEventListener('scroll', kick);
+  }
+
   /* ---------- loop ---------- */
-  function frame() {
+  function frame(now) {
+    if (watchdog(now || 0)) { running = false; return; }
     current += (target - current) * 0.14;
     if (Math.abs(target - current) < 0.0002) current = target;
     setCam();
@@ -568,11 +639,18 @@
   draw();
 
   window.addEventListener('scroll', kick, { passive: true });
-  var rt;
+  var rt, lastW = window.innerWidth, lastH = window.innerHeight;
   window.addEventListener('resize', function () {
     clearTimeout(rt);
     rt = setTimeout(function () {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = window.innerWidth, h = window.innerHeight;
+      // girou o aparelho / cruzou o limiar de composição → recarrega com o modo certo
+      if ((w < 1025) !== MOBILE) { location.reload(); return; }
+      // iOS: mostrar/esconder a barra de URL só mexe na ALTURA em poucos px — ignorar
+      // evita re-medir (e "pular") a cena no meio da rolagem
+      if (w === lastW && Math.abs(h - lastH) < 140) return;
+      lastW = w; lastH = h;
+      dpr = Math.min(window.devicePixelRatio || 1, MOBILE ? 1.5 : 2);
       resize(); heroMeasure(); draw(); kick();
     }, 160);
   });
