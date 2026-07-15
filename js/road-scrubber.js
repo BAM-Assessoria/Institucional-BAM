@@ -302,11 +302,11 @@
   // a palavra, revelada na passagem, FICA para trás. FADE começa só depois de PASS.
   var D_PASS = 3.2;   // distância (mundo) da placa à câmera no instante da passagem
   var PASS = 0.52;
-  // A âncora de viagem de cada placa é derivada da VAGA do próprio texto (sg.rx/sg.ry,
-  // calculadas na medição): a do "juntos" vem na mesma lateral que a do "mais" porém
-  // mais alta; a do "vamos" na mesma altura porém mais perto da pista — a formação
-  // inteira viaja com a estrada já no arranjo em que vai pousar. No retrato, a altura
-  // tem um piso (o pórtico fica suspenso sobre a pista, nunca rente ao asfalto).
+  // A âncora de mundo de cada placa é resolvida da VAGA do próprio texto (descontando
+  // o shift da pista e a curva no pass — ver drawOneSign): a do "juntos" vem na mesma
+  // lateral que a do "mais" porém mais alta; a do "vamos" na mesma altura porém mais
+  // perto da pista — a formação viaja com a estrada já no arranjo em que vai pousar.
+  // No retrato, a altura de viagem tem um piso (o pórtico fica suspenso sobre a pista).
   var SIGN_MIN_Y_MOBILE = 1.6;
   var FADE = 0.66;
   // Surgimento da palavra sincronizado com a passagem: ele TERMINA no instante em que a
@@ -378,11 +378,7 @@
       return {
         x: wx,
         y: wy,
-        // âncora de viagem = a própria vaga (a formação viaja no arranjo do slogan);
-        // no retrato a altura tem piso para o pórtico ficar suspenso sobre a pista
-        rx: wx,
-        ry: MOBILE ? Math.max(wy, SIGN_MIN_Y_MOBILE) : wy,
-        slotX: tx, slotY: ty,            // vaga em px de tela (p/ o teste pista×placa)
+        slotX: tx, slotY: ty,            // vaga em px de tela (âncora e teste pista×placa)
         targetInnerW: r.width * COVER,   // largura on-screen do CONTEÚDO na passagem (× COVER da vaga)
         innerW0: innerW,                 // largura do conteúdo na medida CSS (p/ derivar a escala)
         boxWR: boxW0 / innerW,           // caixa relativa à largura do conteúdo (preserva o padding)
@@ -416,6 +412,16 @@
     // No retrato o pórtico passa POR CIMA da estrada de propósito: pista centralizada.
     if (MOBILE) { ROAD.shift = 0; return; }
     var need = 0, MARGIN = 26;
+    // critério 1: a ÂNCORA de viagem de cada placa (derivada da vaga, descontado o
+    // shift) precisa cair FORA da pista com margem de mundo — senão a placa viaja em
+    // cima da rua. shift ≥ slotX − W/2 + sPass·(halfW + margem − curvaNoPass).
+    var sPass = ROAD.focal / D_PASS;
+    var c0 = ROAD.curve * D_PASS * D_PASS;
+    for (var a = 0; a < signs.length; a++) {
+      var needA = signs[a].slotX - W / 2 + sPass * (ROAD.halfW + 0.3 - c0);
+      if (needA > need) need = needA;
+    }
+    // critério 2: a caixa no POUSO fora da pista nas linhas que ela ocupa.
     for (var i = 0; i < signs.length; i++) {
       var sg = signs[i];
       var boxW = sg.targetInnerW * sg.boxWR;
@@ -491,25 +497,31 @@
     var eB   = tB * tB * (3 - 2 * tB);
     var yOff = -(1 - eB) * ROAD.drop * 0.8;
 
-    // ---- posição: mescla "objeto da estrada" → "pouso na vaga" ----
-    // A âncora de viagem é a VAGA do próprio texto (sg.rx/sg.ry): cada placa vem na
-    // lateral/altura do lugar em que vai pousar, com a MESMA curva/subida e o MESMO
-    // deslocamento lateral da pista (compartilha o ponto de fuga). Perto, converge
-    // para pousar EXATAMENTE na vaga no slogan (que não recebe o shift).
-    var z  = camZ + dist, zp = camZ + D_PASS;
-    var ptRoad = project(sg.rx + curveOffset(z), sg.ry + roadRise(z) + yOff, z);
-    var ptSlot = project(sg.x + (curveOffset(z) - curveOffset(zp)),
-                         sg.y + (roadRise(z)   - roadRise(zp)) + yOff, z);
-    var wMix = prj >= PASS ? 1 : smooth(clamp01(prj / PASS));
-    var pt = { x: lerp(ptRoad.x + ROAD.shift, ptSlot.x, wMix),
-               y: lerp(ptRoad.y,              ptSlot.y, wMix) };
+    // ---- posição: OBJETO DA ESTRADA de ponta a ponta (sem mescla lateral) ----
+    // A âncora de mundo (ax, ay) é resolvida a partir da vaga do texto JÁ DESCONTANDO
+    // o deslocamento lateral da pista (ROAD.shift) e a curva no ponto de passagem:
+    // o outdoor é um ponto FIXO do mundo que segue a curva/subida da estrada o
+    // percurso inteiro — zero deslize horizontal em relação à pista — e, por
+    // construção, cai EXATO na vaga no instante da passagem. fitShiftToSigns garante
+    // que toda âncora fique FORA da pista, com margem de mundo.
+    var z     = camZ + dist;
+    var sPass = ROAD.focal / D_PASS;
+    var c0    = ROAD.curve * D_PASS * D_PASS;   // curveOffset no ponto de passagem
+    var ax = (sg.slotX - ROAD.shift - W / 2) / sPass - c0;
+    var ay = sg.y;
+    var yTravel = ay;
+    if (MOBILE) {
+      // retrato: o pórtico viaja suspenso (piso de altura) e desce para a vaga só no
+      // fim — o ajuste é apenas VERTICAL; lateralmente segue a pista sempre
+      var wMix = prj >= PASS ? 1 : smooth(clamp01(prj / PASS));
+      yTravel = lerp(Math.max(ay, SIGN_MIN_Y_MOBILE), ay, wMix);
+    }
+    var pt = project(ax + curveOffset(z), yTravel + roadRise(z) + yOff, z);
+    pt.x += ROAD.shift;
 
-    // CHÃO sob a placa, na MESMA distância z (plano y=0 + a mesma subida, misturado
-    // com o MESMO wMix): pernas/poste plantados no plano em que os blocos assentam.
-    var gRoad = project(sg.rx + curveOffset(z), roadRise(z), z);
-    var gSlot = project(sg.x + (curveOffset(z) - curveOffset(zp)),
-                        roadRise(z) - roadRise(zp), z);
-    var groundY = lerp(gRoad.y, gSlot.y, wMix);
+    // CHÃO sob a placa (mesma âncora, plano y=0 + a mesma subida): pernas/poste
+    // plantados no plano em que os blocos da estrada assentam.
+    var groundY = project(ax + curveOffset(z), roadRise(z), z).y;
 
     // opacidade: construção (o MESMO easing dos blocos — nada de fade próprio) ×
     // véu do horizonte (o mesmo dos blocos ao longe) × saída depois de FADE.
