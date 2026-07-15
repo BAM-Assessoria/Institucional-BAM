@@ -246,8 +246,11 @@
     background();
     drawLane(MAIN);
     ctx.restore();
-    drawSignCanvas(target);             // outdoor no canvas (sem shift → cai na vaga)
-    heroUpdate(target);                 // reveal das palavras (DOM)
+    // IMPORTANTE: usar `current` (o MESMO progresso eased que posiciona a câmera/estrada),
+    // não `target` — com target a placa andava à frente da pista durante a rolagem e
+    // parecia "não acompanhar a estrada".
+    drawSignCanvas(current);            // outdoor no canvas, em lockstep com a pista
+    heroUpdate(current);                // reveal das palavras (DOM), mesmo relógio
   }
 
   /* ---------- Slogan montado pelas placas (DOM), dirigido pelo scroll ----------
@@ -269,18 +272,17 @@
   var SEG = [[0.12, 0.22], [0.26, 0.37], [0.41, 0.53], [0.57, 0.69], [0.71, 0.82]];
   var SIGN_END = 0.82;
 
-  // Coreografia. O outdoor é um objeto FIXO no mundo: sua distância à câmera diminui
-  // SÓ porque a câmera avança — logo ele se move na MESMA velocidade da estrada (não
-  // "corre mais que a pista", como acontecia quando a distância era um ramp próprio).
-  // Fixamos o z de mundo de cada placa de modo que ela esteja a D_PASS metros da câmera
-  // no instante da passagem (PASS). Antes disso a câmera está atrás → placa mais longe;
-  // depois a câmera a ultrapassa → ela varre bem de perto e sai de cena.
-  // PASS é o instante em que a placa está EXATAMENTE sobre a vaga da palavra. Fica ~no
-  // MEIO do segmento: assim, depois de passar, ainda sobra rolagem para a placa CONTINUAR
-  // VINDO enquanto a palavra, revelada na passagem, FICA para trás. FADE começa só depois
-  // de PASS, então a placa está sólida ao cobrir a vaga e só se apaga já saindo de quadro.
+  // Coreografia. O outdoor NASCE NO FUNDO, bem pequenininho, plantado na beira da
+  // estrada — mesmo ponto de fuga, mesma curva/subida e o mesmo deslocamento lateral
+  // da pista — e vem crescendo por perspectiva (1/dist) até a passagem. A trajetória
+  // converge suavemente da "beira da estrada" para a VAGA da palavra: em PASS ele está
+  // exatamente sobre a vaga. Depois de PASS ele vira objeto fixo no mundo (a distância
+  // só diminui porque a câmera avança) e varre para fora no ritmo da estrada, enquanto
+  // a palavra, revelada na passagem, FICA para trás. FADE começa só depois de PASS.
   var D_PASS = 3.2;   // distância (mundo) da placa à câmera no instante da passagem
   var PASS = 0.52;
+  var SIGN_ROAD_X = -(ROAD.halfW + 1.15); // acostamento esquerdo (mundo): onde a placa "mora" ao longe
+  var SIGN_ROAD_Y = 1.0;                  // altura do centro da placa acima da pista (mundo)
   var FADE = 0.66;
   // Surgimento da palavra sincronizado com a passagem: ele TERMINA no instante em que a
   // placa cobre a vaga (pi = PASS), começando REVEAL_LEAD antes. Assim a palavra já está
@@ -400,18 +402,44 @@
     var prj = clamp01((p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]));
     var sg  = signs[j];
 
-    // distância = z de mundo FIXO menos z da câmera → placa fecha distância na MESMA
-    // taxa da estrada (não "corre mais que a pista"). z fixo dá D_PASS na passagem.
-    var pPass  = SEG[j][0] + PASS * (SEG[j][1] - SEG[j][0]);
-    var fixedZ = pPass * (ROAD.length - ROAD.arriveGap) + D_PASS;
-    var dist = fixedZ - camZ;
-    if (dist < 0.3) dist = 0.3;
+    // ---- distância: nasce NO FUNDO e vem crescendo por perspectiva ----
+    // O quão fundo a placa pode nascer é limitado pela frente de construção da pista no
+    // início do segmento (não pode flutuar sobre trecho ainda não montado): nas primeiras
+    // palavras a estrada existe ~15 m à frente; nas últimas, ~60 m — os outdoors vêm de
+    // cada vez mais longe conforme a estrada cresce. Depois de PASS vira objeto fixo no
+    // mundo: a distância diminui só porque a câmera avança (varre no ritmo da estrada).
+    var pPass = SEG[j][0] + PASS * (SEG[j][1] - SEG[j][0]);
+    var p0    = SEG[j][0];
+    var run   = ROAD.length - ROAD.arriveGap;
+    var dFar  = Math.max(10, Math.min(ROAD.draw * 0.8,
+                (ROAD.base + p0 * (ROAD.length - ROAD.base)) - p0 * run - 1.5));
+    var dist;
+    if (prj <= PASS) {
+      dist = lerp(dFar, D_PASS, smooth(prj / PASS));
+    } else {
+      dist = D_PASS - (camZ - pPass * run);
+      if (dist < 0.3) dist = 0.3;
+    }
 
-    // segue a curva/subida da estrada (0 na passagem → assenta exatamente na vaga)
+    // ---- posição: mescla "outdoor de beira de estrada" → "pouso na vaga" ----
+    // Longe, a placa é um objeto DA CENA: plantada no acostamento esquerdo, com a MESMA
+    // curva/subida e o MESMO deslocamento lateral (ROAD.shift) da pista — compartilha o
+    // ponto de fuga da estrada e vem no fluxo dela. Perto, a trajetória converge para
+    // pousar EXATAMENTE na vaga da palavra no slogan (que não recebe o shift).
     var z  = camZ + dist, zp = camZ + D_PASS;
-    var pt = project(sg.x + (curveOffset(z) - curveOffset(zp)),
-                     sg.y + (roadRise(z)   - roadRise(zp)), z);
-    var op = smooth(clamp01(prj / 0.14)) * (1 - smooth(clamp01((prj - FADE) / (1 - FADE))));
+    var ptRoad = project(SIGN_ROAD_X + curveOffset(z), SIGN_ROAD_Y + roadRise(z), z);
+    var ptSlot = project(sg.x + (curveOffset(z) - curveOffset(zp)),
+                         sg.y + (roadRise(z)   - roadRise(zp)), z);
+    var wMix = prj >= PASS ? 1 : smooth(prj / PASS);
+    var pt = { x: lerp(ptRoad.x + ROAD.shift, ptSlot.x, wMix),
+               y: lerp(ptRoad.y,              ptSlot.y, wMix) };
+
+    // opacidade: nada de "surgir por fade" — a placa entra minúscula e cresce; só um
+    // anti-pop curtíssimo no início, o véu do horizonte (a MESMA queda usada nos blocos
+    // da pista ao longe) e a saída depois de FADE.
+    var op = smooth(clamp01(prj / 0.08))
+           * clamp01((ROAD.draw - dist) / 11)
+           * (1 - smooth(clamp01((prj - FADE) / (1 - FADE))));
     if (op <= 0.004) return;
 
     var innerOn = sg.targetInnerW * (D_PASS / dist);   // largura do conteúdo agora (tela)
