@@ -235,9 +235,10 @@
   }
 
   function draw() {
-    // A PISTA desloca lateralmente (ROAD.shift), mas os OUTDOORS não: eles ficam
-    // ancorados nas vagas do slogan (DOM, via heroUpdate). Assim a estrada sai de
-    // baixo do outdoor da logo sem desalinhar o efeito placa→palavra.
+    // A PISTA desloca lateralmente (ROAD.shift); o OUTDOOR não recebe o shift, então
+    // assenta na vaga do slogan. Mas ele é desenhado NO MESMO canvas da estrada (mesma
+    // camada, mesmo brilho/perspectiva, sob o mesmo scrim) — não é mais um elemento DOM
+    // por cima. heroUpdate cuida só do reveal das palavras do slogan (essas são DOM).
     ctx.fillStyle = '#040605';
     ctx.fillRect(0, 0, W, H);           // limpa a tela inteira (antes do translate)
     ctx.save();
@@ -245,7 +246,8 @@
     background();
     drawLane(MAIN);
     ctx.restore();
-    heroUpdate(target);
+    drawSignCanvas(target);             // outdoor no canvas (sem shift → cai na vaga)
+    heroUpdate(target);                 // reveal das palavras (DOM)
   }
 
   /* ---------- Slogan montado pelas placas (DOM), dirigido pelo scroll ----------
@@ -313,94 +315,162 @@
     signLabelIdx = i;
   }
 
+  // logo desenhada na placa (canvas): carrega a mesma logo-icon.svg do slogan
+  var logoImg = null, logoReady = false;
+  if (signLogo) {
+    logoImg = new Image();
+    logoImg.onload = function () { logoReady = true; draw(); };
+    logoImg.src = signLogo.getAttribute('src') || signLogo.src;
+  }
+  var signFontCss = 48;   // px — font-size da placa (CSS), resolvido na medição
+
   function heroMeasure() {
     if (!heroReady) return;
     for (var i = 0; i < heroWords.length; i++) {
       heroWords[i].style.transform = 'none';
       heroWords[i].style.opacity = '0';
     }
-    var cr = signEl.parentElement ? signEl.parentElement.getBoundingClientRect() : { left: 0, top: 0 };
-    containerOffset.left = cr.left;
-    containerOffset.top  = cr.top;
-
     var sPass = ROAD.focal / D_PASS;   // fator de projeção no instante da passagem
     signs = heroWords.map(function (w, i) {
       var r  = w.getBoundingClientRect();
       var tx = r.left + r.width  / 2;  // vaga da palavra, em coordenadas de viewport
       var ty = r.top  + r.height / 2;
       // inverso de project(): que ponto do mundo cai sobre esta vaga a D_PASS metros?
-      setSignLabel(i);                 // o conteúdo (palavra/logo) muda de largura
-      // âncora de escala = largura do CONTEÚDO (não da caixa): na passagem a palavra
-      // impressa na placa fica do tamanho da vaga, então assenta sem salto.
-      // offsetWidth (largura de layout) e NÃO getBoundingClientRect: este último
-      // inclui o transform:scale() que o scrubber escreve na placa a cada frame, o
-      // que distorceria a medida (a placa da logo saía gigante por causa disso).
-      var inner  = (w.tagName === 'IMG' && signLogo) ? signLogo : signWord;
-      var innerW = inner.offsetWidth || signBox.offsetWidth || 1;
+      setSignLabel(i);                 // o conteúdo (palavra/logo) muda de dimensões
+      var isLogo = w.tagName === 'IMG';
+      // Medimos a placa/conteúdo no DOM (offsetWidth/Height — layout, imune ao transform)
+      // só para pegar as PROPORÇÕES (caixa↔conteúdo). O desenho em si é no canvas.
+      var inner  = (isLogo && signLogo) ? signLogo : signWord;
+      var innerW = inner.offsetWidth  || 1;
+      var innerH = inner.offsetHeight || 1;
+      var boxW0  = signBox.offsetWidth  || innerW;
+      var boxH0  = signBox.offsetHeight || innerH;
+      if (!isLogo) signFontCss = parseFloat(getComputedStyle(signWord).fontSize) || signFontCss;
       return {
         x: (tx - W / 2) / sPass,
         y: ROAD.camH - (ty - ROAD.horizon) / sPass,
-        scale: Math.max(0.35, Math.min(3.4, (r.width * COVER) / innerW))
+        targetInnerW: r.width * COVER,   // largura on-screen do CONTEÚDO na passagem (× COVER da vaga)
+        innerW0: innerW,                 // largura do conteúdo na medida CSS (p/ derivar a escala)
+        boxWR: boxW0 / innerW,           // caixa relativa à largura do conteúdo (preserva o padding)
+        boxHR: boxH0 / innerW,
+        isLogo: isLogo,
+        text: isLogo ? '' : (w.textContent || '').trim().toUpperCase(),
+        logoAR: isLogo ? (innerH / innerW) : 0
       };
     });
-
-    // placa começa oculta, no horizonte
-    signEl.style.left      = (W / 2 - containerOffset.left) + 'px';
-    signEl.style.top       = (ROAD.horizon - containerOffset.top) + 'px';
-    signEl.style.transform = 'translate(-50%,-50%) scale(0.1)';
-    signEl.style.opacity   = '0';
+    if (signEl) signEl.style.opacity = '0';   // a placa DOM fica oculta: agora é canvas
   }
 
+  // Reveal das palavras do slogan (DOM). O outdoor (canvas) carrega a palavra até a
+  // passagem; aqui a palavra "sólida" do slogan assume, cruzando com a saída da placa.
   function heroUpdate(p) {
     if (!heroReady || !signs.length) return;
-
-    // Palavras: cada uma só se materializa DEPOIS que a SUA placa passou por cima da
-    // vaga dela (prj ≥ PASS) — é o texto que estava na placa que "fica para trás".
     for (var i = 0; i < heroWords.length; i++) {
       var pi  = (p - SEG[i][0]) / (SEG[i][1] - SEG[i][0]);
       var rev = smooth(clamp01((pi - (PASS - REVEAL_LEAD)) / REVEAL));
       heroWords[i].style.transform = 'scale(' + (0.9 + 0.1 * rev).toFixed(3) + ')';
       heroWords[i].style.opacity   = rev.toFixed(3);
     }
+  }
 
-    // Placa ativa: a da primeira palavra que ainda não fechou o seu segmento
+  function roundRectPath(x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y,     x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x,     y + h, r);
+    ctx.arcTo(x,     y + h, x,     y,     r);
+    ctx.arcTo(x,     y,     x + w, y,     r);
+    ctx.closePath();
+  }
+
+  // Desenha o outdoor NO CANVAS (mesma camada da estrada). Geometria idêntica à do
+  // efeito anterior — objeto fixo no mundo, seguindo curva/subida, pousando na vaga —
+  // só que agora pintado no <canvas> em vez de posicionar um elemento DOM por cima.
+  function drawSignCanvas(p) {
+    if (!heroReady || !signs.length) return;
+
     var activeJ = -1;
     for (var j2 = 0; j2 < heroWords.length; j2++) {
       if ((p - SEG[j2][0]) / (SEG[j2][1] - SEG[j2][0]) < 1) { activeJ = j2; break; }
     }
-    if (p >= SIGN_END || activeJ < 0) { signEl.style.opacity = '0'; return; }
+    if (p >= SIGN_END || activeJ < 0) return;
 
     var j   = activeJ;
     var prj = clamp01((p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]));
     var sg  = signs[j];
 
-    // distância = z de mundo FIXO da placa menos o z da câmera. O z fixo é escolhido
-    // para dar D_PASS exatamente no instante da passagem (quando camZ == camZ do pass).
-    // Como só camZ varia, a placa fecha distância na MESMA taxa da câmera/estrada — não
-    // "corre mais que a pista". Antes/depois do pass a câmera está mais atrás/à frente.
+    // distância = z de mundo FIXO menos z da câmera → placa fecha distância na MESMA
+    // taxa da estrada (não "corre mais que a pista"). z fixo dá D_PASS na passagem.
     var pPass  = SEG[j][0] + PASS * (SEG[j][1] - SEG[j][0]);
     var fixedZ = pPass * (ROAD.length - ROAD.arriveGap) + D_PASS;
     var dist = fixedZ - camZ;
-    if (dist < 0.3) dist = 0.3;   // trava perto do fim do segmento (placa já apagando)
+    if (dist < 0.3) dist = 0.3;
 
-    // O outdoor VEM NO FLUXO DA ESTRADA (não num ângulo próprio): recebe a MESMA curva
-    // lateral e a MESMA subida da pista, medidas em relação ao instante da passagem —
-    // então ao longe ele acompanha a curva/ladeira da estrada e, ao chegar em D_PASS,
-    // os termos zeram e ele assenta exatamente na vaga da palavra.
-    var z  = camZ + dist;
-    var zp = camZ + D_PASS;
-    var roadCx = curveOffset(z) - curveOffset(zp);   // segue a curva da estrada
-    var roadRy = roadRise(z)   - roadRise(zp);        // segue a subida da estrada
-    var pt = project(sg.x + roadCx, sg.y + roadRy, z);
-    // escala em perspectiva ancorada na passagem: em D_PASS a placa cobre a palavra
-    var scale = sg.scale * (D_PASS / dist);
+    // segue a curva/subida da estrada (0 na passagem → assenta exatamente na vaga)
+    var z  = camZ + dist, zp = camZ + D_PASS;
+    var pt = project(sg.x + (curveOffset(z) - curveOffset(zp)),
+                     sg.y + (roadRise(z)   - roadRise(zp)), z);
     var op = smooth(clamp01(prj / 0.14)) * (1 - smooth(clamp01((prj - FADE) / (1 - FADE))));
+    if (op <= 0.004) return;
 
-    if (signLabelIdx !== j) setSignLabel(j);
-    signEl.style.left      = (pt.x - containerOffset.left) + 'px';
-    signEl.style.top       = (pt.y - containerOffset.top) + 'px';
-    signEl.style.transform = 'translate(-50%,-50%) scale(' + scale.toFixed(3) + ')';
-    signEl.style.opacity   = op.toFixed(3);
+    var innerOn = sg.targetInnerW * (D_PASS / dist);   // largura do conteúdo agora (tela)
+    var scale   = innerOn / sg.innerW0;                // CSS → tela (espessura/raio/glow)
+    var boxW = innerOn * sg.boxWR, boxH = innerOn * sg.boxHR;
+    var cx = pt.x, cy = pt.y;
+    var x = cx - boxW / 2, y = cy - boxH / 2;
+
+    ctx.save();
+    ctx.globalAlpha = op;
+
+    // poste (gradiente verde → transparente), atrás da caixa
+    var poleH = 74 * scale, poleW = Math.max(1, 2 * scale);
+    var pg = ctx.createLinearGradient(0, y + boxH, 0, y + boxH + poleH);
+    pg.addColorStop(0, 'rgba(0,255,174,.85)');
+    pg.addColorStop(1, 'rgba(0,255,174,0)');
+    ctx.fillStyle = pg;
+    ctx.fillRect(cx - poleW / 2, y + boxH, poleW, poleH);
+
+    // caixa: fundo escuro + glow externo
+    roundRectPath(x, y, boxW, boxH, 12 * scale);
+    ctx.shadowColor = 'rgba(0,255,174,.42)';
+    ctx.shadowBlur  = 34 * scale;
+    ctx.fillStyle   = 'rgba(4,6,5,.72)';
+    ctx.fill();
+    ctx.shadowBlur  = 0;
+
+    // borda neon
+    roundRectPath(x, y, boxW, boxH, 12 * scale);
+    ctx.lineWidth   = 2.5 * scale;
+    ctx.strokeStyle = GREEN;
+    ctx.shadowColor = GREEN;
+    ctx.shadowBlur  = 12 * scale;
+    ctx.stroke();
+    ctx.shadowBlur  = 0;
+
+    // conteúdo: logo (imagem) ou palavra (texto Oswald), com glow verde
+    if (sg.isLogo) {
+      if (logoReady) {
+        var lw = innerOn, lh = innerOn * sg.logoAR;
+        ctx.shadowColor = 'rgba(0,255,174,.5)';
+        ctx.shadowBlur  = 16 * scale;
+        ctx.drawImage(logoImg, cx - lw / 2, cy - lh / 2, lw, lh);
+        ctx.shadowBlur  = 0;
+      }
+    } else {
+      var fontPx = signFontCss * scale;
+      ctx.font = '700 ' + fontPx.toFixed(1) + 'px Oswald, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      try { ctx.letterSpacing = (0.02 * fontPx).toFixed(2) + 'px'; } catch (e) {}
+      ctx.shadowColor = 'rgba(0,255,174,.4)';
+      ctx.shadowBlur  = 14 * scale;
+      ctx.fillStyle   = 'rgba(228,238,233,.62)';
+      ctx.fillText(sg.text, cx, cy + fontPx * 0.02);
+      ctx.shadowBlur  = 0;
+      try { ctx.letterSpacing = '0px'; } catch (e) {}
+    }
+    ctx.restore();
   }
 
   // Liga/desliga do efeito placa→slogan. Agora a estrada 3D é limpa (sem placas
