@@ -57,7 +57,7 @@
     rise: 5.5,        // altura ganha a cada "riseRun" de subida (mundo)
     riseStart: 62,    // z onde a ladeira começa (antes disso a pista é plana, sob a câmera)
     riseRun: 26,      // 1ª parte da subida; depois a estrada SEGUE subindo (ladeira longa, sem fim à vista)
-    shiftFrac: 0,     // desloca SÓ a pista lateralmente (fração de W). 0 = centralizada: a logo saiu de baixo da pista indo p/ a própria linha, então a estrada volta ao centro e os outdoors seguem o fluxo dela
+    shiftFrac: 0.13,  // desloca SÓ a pista p/ a direita (fração de W): tira a estrada de baixo dos outdoors do centro/direita (vamos, longe), que vinham "dentro da pista". Como o outdoor emerge do centro e não recebe o shift, quanto maior o shift mais folga entre placa e pista
     focal: 0,
     horizon: 0,
     shift: 0          // shiftFrac × W, calculado no resize (px de tela)
@@ -267,16 +267,17 @@
   var SEG = [[0.12, 0.22], [0.26, 0.37], [0.41, 0.53], [0.57, 0.69], [0.71, 0.82]];
   var SIGN_END = 0.82;
 
-  // Coreografia, em fração do segmento da palavra (prj) e em metros de mundo:
-  //   D_FAR → D_PASS → D_EXIT = distância da placa até a câmera.
-  // PASS é o instante em que a placa está EXATAMENTE sobre a vaga da palavra. Ele fica
-  // ~no MEIO do segmento de propósito: assim, DEPOIS de passar, ainda sobra bastante
-  // rolagem (1 − PASS) para a placa CONTINUAR VINDO — ela cresce até D_EXIT (bem perto
-  // da câmera) e varre para fora de cena — enquanto a palavra, revelada na passagem,
-  // FICA para trás. É a placa que "deixa" a palavra ali, não a palavra que aparece
-  // sozinha. FADE começa só depois de PASS, então a placa ainda está sólida no
-  // instante em que cobre a vaga, e só se apaga já saindo de quadro.
-  var D_FAR = 16, D_PASS = 3.2, D_EXIT = 1.05;
+  // Coreografia. O outdoor é um objeto FIXO no mundo: sua distância à câmera diminui
+  // SÓ porque a câmera avança — logo ele se move na MESMA velocidade da estrada (não
+  // "corre mais que a pista", como acontecia quando a distância era um ramp próprio).
+  // Fixamos o z de mundo de cada placa de modo que ela esteja a D_PASS metros da câmera
+  // no instante da passagem (PASS). Antes disso a câmera está atrás → placa mais longe;
+  // depois a câmera a ultrapassa → ela varre bem de perto e sai de cena.
+  // PASS é o instante em que a placa está EXATAMENTE sobre a vaga da palavra. Fica ~no
+  // MEIO do segmento: assim, depois de passar, ainda sobra rolagem para a placa CONTINUAR
+  // VINDO enquanto a palavra, revelada na passagem, FICA para trás. FADE começa só depois
+  // de PASS, então a placa está sólida ao cobrir a vaga e só se apaga já saindo de quadro.
+  var D_PASS = 3.2;   // distância (mundo) da placa à câmera no instante da passagem
   var PASS = 0.52;
   var FADE = 0.66;
   // Surgimento da palavra sincronizado com a passagem: ele TERMINA no instante em que a
@@ -373,13 +374,14 @@
     var prj = clamp01((p - SEG[j][0]) / (SEG[j][1] - SEG[j][0]));
     var sg  = signs[j];
 
-    // distância: longe → cobre a vaga (D_PASS) → continua vindo e sai de cena (D_EXIT).
-    // Na saída uso ease-OUT (t*(2−t)): a placa DESCOBRE a vaga rápido logo após passar,
-    // então a palavra (já plena no pass) aparece em sincronia, sem esperar a placa varrer.
-    var te = (prj - PASS) / (1 - PASS);
-    var dist = prj <= PASS
-      ? lerp(D_FAR, D_PASS, smooth(prj / PASS))
-      : lerp(D_PASS, D_EXIT, te * (2 - te));
+    // distância = z de mundo FIXO da placa menos o z da câmera. O z fixo é escolhido
+    // para dar D_PASS exatamente no instante da passagem (quando camZ == camZ do pass).
+    // Como só camZ varia, a placa fecha distância na MESMA taxa da câmera/estrada — não
+    // "corre mais que a pista". Antes/depois do pass a câmera está mais atrás/à frente.
+    var pPass  = SEG[j][0] + PASS * (SEG[j][1] - SEG[j][0]);
+    var fixedZ = pPass * (ROAD.length - ROAD.arriveGap) + D_PASS;
+    var dist = fixedZ - camZ;
+    if (dist < 0.3) dist = 0.3;   // trava perto do fim do segmento (placa já apagando)
 
     // O outdoor VEM NO FLUXO DA ESTRADA (não num ângulo próprio): recebe a MESMA curva
     // lateral e a MESMA subida da pista, medidas em relação ao instante da passagem —
