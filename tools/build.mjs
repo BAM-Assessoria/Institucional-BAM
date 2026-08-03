@@ -45,6 +45,13 @@ const team = J('data/team.json') || [];
 const clients = J('data/clients.json') || [];
 const posts = (J('data/posts.json') || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
+// Portfólio: fonte única para a galeria de portifolio.html e o deck 3D da home.
+const pf = J('data/portfolio.json') || { trabalhos: [], deck: [] };
+const works = pf.trabalhos || [];
+const deckWorks = (pf.deck || [])
+  .map(slug => works.find(w => w.slug === slug) || (console.warn(`AVISO: deck aponta para "${slug}", que não existe em trabalhos.`), null))
+  .filter(Boolean);
+
 const esc = (s = '') => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const escAttr = (s = '') => esc(s).replace(/"/g, '&quot;');
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -57,6 +64,73 @@ function fmtDate(iso) {
 function readingTime(html) {
   const words = String(html).replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
+}
+
+/* ---------- portfólio (data/portfolio.json) ---------- */
+// Legenda de apoio: a métrica quando o resultado é comprovadamente deste cliente,
+// senão a nota do segmento. Nunca a categoria — ela já aparece na etiqueta do card.
+function workNote(w) {
+  return w.metrica ? `${w.metrica} ${w.resultado || ''}`.trim() : (w.nota || '');
+}
+function workAlt(w) {
+  return `Criativo de ${String(w.tag).toLowerCase()} da BAM para ${w.cliente} — ${w.titulo}`;
+}
+
+// Deck 3D da home: só o criativo, sem tarja nem rótulo. Todas as peças já trazem
+// a logo ou o @ do cliente no rodapé — o overlay cobria justamente essa marca.
+// O cliente vai em data-client: o deck.js lê dali para o leitor de tela.
+function deckCards(prefix) {
+  return deckWorks.map(w => `        <div class="deck-card" data-client="${escAttr(w.cliente)}"><img src="${prefix}portifolio/web/${w.slug}.webp" alt="${escAttr(workAlt(w))}" loading="lazy" decoding="async"></div>`).join('\n');
+}
+
+// Galeria de portifolio.html: título = PEÇA, linha de apoio = CLIENTE.
+function portfolioGrid() {
+  return works.map(w => {
+    // spans (e não divs): o card é um <button>, que só aceita conteúdo de frase
+    const metric = w.metrica ? `<span class="wmetric">${esc(w.metrica)}</span>` : '';
+    // A legenda fica FORA da imagem: toda peça traz a logo do cliente no rodapé,
+    // e o texto sobreposto cobria justamente essa marca.
+    return `      <button class="work" data-cat="${escAttr(w.cat)}" data-full="portifolio/web/${w.slug}.webp" data-title="${escAttr(w.titulo)}" data-seg="${escAttr(w.cliente + ' · ' + w.tag)}" aria-label="Ampliar criativo: ${escAttr(w.titulo)} — ${escAttr(w.cliente)}">
+        <span class="work-media">
+          <img src="portifolio/web/${w.slug}.webp" alt="${escAttr(workAlt(w))}" loading="lazy" decoding="async" width="1080" height="1350">
+          <span class="work-cover"></span>
+          <span class="work-top"><span class="wtag">${esc(w.tag)}</span><span class="wzoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span></span>
+        </span>
+        <span class="work-info"><span class="wtxt"><span class="wt">${esc(w.titulo)}</span><span class="wseg">${esc(w.cliente)}</span></span>${metric}</span>
+      </button>`;
+  }).join('\n');
+}
+
+// Contadores dos filtros — calculados da lista, para não dessincronizarem.
+function portfolioFilters() {
+  const n = cat => works.filter(w => w.cat === cat).length;
+  const chips = [
+    ['all', 'Todos', works.length],
+    ['social', 'Social Media', n('social')],
+    ['campanha', 'Campanhas', n('campanha')],
+    ['conteudo', 'Conteúdo &amp; Design', n('conteudo')],
+  ];
+  return chips.map(([f, label, count]) =>
+    `      <button class="pf-chip" type="button" data-filter="${f}" aria-pressed="${f === 'all'}">${label} <span class="c">${count}</span></button>`
+  ).join('\n');
+}
+
+// portifolio.html é escrito à mão (CSS e textos próprios); o build só reescreve
+// os blocos entre os marcadores, para a galeria não divergir do deck da home.
+function injectPortfolio() {
+  const file = 'portifolio.html';
+  if (!existsSync(file)) { console.warn(`AVISO: ${file} não encontrado — galeria não atualizada.`); return false; }
+  let html = readFileSync(file, 'utf8');
+  const NL = html.includes('\r\n') ? '\r\n' : '\n'; // o arquivo está em CRLF; não misturar
+  const blocks = [['PF:FILTROS', portfolioFilters()], ['PF:GALERIA', portfolioGrid()]];
+  for (const [tag, content] of blocks) {
+    const re = new RegExp(`([ \\t]*<!-- ${tag}:INICIO -->\\r?\\n)[\\s\\S]*?([ \\t]*<!-- ${tag}:FIM -->)`);
+    if (!re.test(html)) { console.warn(`AVISO: marcadores ${tag} não encontrados em ${file}.`); return false; }
+    const body = content.replace(/\r?\n/g, NL);
+    html = html.replace(re, (_, open, close) => `${open}${body}${NL}${close}`);
+  }
+  writeFileSync(file, html);
+  return true;
 }
 
 /* ---------- <head> com CSP (hash do JSON-LD inline) ---------- */
@@ -278,16 +352,7 @@ function buildHome() {
     </div>
     <div class="deck-scene">
       <div class="deck-group" id="deckGroup">
-        <div class="deck-card"><img src="${prefix}portifolio/web/kontainers.webp" alt="Kontainers — Logística" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Kontainers</div><div class="deck-card-metric">+60% Ticket médio</div></div></div>
-        <div class="deck-card"><img src="${prefix}portifolio/web/jogo-verao.webp" alt="Hygge Games — Jogo de Verão" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Hygge Games</div><div class="deck-card-metric">+200% Engajamento</div></div></div>
-        <div class="deck-card"><img src="${prefix}portifolio/web/experiencia-do-cliente.webp" alt="FreePort — Experiência do Cliente" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">FreePort</div><div class="deck-card-metric">Varejo &amp; alimentação</div></div></div>
-        <div class="deck-card"><img src="${prefix}portifolio/web/o-futuro-comeca.webp" alt="Parque da Cantareira — O Futuro Começa" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Pq. da Cantareira</div><div class="deck-card-metric">+40% Leads</div></div></div>
-        <div class="deck-card"><img src="${prefix}portifolio/web/graos-que-geram-renda.webp" alt="Granitos Moredo — Grãos que Geram Renda" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Granitos Moredo</div><div class="deck-card-metric">+20% Novos clientes</div></div></div>
-        <div class="deck-card"><img src="${prefix}portifolio/web/escopo-claro.webp" alt="Prompt Serviços — Escopo Claro" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Prompt Serviços</div><div class="deck-card-metric">+80% Orçamentos</div></div></div>
-        <div class="deck-card"><img src="${prefix}portifolio/web/coca-cola-segunda-guerra.webp" alt="Coca-Cola na Segunda Guerra — Conteúdo editorial" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Coca-Cola</div><div class="deck-card-metric">Conteúdo editorial</div></div></div>
-        <div class="deck-card"><img src="${prefix}portifolio/web/cada-homenagem.webp" alt="Cada Homenagem — Campanha sazonal" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Cada Homenagem</div><div class="deck-card-metric">Campanha sazonal</div></div></div>
-        <div class="deck-card"><img src="${prefix}portifolio/web/variedade-e-frescor.webp" alt="Variedade e Frescor — Varejo" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Variedade &amp; Frescor</div><div class="deck-card-metric">Varejo &amp; alimentação</div></div></div>
-        <div class="deck-card"><img src="${prefix}portifolio/web/espaco-acolhimento-paz.webp" alt="Espaço de Acolhimento e Paz — Branding" loading="lazy" decoding="async"><div class="deck-card-cover"></div><div class="deck-card-info"><div class="deck-card-name">Acolhimento &amp; Paz</div><div class="deck-card-metric">Branding</div></div></div>
+${deckCards(prefix)}
       </div>
     </div>
   </div>
@@ -892,6 +957,7 @@ writeFileSync('contato.html', buildContato());
 writeFileSync('privacidade.html', buildPrivacidade());
 writeFileSync('blog/post.html', buildPostViewer()); // visualizador de posts dinâmicos
 let n = 5;
+if (injectPortfolio()) n++; // galeria de portifolio.html (blocos entre marcadores)
 if (posts.length) {
   writeFileSync('blog/index.html', buildBlogIndex());
   n++;
@@ -929,4 +995,4 @@ writeFileSync('sitemap.xml', sitemap);
 writeFileSync('robots.txt', `User-agent: *\nAllow: /\n\nSitemap: ${SITE.url}/sitemap.xml\n`);
 
 console.log(`Gerado: ${n} páginas (${posts.length} posts de blog) + sitemap.xml + robots.txt.`);
-console.log(`Equipe: ${team.length} | Clientes: ${clients.length}`);
+console.log(`Equipe: ${team.length} | Clientes: ${clients.length} | Portfólio: ${works.length} peças (${deckWorks.length} no deck da home)`);

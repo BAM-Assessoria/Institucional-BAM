@@ -1,0 +1,180 @@
+{
+  "_leia_me": [
+    "FONTE ÚNICA do portfólio. Alimenta a galeria de portifolio.html E o deck 3D da home.",
+    "Depois de editar este arquivo, rode build.bat (ou 'node tools/build.mjs') para as duas páginas se atualizarem.",
+    "",
+    "CAMPOS DE CADA TRABALHO:",
+    "  slug      obrigatório  nome do arquivo em portifolio/web/<slug>.webp",
+    "  titulo    obrigatório  nome da PEÇA (texto grande do card)",
+    "  cliente   obrigatório  dono do criativo (texto pequeno do card) — confira a marca d'água da peça",
+    "  cat       obrigatório  filtro da galeria: social | campanha | conteudo",
+    "  tag       obrigatório  etiqueta verde do topo do card",
+    "  metrica   opcional     ex. '+200%' — só use se o resultado for DESTE cliente",
+    "  resultado opcional     o que a métrica mede, ex. 'Engajamento'",
+    "  nota      opcional     legenda do deck da home quando a peça não tem métrica",
+    "",
+    "A ordem desta lista é a ordem da galeria. Os contadores dos filtros são calculados sozinhos."
+  ],
+
+  "trabalhos": [
+    {
+      "slug": "experiencia-do-cliente",
+      "titulo": "Experiência do Cliente",
+      "cliente": "Restaurante FreePort",
+      "cat": "social",
+      "tag": "Social Media",
+      "nota": "Varejo & alimentação"
+    },
+    {
+      "slug": "jogo-verao",
+      "titulo": "Jogo de Verão",
+      "cliente": "Hygge Games",
+      "cat": "campanha",
+      "tag": "Campanha",
+      "metrica": "+200%",
+      "resultado": "Engajamento"
+    },
+    {
+      "slug": "escopo-claro",
+      "titulo": "Escopo Claro",
+      "cliente": "Promanage",
+      "cat": "social",
+      "tag": "Social Media",
+      "nota": "Gestão de projetos"
+    },
+    {
+      "slug": "o-futuro-comeca",
+      "titulo": "O Futuro Depende das Escolhas de Hoje",
+      "cliente": "Electro-Tec Reciclagem",
+      "cat": "campanha",
+      "tag": "Campanha",
+      "nota": "Reciclagem & sustentabilidade"
+    },
+    {
+      "slug": "graos-que-geram-renda",
+      "titulo": "Grãos que Geram Renda",
+      "cliente": "Solar Café",
+      "cat": "campanha",
+      "tag": "Campanha",
+      "nota": "Café & agronegócio"
+    },
+    {
+      "slug": "kontainers",
+      "titulo": "Levar a Estrutura até Você",
+      "cliente": "Kontainers Construções",
+      "cat": "social",
+      "tag": "Social Media",
+      "metrica": "+60%",
+      "resultado": "Ticket médio"
+    },
+    {
+      "slug": "batalha-de-gigantes",
+      "titulo": "Batalha de Gigantes",
+      "cliente": "Restaurante FreePort",
+      "cat": "conteudo",
+      "tag": "Conteúdo",
+      "nota": "Conteúdo editorial"
+    },
+    {
+      "slug": "one-game-three-styles",
+      "titulo": "One Game, Three Styles",
+      "cliente": "Hygge Games",
+      "cat": "conteudo",
+      "tag": "Conteúdo"
+    },
+    {
+      "slug": "o-jogo-e-pretexto",
+      "titulo": "O Jogo é Pretexto",
+      "cliente": "Hygge Games",
+      "cat": "conteudo",
+      "tag": "Conteúdo"
+    },
+    {
+      "slug": "qual-jogo-tem-a-sua-cara",
+      "titulo": "Qual Jogo Tem a Sua Cara",
+      "cliente": "Hygge Games",
+      "cat": "social",
+      "tag": "Social Media"
+    },
+    {
+      "slug": "voce-aprende-rapido",
+      "titulo": "Você Aprende Rápido",
+      "cliente": "Hygge Games",
+      "cat": "social",
+      "tag": "Social Media"
+    },
+    {
+      "slug": "vacilou-dancou",
+      "titulo": "Vacilou, Dançou",
+      "cliente": "Hygge Games",
+      "cat": "social",
+      "tag": "Social Media"
+    },
+    {
+      "slug": "3-things-5-seconds",
+      "titulo": "3 Things, 5 Seconds",
+      "cliente": "Hygge Games",
+      "cat": "conteudo",
+      "tag": "Conteúdo"
+    },
+    {
+      "slug": "coca-cola-segunda-guerra",
+      "titulo": "Coca-Cola na 2ª Guerra",
+      "cliente": "Restaurante FreePort",
+      "cat": "conteudo",
+      "tag": "Conteúdo",
+      "nota": "Conteúdo editorial"
+    },
+    {
+      "slug": "cada-homenagem",
+      "titulo": "Cada Homenagem é Única",
+      "cliente": "Cemitério Parque da Cantareira",
+      "cat": "campanha",
+      "tag": "Campanha",
+      "nota": "Campanha sazonal"
+    },
+    {
+      "slug": "espaco-acolhimento-paz",
+      "titulo": "Espaço de Acolhimento e Paz",
+      "cliente": "Cemitério Parque da Cantareira",
+      "cat": "campanha",
+      "tag": "Campanha",
+      "nota": "Branding"
+    },
+    {
+      "slug": "menos-tempo-mais-tela",
+      "titulo": "Menos Tela, Mais Momentos",
+      "cliente": "Hygge Games",
+      "cat": "social",
+      "tag": "Social Media"
+    },
+    {
+      "slug": "proposito-novembro",
+      "titulo": "Um Planeta Mais Limpo",
+      "cliente": "Electro-Tec Reciclagem",
+      "cat": "campanha",
+      "tag": "Campanha"
+    },
+    {
+      "slug": "variedade-e-frescor",
+      "titulo": "Variedade e Frescor",
+      "cliente": "La Campesina",
+      "cat": "social",
+      "tag": "Social Media",
+      "nota": "Varejo & alimentação"
+    }
+  ],
+
+  "deck": [
+    "kontainers",
+    "jogo-verao",
+    "experiencia-do-cliente",
+    "o-futuro-comeca",
+    "graos-que-geram-renda",
+    "escopo-claro",
+    "coca-cola-segunda-guerra",
+    "cada-homenagem",
+    "variedade-e-frescor",
+    "espaco-acolhimento-paz"
+  ]
+}

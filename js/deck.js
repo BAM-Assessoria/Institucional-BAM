@@ -24,6 +24,16 @@
   function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
   function ease(t) { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); }
 
+  /* ---- carrossel INFINITO: depois da última carta volta a primeira ----
+     mod() sempre devolve índice válido (o % do JS é negativo p/ entrada negativa);
+     circDist() dá a MENOR distância entre a carta e o centro, indo pelos dois
+     lados do círculo, então o leque nunca tem "ponta". */
+  function mod(n, m) { return ((n % m) + m) % m; }
+  function circDist(i, p) {
+    var d = mod(i - p, N);
+    return d > N / 2 ? d - N : d;
+  }
+
   var scene = group.parentNode; /* .deck-scene */
 
   var live = document.createElement('div');
@@ -39,9 +49,16 @@
   }
   function closedPose(i) { return { tx: i * 3, ty: i * -3, rot: i * 0.8, sc: 1 - i * 0.012 }; }
   function carX(d, k) { var s = d < 0 ? -1 : 1, ad = Math.abs(d); if (ad <= 1) return d * k.STEP; if (ad <= 2) return s * (k.STEP + (ad - 1) * k.FAR); return s * (k.STEP + k.FAR + (ad - 2) * k.EDGE); }
-  function carPose(i, pos) { var k = K(), d = i - pos, ad = Math.abs(d); return { tx: carX(d, k), ty: -clamp(d, -3, 3) * k.TY, rot: clamp(d * k.ROT, -k.ROTm, k.ROTm), sc: clamp(k.SCc - ad * k.SCf, k.SCm, k.SCc) }; }
+  function carPose(i, pos) { var k = K(), d = circDist(i, pos), ad = Math.abs(d); return { tx: carX(d, k), ty: -clamp(d, -3, 3) * k.TY, rot: clamp(d * k.ROT, -k.ROTm, k.ROTm), sc: clamp(k.SCc - ad * k.SCf, k.SCm, k.SCc) }; }
 
-  function nameOf(card) { var el = card.querySelector('.deck-card-name'); return el ? el.textContent.trim() : 'case'; }
+  // O card não mostra texto (o criativo já traz a logo do cliente); o nome vem
+  // do data-client, só para o leitor de tela.
+  function nameOf(card) {
+    var nome = card.getAttribute('data-client');
+    if (nome) return nome.trim();
+    var el = card.querySelector('.deck-card-name');
+    return el ? el.textContent.trim() : 'case';
+  }
   function navigate(card) { var h = card.getAttribute('data-href') || 'portifolio.html'; window.location.href = h; }
 
   var targetIdx = Math.round((N - 1) / 2);   /* abre equilibrado (carta do meio ao centro) */
@@ -50,8 +67,10 @@
   var hoverIndex = -1;
   var raf = null;
 
-  function announce() { live.textContent = 'Case ' + (targetIdx + 1) + ' de ' + N + ': ' + nameOf(cards[targetIdx]); }
-  function go(delta) { targetIdx = clamp(targetIdx + delta, 0, N - 1); announce(); }
+  function activeCard() { return cards[mod(Math.round(targetIdx), N)]; }
+  function announce() { live.textContent = 'Case ' + (mod(targetIdx, N) + 1) + ' de ' + N + ': ' + nameOf(activeCard()); }
+  /* sem trava nas pontas: targetIdx corre livre e o mod cuida do resto */
+  function go(delta) { targetIdx += delta; announce(); }
 
   /* ---- controles de seta (criados no JS; só no desktop animado) ---- */
   var nav = document.createElement('div'); nav.className = 'deck-nav';
@@ -66,11 +85,13 @@
     if (!card.getAttribute('data-href')) card.setAttribute('data-href', 'portifolio.html');
     card.addEventListener('pointerenter', function () { hoverIndex = i; });
     card.addEventListener('pointerleave', function () { if (hoverIndex === i) hoverIndex = -1; });
-    card.addEventListener('click', function () { if (i === targetIdx) navigate(card); else go(i - targetIdx); });
+    /* clicar numa carta lateral: vai pelo caminho mais curto do círculo */
+    function activate() { if (i === mod(targetIdx, N)) navigate(card); else go(circDist(i, targetIdx)); }
+    card.addEventListener('click', activate);
     card.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (i === targetIdx) navigate(card); else go(i - targetIdx); }
-      else if (e.key === 'ArrowRight') { e.preventDefault(); go(1); cards[targetIdx].focus(); }
-      else if (e.key === 'ArrowLeft')  { e.preventDefault(); go(-1); cards[targetIdx].focus(); }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); go(1); activeCard().focus(); }
+      else if (e.key === 'ArrowLeft')  { e.preventDefault(); go(-1); activeCard().focus(); }
     });
   });
 
@@ -89,14 +110,14 @@
     if (!dragging || e.pointerId !== dragId) return;
     var dx = e.clientX - dragStartX;
     if (Math.abs(dx) > DRAG_THRESHOLD) dragMoved = true;
-    pos = clamp(dragStartPos - dx / K().STEP, 0, N - 1); /* puxar p/ direita => cards anteriores */
+    pos = dragStartPos - dx / K().STEP; /* puxar p/ direita => cards anteriores; sem limite: gira sempre */
   });
 
   function endDrag(e) {
     if (!dragging || (e && e.pointerId !== dragId)) return;
     dragging = false; dragId = -1;
     group.classList.remove('is-grabbing');
-    if (dragMoved) { targetIdx = clamp(Math.round(pos), 0, N - 1); announce(); } /* encaixa no mais próximo */
+    if (dragMoved) { targetIdx = Math.round(pos); announce(); } /* encaixa no mais próximo */
   }
   window.addEventListener('pointerup', endDrag);
   window.addEventListener('pointercancel', endDrag);
@@ -121,8 +142,16 @@
 
   function tick() {
     openCur = lerp(openCur, openTarget(), 0.12);
-    if (!dragging) pos = lerp(pos, targetIdx, 0.16); /* arrastando: pos segue o mouse */
-    var active = Math.round(pos);
+    if (!dragging) {
+      pos = lerp(pos, targetIdx, 0.16); /* arrastando: pos segue o mouse */
+      /* já parou de andar? traz os dois de volta pra faixa 0..N-1, para os
+         números não crescerem indefinidamente depois de muitas voltas */
+      if (Math.abs(pos - targetIdx) < 0.002) {
+        var voltas = Math.floor(targetIdx / N);
+        if (voltas !== 0) { targetIdx -= voltas * N; pos -= voltas * N; }
+      }
+    }
+    var active = mod(Math.round(pos), N);
     var open = openCur > 0.55;
     var i;
     for (i = 0; i < N; i++) {
@@ -132,7 +161,7 @@
       if (open && i === hoverIndex && i !== active) { ty -= 12; }
       cards[i].style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) rotate(' + rot.toFixed(2) + 'deg) scale(' + scv.toFixed(3) + ')';
       sc[i] = scv;
-      var dd = Math.abs(i - pos);
+      var dd = Math.abs(circDist(i, pos));
       cards[i].classList.toggle('is-focus', open && i === active);
       cards[i].classList.toggle('is-dimmed', open && dd > 1.5 && i !== hoverIndex);
     }
@@ -142,10 +171,8 @@
     order.sort(function (a, b) { var d = sc[b] - sc[a]; if (d > 0) return 1; if (d < 0) return -1; return a - b; });
     for (var r = 0; r < N; r++) { var idx = order[r], z = 100 + (N - r); if (lastZ[idx] !== z) { cards[idx].style.zIndex = String(z); lastZ[idx] = z; } }
 
-    /* setas: aparecem com o leque aberto; desabilitam nas pontas */
+    /* setas: aparecem com o leque aberto e nunca desabilitam — o giro não tem fim */
     nav.classList.toggle('show', open);
-    prev.disabled = targetIdx <= 0;
-    next.disabled = targetIdx >= N - 1;
 
     raf = requestAnimationFrame(tick);
   }

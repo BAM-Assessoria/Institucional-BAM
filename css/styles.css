@@ -396,10 +396,7 @@ form .btn{width:100%;justify-content:center;margin-top:4px}
 .deck-group .deck-card{cursor:grab}
 .deck-group.is-grabbing,.deck-group.is-grabbing .deck-card{cursor:grabbing;user-select:none}
 .deck-card img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
-.deck-card-cover{position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.88) 100%);pointer-events:none}
-.deck-card-info{position:absolute;bottom:0;left:0;right:0;padding:18px 16px;pointer-events:none}
-.deck-card-name{color:#fff;font-family:var(--disp);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.04em}
-.deck-card-metric{color:var(--green);font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-top:5px}
+/* sem tarja nem rotulo no card: a peca ja traz a logo do cliente no rodape */
 /* neighbor dim uses filter (brightness), never opacity, so no translucency bleed */
 .deck-card.is-dimmed{filter:brightness(.62)}
 /* focused/selected card: neon-green ring */
@@ -625,20 +622,25 @@ form .btn{width:100%;justify-content:center;margin-top:4px}
 
 /* grade de trabalhos */
 .pf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.work{position:relative;display:block;width:100%;border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);cursor:pointer;aspect-ratio:4/5;padding:0;text-align:left;transition:border-color .45s,box-shadow .45s,transform .45s cubic-bezier(.2,.7,.2,1)}
+.work{position:relative;display:flex;flex-direction:column;width:100%;border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);cursor:pointer;padding:0;text-align:left;transition:border-color .45s,box-shadow .45s,transform .45s cubic-bezier(.2,.7,.2,1)}
 .work:hover,.work:focus-visible{border-color:var(--green);box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 30px rgba(0,255,174,.12);transform:translateY(-6px);outline:none}
-.work img{width:100%;height:100%;object-fit:cover;transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+/* a arte fica isolada aqui; a legenda vai ABAIXO, para nao cobrir a logo do cliente */
+.work-media{position:relative;display:block;width:100%;aspect-ratio:4/5;overflow:hidden}
+.work img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .7s cubic-bezier(.2,.7,.2,1)}
 .work:hover img,.work:focus-visible img{transform:scale(1.07)}
-.work .work-cover{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,5,5,.5) 0%,transparent 26%,transparent 50%,rgba(5,5,5,.92) 100%);transition:opacity .4s}
+/* escurece so o topo, onde ficam a etiqueta e o botao de ampliar */
+.work .work-cover{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,5,5,.55) 0%,transparent 30%);transition:opacity .4s}
 .work-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:14px;z-index:1}
 .work .wtag{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--green);background:rgba(4,6,5,.66);border:1px solid rgba(0,255,174,.32);border-radius:30px;padding:6px 11px;backdrop-filter:blur(4px)}
 .work .wzoom{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:1px solid var(--green);background:rgba(4,6,5,.55);display:flex;align-items:center;justify-content:center;color:var(--green);opacity:0;transform:scale(.6) rotate(-25deg);transition:opacity .4s,transform .5s cubic-bezier(.34,1.56,.64,1);backdrop-filter:blur(4px)}
 .work:hover .wzoom,.work:focus-visible .wzoom{opacity:1;transform:none}
 .work .wzoom svg{width:15px;height:15px}
-.work-info{position:absolute;left:0;right:0;bottom:0;padding:18px 16px;z-index:1}
-.work .wmetric{font-family:var(--disp);font-weight:700;font-size:clamp(22px,2.4vw,30px);line-height:1;color:var(--green);text-transform:uppercase;margin-bottom:6px}
-.work .wt{font-family:var(--disp);font-weight:600;font-size:clamp(17px,1.7vw,21px);text-transform:uppercase;line-height:1.1;color:#fff}
-.work .wseg{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:#c4c4c4;margin-top:6px;display:block}
+/* faixa de legenda: fora da imagem, titulo a esquerda e metrica a direita */
+.work-info{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:13px 15px 14px;border-top:1px solid var(--line);background:var(--panel)}
+.work .wtxt{display:block;min-width:0}
+.work .wmetric{flex:0 0 auto;font-family:var(--disp);font-weight:700;font-size:clamp(18px,1.9vw,24px);line-height:1;color:var(--green);text-transform:uppercase}
+.work .wt{display:block;font-family:var(--disp);font-weight:600;font-size:clamp(15px,1.5vw,18px);text-transform:uppercase;line-height:1.15;color:#fff}
+.work .wseg{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:#c4c4c4;margin-top:5px;display:block}
 .work[hidden]{display:none}
 .pf-empty{display:none;color:var(--gray);font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;padding:50px 0;text-align:center}
 @media(max-width:860px){.pf-grid{grid-template-columns:repeat(2,1fr)}}
