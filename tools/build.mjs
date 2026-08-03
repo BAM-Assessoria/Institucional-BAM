@@ -75,13 +75,16 @@ function head({ prefix, title, desc, path, jsonLd, ogType = 'website', firebase 
   const FB_SCRIPT = ' https://www.gstatic.com';
   const FB_CONNECT = ' https://firestore.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com';
   const FB_IMG = ' https://firebasestorage.googleapis.com https://storage.googleapis.com';
+  // Tag "Meu Site" (BAM-MKT): loader + rrweb (CDN) e endpoints de coleta (config/ingest).
+  const MS_SCRIPT = ' https://bammarketing.web.app https://cdn.jsdelivr.net';
+  const MS_CONNECT = ' https://southamerica-east1-projeto3-lr5vjl.cloudfunctions.net';
   const csp = [
     "default-src 'self'",
     "img-src 'self' data:" + (firebase ? FB_IMG : ''),
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    `script-src 'self' ${ldHash}` + (firebase ? FB_SCRIPT : ''),
-    "connect-src 'self'" + (firebase ? FB_CONNECT : ''),
+    `script-src 'self' ${ldHash}` + (firebase ? FB_SCRIPT : '') + MS_SCRIPT,
+    "connect-src 'self'" + (firebase ? FB_CONNECT : '') + MS_CONNECT,
     "form-action 'self' https://api.whatsapp.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -109,6 +112,7 @@ function head({ prefix, title, desc, path, jsonLd, ogType = 'website', firebase 
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="${prefix}css/styles.css">
+<script async src="https://bammarketing.web.app/bam-replay-loader.js" data-site-key="sk_-2AaWDaECuD1k7XG4QjzBISaQZA2lJcP"></script>
 <script type="application/ld+json">${ld}</script>`;
 }
 
