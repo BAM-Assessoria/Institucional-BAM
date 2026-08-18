@@ -20,6 +20,38 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Leads capturados pelas landing pages de material rico (/materiais/*).
+    // - Qualquer visitante PODE CRIAR um lead, sem login — é um formulário público.
+    // - Ninguém, além do admin, PODE LER: uma regra aberta aqui vazaria a base
+    //   inteira de contatos para quem souber o projectId (que é público).
+    // - Ninguém PODE EDITAR. O admin pode excluir, porque a LGPD (art. 18, VI)
+    //   dá ao titular o direito de pedir a eliminação dos dados dele.
+    match /leads/{leadId} {
+
+      function isValidLead() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['nome','email','telefone','empresa','consentimento','origem','material','createdAt'])
+          && d.keys().hasAll(['nome','email','telefone','consentimento','createdAt'])
+          && d.nome is string && d.nome.size() >= 2 && d.nome.size() <= 80
+          && d.email is string && d.email.size() <= 120
+             && d.email.matches('^[^@ ]+@[^@ ]+[.][^@ ]+$')
+          && d.telefone is string && d.telefone.size() >= 8 && d.telefone.size() <= 20
+          && (!('empresa' in d.keys()) || (d.empresa is string && d.empresa.size() <= 80))
+          && (!('origem' in d.keys()) || (d.origem is string && d.origem.size() <= 40))
+          && (!('material' in d.keys()) || (d.material is string && d.material.size() <= 60))
+          // Consentimento tem que ser afirmativo: sem ele o documento não existe.
+          // Isso faz a própria regra virar parte da evidência de conformidade.
+          && d.consentimento == true
+          // serverTimestamp() resolve para request.time no create, então a data
+          // não pode ser forjada pelo cliente.
+          && d.createdAt == request.time;
+      }
+
+      allow create: if isValidLead();
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
+
     // Bloqueia qualquer outra coleção por padrão.
     match /{document=**} {
       allow read, write: if false;
