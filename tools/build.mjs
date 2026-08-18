@@ -154,7 +154,10 @@ function head({ prefix, title, desc, path, jsonLd, ogType = 'website', firebase 
   // em google.com — sem `frame-src` ele cairia no default-src 'self' e o App
   // Check nunca conseguiria emitir token.
   const AC_SCRIPT = ' https://www.google.com'; // gstatic já vem de FB_SCRIPT
-  const AC_CONNECT = ' https://content-firebaseappcheck.googleapis.com';
+  // Além da troca do token, o próprio reCAPTCHA faz fetch para
+  // google.com/recaptcha/api2/clr — sem ele em connect-src o token sai
+  // inválido e o exchange responde 400.
+  const AC_CONNECT = ' https://content-firebaseappcheck.googleapis.com https://www.google.com';
   const AC_FRAME = ' https://www.google.com https://recaptcha.google.com';
   // Tag "Meu Site" (BAM-MKT): loader + rrweb (CDN) e endpoints de coleta (config/ingest).
   const MS_SCRIPT = ' https://bammarketing.web.app https://cdn.jsdelivr.net';
