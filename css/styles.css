@@ -720,7 +720,10 @@ form .btn{width:100%;justify-content:center;margin-top:4px}
 .bw-meta .pcat{color:var(--green)}
 .bw-meta .date{color:var(--gray)}
 .bw-fbody h3{font-family:var(--disp);font-weight:600;font-size:clamp(21px,2.5vw,32px);line-height:1.08;
-  text-transform:uppercase;transition:color .3s}
+  text-transform:uppercase;transition:color .3s;
+  /* O destaque vem do posts.json, então o título tem tamanho imprevisível:
+     limitar a 3 linhas evita que um título longo empurre o card. */
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .bw-feature:hover .bw-fbody h3{color:var(--green2)}
 .bw-fbody p{color:#bdbdbd;font-size:15px;line-height:1.55;max-width:48ch;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}

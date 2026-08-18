@@ -516,51 +516,14 @@ ${clientsWall(prefix)}
       <div class="blogwin-body">
         <div class="cgrid" aria-hidden="true"></div>
 
-        <!-- DESTAQUE = post mais novo -->
-        <a class="bw-feature" href="${prefix}blog/instagram-seo-respondemos-as-perguntas-mais-frequentes-e-montamos-um-checklist-final.html" data-hover>
-          <span class="bw-cover">
-            <img src="${prefix}assets/img/blog/instagram-seo-respondemos-as-perguntas-mais-frequentes-e-montamos-um-checklist-final.webp" alt="Instagram + SEO: checklist final" loading="lazy" decoding="async">
-            <span class="bw-badge">Destaque</span>
-          </span>
-          <span class="bw-fbody">
-            <span class="bw-meta"><span class="pcat">Blog</span><span class="date">26 Ago 2025</span></span>
-            <h3>Instagram + SEO: Perguntas Frequentes e Checklist Final</h3>
-            <p>Encerrando a série sobre indexação do Instagram no Google: as dúvidas mais comuns e um checklist prático para ser encontrado pelos buscadores.</p>
-            <span class="bw-go">Ler artigo <span class="ar">→</span></span>
-          </span>
-        </a>
+        <!-- DESTAQUE = post mais novo (posts[0]) -->
+        ${homeFeature(prefix, posts[0])}
 
-        <!-- ÚLTIMAS = próximos posts mais recentes -->
+        <!-- ÚLTIMAS = os quatro seguintes -->
         <div class="bw-list">
           <span class="bw-list-label">Últimas no blog</span>
 
-          <a class="bw-row" href="${prefix}blog/seus-reels-no-google-o-guia-completo-para-criar-conteudo-que-o-algoritmo-ama-e-indexa.html" data-hover>
-            <span class="bw-no">02</span>
-            <span class="bw-rthumb"><img src="${prefix}assets/img/blog/seus-reels-no-google-o-guia-completo-para-criar-conteudo-que-o-algoritmo-ama-e-indexa.webp" alt="" loading="lazy" decoding="async"></span>
-            <span class="bw-rtext"><span class="date">19 Ago 2025</span><h4>Seus Reels no Google: o guia completo do algoritmo</h4></span>
-            <span class="bw-chev" aria-hidden="true">›</span>
-          </a>
-
-          <a class="bw-row" href="${prefix}blog/otimizacao-de-instagram-para-google-5-estrategias-de-seo-alem-das-hashtags.html" data-hover>
-            <span class="bw-no">03</span>
-            <span class="bw-rthumb"><img src="${prefix}assets/img/blog/otimizacao-de-instagram-para-google-5-estrategias-de-seo-alem-das-hashtags.webp" alt="" loading="lazy" decoding="async"></span>
-            <span class="bw-rtext"><span class="date">12 Ago 2025</span><h4>Instagram para Google: 5 estratégias de SEO além das hashtags</h4></span>
-            <span class="bw-chev" aria-hidden="true">›</span>
-          </a>
-
-          <a class="bw-row" href="${prefix}blog/a-indexacao-do-instagram-pelo-google-uma-nova-fronteira-para-a-visibilidade-online.html" data-hover>
-            <span class="bw-no">04</span>
-            <span class="bw-rthumb"><img src="${prefix}assets/img/blog/a-indexacao-do-instagram-pelo-google-uma-nova-fronteira-para-a-visibilidade-online.webp" alt="" loading="lazy" decoding="async"></span>
-            <span class="bw-rtext"><span class="date">05 Ago 2025</span><h4>A indexação do Instagram pelo Google: nova fronteira</h4></span>
-            <span class="bw-chev" aria-hidden="true">›</span>
-          </a>
-
-          <a class="bw-row" href="${prefix}blog/marketing-de-afiliados-o-que-e-e-como-implementar.html" data-hover>
-            <span class="bw-no">05</span>
-            <span class="bw-rthumb"><img src="${prefix}assets/img/blog/marketing-de-afiliados-o-que-e-e-como-implementar.webp" alt="" loading="lazy" decoding="async"></span>
-            <span class="bw-rtext"><span class="date">24 Jun 2025</span><h4>Marketing de Afiliados: o que é e como implementar</h4></span>
-            <span class="bw-chev" aria-hidden="true">›</span>
-          </a>
+          ${posts.slice(1, 5).map((p, i) => homeRow(prefix, p, i + 2)).join('\n\n          ')}
         </div>
       </div>
 
@@ -823,6 +786,42 @@ function buildPrivacidade() {
     desc: 'Política de Privacidade da BAM Assessoria em Marketing, em conformidade com a LGPD: quais dados tratamos, finalidade e seus direitos.',
     path: '/privacidade.html', active: null, content,
   });
+}
+
+/* ---------- Janela do blog na home (#blog-destaque) ----------
+   Antes esses cards eram HTML fixo: slug, título, data e imagem escritos na
+   mão. Resultado, todo post novo exigia editar este arquivo — e o "destaque"
+   ficou parado em agosto de 2025. Agora sai de `posts`, que já vem ordenado
+   por data (linha 46), então o post mais recente assume o destaque sozinho. */
+function homeThumb(prefix, p) {
+  return p.cover
+    ? `<img src="${prefix}assets/img/blog/${p.cover}" alt="" loading="lazy" decoding="async">`
+    : `<img src="${ICON(prefix)}" alt="" aria-hidden="true">`;
+}
+
+function homeFeature(prefix, p) {
+  if (!p) return '';
+  return `<a class="bw-feature" href="${prefix}blog/${p.slug}.html" data-hover>
+          <span class="bw-cover">
+            ${p.cover ? `<img src="${prefix}assets/img/blog/${p.cover}" alt="${escAttr(p.title)}" loading="lazy" decoding="async">` : ''}
+            <span class="bw-badge">Destaque</span>
+          </span>
+          <span class="bw-fbody">
+            <span class="bw-meta"><span class="pcat">${esc(p.category || 'Blog')}</span><span class="date">${fmtDate(p.date)}</span></span>
+            <h3>${esc(p.title)}</h3>
+            <p>${esc(p.excerpt || '')}</p>
+            <span class="bw-go">Ler artigo <span class="ar">→</span></span>
+          </span>
+        </a>`;
+}
+
+function homeRow(prefix, p, n) {
+  return `<a class="bw-row" href="${prefix}blog/${p.slug}.html" data-hover>
+            <span class="bw-no">${String(n).padStart(2, '0')}</span>
+            <span class="bw-rthumb">${homeThumb(prefix, p)}</span>
+            <span class="bw-rtext"><span class="date">${fmtDate(p.date)}</span><h4>${esc(p.title)}</h4></span>
+            <span class="bw-chev" aria-hidden="true">›</span>
+          </a>`;
 }
 
 function postCard(prefix, p) {

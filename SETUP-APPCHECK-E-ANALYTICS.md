@@ -43,14 +43,22 @@ preenchida e o site publicado. Por isso:
 
 1. [console.firebase.google.com](https://console.firebase.google.com) → projeto
    **bam-site-fb9d5**.
-2. Menu lateral → **Criação** → **App Check**.
+2. Menu lateral → **Categorias dos produtos** → **Segurança** → **App Check**.
+   (Em consoles mais antigos o menu se chamava "Criação"/"Build".)
 3. Aba **Apps** → clique no app **Web** → **Registrar**.
 4. Escolha o provedor **reCAPTCHA v3**.
-5. O console abre o cadastro do reCAPTCHA. Informe os domínios:
-   - `www.bamassessoria.com`
-   - `bamassessoria.com`
-   - `bam-site-fb9d5.web.app` (domínio do Firebase Hosting)
-   - `localhost` — só se você quiser testar na sua máquina
+5. O console abre o cadastro do reCAPTCHA. **Informe TODOS os domínios abaixo** —
+   um domínio que ficar de fora para de emitir token e o formulário quebra lá:
+
+   | Domínio | Situação |
+   |---|---|
+   | `bamassessoria.com` | responde 200 |
+   | `www.bamassessoria.com` | responde 200 |
+   | `bamassessoria.com.br` | responde 200 — **fácil de esquecer** |
+   | `bam-site-fb9d5.web.app` | padrão do Hosting |
+   | `bam-site-fb9d5.firebaseapp.com` | padrão do Hosting |
+   | `localhost` | só se for testar na sua máquina |
+
 6. Copie a **chave do site** (site key).
 
 > A chave do site é pública, pode ficar no repositório. Quem não pode vazar é a
@@ -77,7 +85,7 @@ npx firebase-tools deploy --only hosting
 
 ### 4. Conferir se os tokens estão chegando
 
-No console → **App Check** → aba **APIs** → **Cloud Firestore**. Abra o site em
+No console → **Segurança → App Check** → aba **APIs** → **Cloud Firestore**. Abra o site em
 produção, navegue pelo blog, entre no `/admin` e envie o formulário da landing
 page. Em alguns minutos o gráfico deve mostrar requisições **verificadas**.
 
@@ -86,7 +94,7 @@ page. Em alguns minutos o gráfico deve mostrar requisições **verificadas**.
 
 ### 5. Ligar a exigência
 
-Console → **App Check** → aba **APIs** → **Cloud Firestore** → **Aplicar**.
+Console → **Segurança → App Check** → aba **APIs** → **Cloud Firestore** → **Aplicar**.
 Faça o mesmo para o **Cloud Storage** (as capas dos posts do `/admin`).
 
 Se algo quebrar, o botão **Cancelar aplicação** desfaz na hora.
@@ -94,7 +102,7 @@ Se algo quebrar, o botão **Cancelar aplicação** desfaz na hora.
 ### Testar na sua máquina depois de aplicar
 
 Com a exigência ligada, `localhost` para de funcionar. Para voltar a testar
-local: console → App Check → app Web → menu ⋮ → **Gerenciar tokens de
+local: console → Segurança → App Check → app Web → menu ⋮ → **Gerenciar tokens de
 depuração**. No navegador, abra o console e rode
 `self.FIREBASE_APPCHECK_DEBUG_TOKEN = true`, recarregue, copie o token que
 aparece no console e cadastre-o no Firebase.
@@ -159,7 +167,7 @@ Isso deixou de ser verdade, então o texto foi reescrito (a página é gerada po
 
 | # | Ação | Onde |
 |---|---|---|
-| 1 | Registrar o app no App Check com reCAPTCHA v3 | Console Firebase |
+| 1 | Registrar o app no App Check (Segurança → App Check) com reCAPTCHA v3, listando TODOS os domínios | Console Firebase |
 | 2 | Colar a chave em `recaptchaSiteKey` | `js/firebase-config.js` |
 | 3 | `node tools/build.mjs` | terminal |
 | 4 | `npx firebase-tools deploy --only firestore:rules` | terminal |

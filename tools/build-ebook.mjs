@@ -486,7 +486,9 @@ const HTML = `<!DOCTYPE html>
   <span style="position:absolute;width:620px;height:620px;right:-190px;top:-200px;border-radius:50%;
     background:radial-gradient(circle,rgba(0,255,174,.22) 0%,rgba(0,255,174,0) 68%)"></span>
   <div style="position:absolute;left:72px;right:72px;top:64px;bottom:60px;display:flex;flex-direction:column">
-    <svg viewBox="120 254 672 398" style="width:96px;fill:#57F5C3;display:block">
+    <!-- O logo fica à DIREITA: no card em destaque da home o site sobrepõe um
+         selo "Destaque" no canto superior esquerdo da capa. -->
+    <svg viewBox="120 254 672 398" style="width:96px;fill:#57F5C3;display:block;align-self:flex-end">
       <polygon points="128.7 262 273.4 262 413.4 452.8 273.4 643.5 128.7 643.5 268.7 452.8 128.7 262"/>
       <polygon points="313.7 262 458.3 262 598.3 452.8 458.3 643.5 313.7 643.5 453.7 452.8 313.7 262"/>
       <polygon points="498.6 262 643.3 262 783.3 452.8 643.3 643.5 498.6 643.5 638.6 452.8 498.6 262"/>
