@@ -890,3 +890,195 @@ a.svc-shot:hover .svc-shot-go{transform:translateX(4px)}
 .reel-cap{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--gray);padding:14px 16px;border-top:1px solid var(--line)}
 @media(max-width:1024px){.reels{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.reels{grid-template-columns:1fr}}
+
+/* =========================================================================
+   LANDING PAGE DE MATERIAL RICO (/materiais/*)
+   -------------------------------------------------------------------------
+   Página gerada com `chrome:false` no build: sem topbar, sem menu, sem rodapé
+   completo e sem o botão flutuante do WhatsApp. A regra aqui é uma só — cada
+   link a mais é uma rota de fuga da conversão, então a página tem exatamente
+   dois destinos: o formulário e o download.
+   Como não existe a topbar fixa, NÃO reaproveitar `.page-head` (o padding-top
+   dele é calibrado para a barra, veja o bloco "cabeçalho padrão de página
+   interna"). Estas seções montam o próprio espaçamento.
+   ========================================================================= */
+
+/* barra mínima: só a marca, sem navegação */
+.lp-bar{padding:22px var(--gut);display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid var(--line)}
+.lp-bar .lp-logo{display:flex;align-items:center;gap:11px}
+.lp-bar .lp-logo img{height:30px;width:auto;display:block}
+.lp-bar .lp-logo b{font-family:var(--mono);font-size:11px;font-weight:400;text-transform:uppercase;letter-spacing:.16em;color:var(--gray)}
+.lp-bar .lp-back{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--gray);transition:color .3s}
+.lp-bar .lp-back:hover{color:var(--green)}
+
+/* ---------- hero: copy à esquerda, formulário à direita ---------- */
+.lp-hero{position:relative;overflow:hidden;padding:clamp(44px,6vw,80px) var(--gut) clamp(56px,7vw,96px)}
+/* .hero-grid e .hero-glow do site são escopados em .page-head, que esta página
+   não usa (não há topbar fixa aqui) — então o fundo é redeclarado. */
+.lp-hero .hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(ellipse 90% 80% at 50% 40%,#000 25%,transparent 80%);opacity:.4;z-index:0}
+.lp-hero .hero-glow{position:absolute;width:60vw;height:60vw;max-width:720px;max-height:720px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,174,.12),transparent 62%);top:-32%;right:-10%;z-index:0;filter:blur(10px)}
+.lp-wrap{max-width:1240px;margin:0 auto;position:relative;z-index:1}
+.lp-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(32px,4vw,64px);align-items:start}
+
+.lp-kick{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--green);border:1px solid rgba(0,255,174,.28);background:rgba(0,255,174,.06);border-radius:999px;padding:8px 15px}
+.lp-hero h1{font-family:var(--disp);font-weight:600;text-transform:uppercase;line-height:.98;letter-spacing:-.01em;font-size:clamp(38px,5.6vw,72px);margin:22px 0 0}
+.lp-hero h1 .g{background:linear-gradient(100deg,var(--green),var(--green3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lp-hero .lp-sub{color:#c4c4c4;font-size:clamp(15px,1.35vw,18px);line-height:1.65;margin-top:22px;max-width:560px}
+
+/* o que vem dentro — lista curta, com o chevron da marca */
+.lp-gets{margin-top:30px;display:flex;flex-direction:column;gap:14px;max-width:560px}
+.lp-gets li{display:flex;gap:13px;align-items:flex-start;line-height:1.5;color:#e4e4e4;font-size:15px}
+.lp-gets li::before{content:"";flex:0 0 auto;width:11px;height:11px;margin-top:6px;background:var(--green);clip-path:polygon(0 0,52% 0,100% 50%,52% 100%,0 100%,48% 50%)}
+
+/* linha de confiança abaixo da lista */
+.lp-trust{margin-top:32px;padding-top:24px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:26px}
+.lp-trust div{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--gray)}
+.lp-trust b{display:block;font-family:var(--body);font-size:22px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--green);margin-bottom:3px}
+
+/* ---------- cartão do formulário ---------- */
+.lp-card{border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,rgba(0,255,174,.05),rgba(255,255,255,.02));padding:clamp(22px,2.4vw,30px);position:sticky;top:24px}
+.lp-card .lp-cover{display:block;width:118px;margin:0 auto 18px;border-radius:5px;box-shadow:0 18px 40px rgba(0,0,0,.55);border:1px solid var(--line)}
+.lp-card h2{font-family:var(--disp);font-weight:600;text-transform:uppercase;font-size:clamp(20px,2vw,26px);line-height:1.1;text-align:center}
+.lp-card .lp-cardsub{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--green);text-align:center;margin-top:9px}
+
+/* o <form> do site já vem com moldura própria (regra `form` do bloco contact);
+   dentro do cartão isso viraria caixa-dentro-de-caixa, então zeramos. */
+.lp-card form{border:0;background:none;padding:0;margin-top:22px;border-radius:0}
+
+/* consentimento LGPD: obrigatório antes de gravar o lead */
+.lp-consent{display:flex;gap:11px;align-items:flex-start;margin:4px 0 18px}
+.lp-consent input{flex:0 0 auto;width:17px;height:17px;margin-top:2px;accent-color:var(--green);cursor:pointer}
+.lp-consent label{font-size:12.5px;line-height:1.5;color:var(--gray);cursor:pointer}
+.lp-consent a{color:var(--green3);text-decoration:underline;text-underline-offset:2px}
+
+/* honeypot: some para gente, visível para robô de formulário */
+.lp-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+.lp-card .btn[disabled]{opacity:.55;cursor:not-allowed;transform:none}
+.lp-card .btn[disabled]:hover::before{transform:translateY(101%)}
+.lp-card .btn[disabled]:hover span{color:#000}
+
+/* erro de envio */
+.lp-err{display:none;margin-top:14px;padding:12px 14px;border:1px solid rgba(255,90,90,.4);background:rgba(255,90,90,.08);border-radius:5px;font-size:13px;line-height:1.5;color:#ffb3b3}
+.lp-err.on{display:block}
+
+/* ---------- estado de sucesso (troca o formulário pelo download) ---------- */
+.lp-done{display:none;text-align:center}
+.lp-done.on{display:block}
+.lp-done .lp-check{width:56px;height:56px;margin:0 auto 18px;border-radius:50%;background:rgba(0,255,174,.12);border:1px solid rgba(0,255,174,.4);display:grid;place-items:center}
+.lp-done .lp-check svg{width:26px;height:26px;stroke:var(--green);fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.lp-done h2{margin-bottom:10px}
+.lp-done p{color:#c4c4c4;font-size:14.5px;line-height:1.6;margin-bottom:22px}
+.lp-done .btn{width:100%;justify-content:center}
+.lp-done .lp-alt{display:block;margin-top:16px;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--gray);transition:color .3s}
+.lp-done .lp-alt:hover{color:var(--green)}
+
+/* ---------- "o que tem dentro": um cartão por capítulo ---------- */
+.lp-chapters{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+.lp-chap{border:1px solid var(--line);border-radius:11px;padding:26px 24px;background:rgba(255,255,255,.02);transition:border-color .3s,transform .3s}
+.lp-chap:hover{border-color:rgba(0,255,174,.32);transform:translateY(-3px)}
+.lp-chap .n{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--green);display:block;margin-bottom:13px}
+.lp-chap h3{font-family:var(--disp);font-weight:500;text-transform:uppercase;font-size:17px;line-height:1.2;margin-bottom:10px}
+.lp-chap p{color:#b4b4b4;font-size:14px;line-height:1.6}
+
+/* ---------- para quem é / para quem não é ---------- */
+.lp-fit{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:44px}
+.lp-fit>div{border:1px solid var(--line);border-radius:11px;padding:28px 26px}
+.lp-fit .yes{background:rgba(0,255,174,.04);border-color:rgba(0,255,174,.22)}
+.lp-fit h3{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.14em;margin-bottom:18px}
+.lp-fit .yes h3{color:var(--green)}
+.lp-fit .no h3{color:var(--gray)}
+.lp-fit ul{display:flex;flex-direction:column;gap:13px}
+.lp-fit li{display:flex;gap:11px;align-items:flex-start;font-size:14.5px;line-height:1.55;color:#d6d6d6}
+.lp-fit li::before{flex:0 0 auto;font-family:var(--mono);font-size:13px;line-height:1.5}
+.lp-fit .yes li::before{content:"+";color:var(--green)}
+.lp-fit .no li::before{content:"–";color:var(--gray)}
+.lp-fit .no li{color:#9a9a9a}
+
+/* ---------- chamada final ---------- */
+.lp-final{text-align:center;padding:clamp(48px,6vw,86px) var(--gut)}
+.lp-final h2{font-family:var(--disp);font-weight:600;text-transform:uppercase;font-size:clamp(28px,4vw,52px);line-height:1.02;margin-bottom:20px}
+.lp-final p{color:#c4c4c4;max-width:560px;margin:0 auto 30px;line-height:1.65}
+
+/* ---------- rodapé enxuto ---------- */
+.lp-foot{border-top:1px solid var(--line);padding:30px var(--gut);display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center}
+.lp-foot p,.lp-foot a{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--gray)}
+.lp-foot a{transition:color .3s}.lp-foot a:hover{color:var(--green)}
+.lp-foot .lp-fl{display:flex;gap:20px;flex-wrap:wrap}
+
+@media(max-width:1024px){
+  .lp-grid{grid-template-columns:1fr}
+  /* No celular a copy vem ANTES do formulário (ordem natural do DOM): o tráfego
+     chega frio do post do blog e precisa da promessa antes de entregar o dado.
+     Quem já está convencido usa o botão da chamada final, que ancora em #form. */
+  .lp-card{position:static}
+  .lp-chapters{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:640px){
+  .lp-chapters,.lp-fit{grid-template-columns:1fr}
+  .lp-trust{gap:18px}
+  .lp-bar .lp-back{display:none}
+}
+
+/* -------------------------------------------------------------------------
+   Chamada do material rico DENTRO de um artigo do blog.
+   O post é quem traz tráfego (SEO, redes); a landing page é quem converte.
+   Esta caixa é a ponte entre os dois — aparece no meio e no fim do artigo.
+   Vive dentro de `.prose`, então precisa vencer os estilos de <a> e <img>
+   herdados do bloco de texto longo.
+   ------------------------------------------------------------------------- */
+.prose .ebook-cta{display:grid;grid-template-columns:96px 1fr;gap:22px;align-items:center;margin:38px 0;padding:24px 26px;border:1px solid rgba(0,255,174,.28);border-radius:14px;background:radial-gradient(circle at 12% 0,rgba(0,255,174,.13),transparent 62%),var(--panel);text-decoration:none;transition:border-color .3s,transform .3s}
+.prose .ebook-cta:hover{border-color:var(--green);transform:translateY(-3px)}
+.prose .ebook-cta img{width:96px;height:auto;margin:0;border-radius:4px;border:1px solid var(--line);box-shadow:0 12px 28px rgba(0,0,0,.5);display:block}
+.prose .ebook-cta .ec-k{display:block;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.16em;color:var(--green);margin-bottom:9px}
+.prose .ebook-cta strong{display:block;font-family:var(--disp);font-weight:600;text-transform:uppercase;font-size:clamp(19px,2.2vw,25px);line-height:1.14;color:#fff;margin-bottom:9px}
+.prose .ebook-cta .ec-d{display:block;color:#b6b6b6;font-size:14.5px;line-height:1.55;margin-bottom:13px}
+.prose .ebook-cta .ec-go{display:block;font-family:var(--mono);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green)}
+@media(max-width:640px){
+  .prose .ebook-cta{grid-template-columns:1fr;gap:16px}
+  .prose .ebook-cta img{width:84px}
+}
+
+/* =========================================================================
+   AVISO DE COOKIES (js/consent.js)
+   -------------------------------------------------------------------------
+   Barra inferior, discreta, presente em todas as páginas até haver decisão.
+   O markup é criado por JS — a CSP não permite script inline, mas permite
+   criar elementos, então o banner nasce do módulo js/consent.js.
+   Não bloqueia a leitura do conteúdo de propósito: um "muro" de cookies
+   derruba a conversão e não é exigido pela LGPD.
+   ========================================================================= */
+.ck{position:fixed;left:0;right:0;bottom:0;z-index:900;padding:0 var(--gut) max(16px,env(safe-area-inset-bottom));
+  transform:translateY(115%);transition:transform .34s cubic-bezier(.7,0,.3,1)}
+.ck.on{transform:translateY(0)}
+/* O botão flutuante do WhatsApp mora no canto inferior direito (z-index 910) e
+   ficaria por cima do banner. Enquanto a escolha estiver aberta, ele sobe. */
+body.ck-open .wa-float{transform:translateY(-118px)}
+body.ck-open .wa-float:hover{transform:translateY(-118px) scale(1.08)}
+@media(max-width:760px){
+  body.ck-open .wa-float{transform:translateY(-238px)}
+  body.ck-open .wa-float:hover{transform:translateY(-238px) scale(1.08)}
+}
+.ck-in{max-width:1240px;margin:0 auto;background:rgba(8,12,11,.97);border:1px solid var(--line);
+  border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:26px;
+  box-shadow:0 22px 60px rgba(0,0,0,.6);backdrop-filter:blur(10px)}
+.ck-txt{font-size:13.5px;line-height:1.55;color:#c4c4c4;margin:0}
+.ck-txt strong{color:#fff;font-weight:600}
+.ck-txt a{color:var(--green3);text-decoration:underline;text-underline-offset:2px}
+.ck-btns{display:flex;gap:10px;flex:0 0 auto}
+.ck-btns button{font-family:var(--mono);font-size:12px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;padding:12px 20px;border-radius:4px;cursor:pointer;
+  transition:background .25s,color .25s,border-color .25s}
+.ck-yes{background:var(--green);color:#000;border:1px solid var(--green)}
+.ck-yes:hover{background:var(--green2);border-color:var(--green2)}
+.ck-no{background:transparent;color:#c4c4c4;border:1px solid var(--line)}
+.ck-no:hover{color:#fff;border-color:var(--gray)}
+
+@media(max-width:760px){
+  .ck-in{flex-direction:column;align-items:stretch;gap:16px;padding:18px}
+  .ck-btns button{flex:1}
+}
+/* Quem pediu menos movimento não recebe a animação de entrada. */
+@media(prefers-reduced-motion:reduce){
+  .ck{transition:none}
+}

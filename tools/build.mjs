@@ -149,16 +149,29 @@ function head({ prefix, title, desc, path, jsonLd, ogType = 'website', firebase 
   const FB_SCRIPT = ' https://www.gstatic.com';
   const FB_CONNECT = ' https://firestore.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com';
   const FB_IMG = ' https://firebasestorage.googleapis.com https://storage.googleapis.com';
+  // App Check com reCAPTCHA v3: o script vem de google.com/gstatic, o token é
+  // trocado em content-firebaseappcheck e o reCAPTCHA monta um IFRAME INVISÍVEL
+  // em google.com — sem `frame-src` ele cairia no default-src 'self' e o App
+  // Check nunca conseguiria emitir token.
+  const AC_SCRIPT = ' https://www.google.com'; // gstatic já vem de FB_SCRIPT
+  const AC_CONNECT = ' https://content-firebaseappcheck.googleapis.com';
+  const AC_FRAME = ' https://www.google.com https://recaptcha.google.com';
   // Tag "Meu Site" (BAM-MKT): loader + rrweb (CDN) e endpoints de coleta (config/ingest).
   const MS_SCRIPT = ' https://bammarketing.web.app https://cdn.jsdelivr.net';
   const MS_CONNECT = ' https://southamerica-east1-projeto3-lr5vjl.cloudfunctions.net';
+  // GA4 (gtag.js). Vai em TODAS as páginas, mas só dispara depois do aceite no
+  // banner de consentimento — ver js/consent.js.
+  const GA_SCRIPT = ' https://www.googletagmanager.com';
+  const GA_CONNECT = ' https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://www.googletagmanager.com';
+  const GA_IMG = ' https://www.google-analytics.com https://www.googletagmanager.com';
   const csp = [
     "default-src 'self'",
-    "img-src 'self' data:" + (firebase ? FB_IMG : ''),
+    "img-src 'self' data:" + (firebase ? FB_IMG : '') + GA_IMG,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    `script-src 'self' ${ldHash}` + (firebase ? FB_SCRIPT : '') + MS_SCRIPT,
-    "connect-src 'self'" + (firebase ? FB_CONNECT : '') + MS_CONNECT,
+    `script-src 'self' ${ldHash}` + (firebase ? FB_SCRIPT + AC_SCRIPT : '') + MS_SCRIPT + GA_SCRIPT,
+    "connect-src 'self'" + (firebase ? FB_CONNECT + AC_CONNECT : '') + MS_CONNECT + GA_CONNECT,
+    "frame-src 'self'" + (firebase ? AC_FRAME : ''),
     "form-action 'self' https://api.whatsapp.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -255,7 +268,7 @@ function footer(prefix, active, portfolio = true) {
       <div class="foot-col"><h4>Contato</h4><a href="tel:${SITE.tel}">${SITE.telDisplay}</a><a href="mailto:${SITE.email}">${SITE.email}</a><p>${SITE.addr}</p></div>
       <div class="foot-col"><h4>Receba insights</h4><form class="news" id="newsForm"><input type="email" name="news" placeholder="seu@email.com" aria-label="Email" required><button type="submit" aria-label="Inscrever">→</button></form><h4 style="margin-top:22px">Social</h4><a href="${SITE.instagram}" target="_blank" rel="noopener noreferrer">Instagram</a><a href="${SITE.linkedin}" target="_blank" rel="noopener noreferrer">LinkedIn</a></div>
     </div>
-    <div class="foot-bot"><span>© 2026 B.A.M. Assessoria em Marketing — Todos os direitos reservados</span><span><a href="${prefix}privacidade.html">Política de Privacidade</a> · SP / BR</span></div>
+    <div class="foot-bot"><span>© 2026 B.A.M. Assessoria em Marketing — Todos os direitos reservados</span><span><a href="${prefix}privacidade.html">Política de Privacidade</a> · <a href="#" data-cookies>Cookies</a> · SP / BR</span></div>
   </div>
 </footer>`;
 }
@@ -266,7 +279,9 @@ function waFloat() {
 </a>`;
 }
 
-function page({ prefix, bodyClass = '', title, desc, path, active, hasLoader = false, jsonLd, ogType, content, firebase = false, noindex = false, extraScripts = '', portfolio = true }) {
+// `chrome: false` gera a página sem menu, rodapé e botão flutuante do WhatsApp.
+// Serve para landing pages, onde cada link a mais é uma rota de fuga da conversão.
+function page({ prefix, bodyClass = '', title, desc, path, active, hasLoader = false, jsonLd, ogType, content, firebase = false, noindex = false, extraScripts = '', portfolio = true, chrome = true }) {
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -275,14 +290,15 @@ ${head({ prefix, title, desc, path, jsonLd, ogType, firebase, noindex })}
 <body${bodyClass ? ` class="${bodyClass}"` : ''}>
 <a class="skip-link" href="#main">Pular para o conteúdo</a>
 <div class="progress" id="progress" aria-hidden="true"></div>
-${hasLoader ? loader(prefix) + '\n' : ''}${header(prefix, active, portfolio)}
+${hasLoader ? loader(prefix) + '\n' : ''}${chrome ? header(prefix, active, portfolio) : ''}
 <span id="top"></span>
 <main id="main">
 ${content}
 </main>
-${footer(prefix, active, portfolio)}
-${waFloat()}
+${chrome ? footer(prefix, active, portfolio) : ''}
+${chrome ? waFloat() : ''}
 <script src="${prefix}js/main.js" defer></script>
+<script type="module" src="${prefix}js/consent.js"></script>
 ${extraScripts}</body>
 </html>
 `;
@@ -752,7 +768,7 @@ function buildPrivacidade() {
 <section class="section">
   <div class="wrap">
     <div class="prose center">
-      <p><strong>Última atualização:</strong> junho de 2026.</p>
+      <p><strong>Última atualização:</strong> agosto de 2026.</p>
       <p>A sua privacidade é importante para a <strong>BAM Assessoria em Marketing</strong> ("BAM", "nós"). Esta política explica quais dados pessoais tratamos, com qual finalidade e quais são os seus direitos. Ao utilizar este site e nossos canais de contato, você concorda com as práticas aqui descritas.</p>
 
       <h2>1. Quem é o controlador</h2>
@@ -761,7 +777,9 @@ function buildPrivacidade() {
       <h2>2. Quais dados coletamos</h2>
       <ul>
         <li><strong>Dados que você nos fornece:</strong> nome, e-mail, telefone, empresa/segmento e a mensagem enviada pelo formulário de contato ou pela newsletter. Esses dados são enviados diretamente ao nosso WhatsApp comercial quando você submete o formulário.</li>
-        <li><strong>Dados de navegação:</strong> este site é estático e <strong>não utiliza cookies de rastreamento próprios</strong>. Recursos externos (como as fontes do Google Fonts) podem registrar seu endereço IP ao carregar os arquivos, conforme as políticas do respectivo provedor.</li>
+        <li><strong>Dados de materiais gratuitos:</strong> ao baixar um e-book ou guia em nossas páginas de material rico, registramos nome, e-mail, telefone, empresa (opcional), a origem do acesso e o material solicitado. Esse registro só acontece mediante o seu consentimento explícito, marcado no próprio formulário, e fica armazenado no Cloud Firestore (Google), acessível apenas à equipe autorizada da BAM.</li>
+        <li><strong>Dados de navegação:</strong> utilizamos o <strong>Google Analytics 4</strong> para entender de forma agregada quais conteúdos são acessados e como o site é utilizado. Esses cookies <strong>só são gravados após o seu aceite</strong> no aviso exibido na primeira visita — se você recusar, nenhum cookie de medição é criado. Sua escolha pode ser alterada a qualquer momento pelo link <strong>&ldquo;Cookies&rdquo;</strong> no rodapé. Coletamos o IP de forma anonimizada e não utilizamos os dados para publicidade ou remarketing.</li>
+        <li><strong>Recursos de terceiros:</strong> serviços externos carregados pelo site (fontes do Google Fonts, o serviço de proteção reCAPTCHA do Google, que protege nossos formulários contra envios automatizados, e nossa ferramenta de análise de sessão) podem registrar seu endereço IP ao carregar os arquivos, conforme as políticas do respectivo provedor.</li>
       </ul>
 
       <h2>3. Para que usamos os dados</h2>
@@ -775,19 +793,27 @@ function buildPrivacidade() {
       <h2>4. Base legal</h2>
       <p>Tratamos seus dados com base no seu <strong>consentimento</strong> e na execução de <strong>procedimentos preliminares a um contrato</strong> a seu pedido, nos termos do art. 7º da LGPD.</p>
 
-      <h2>5. Compartilhamento</h2>
-      <p>Não vendemos seus dados. Podemos compartilhá-los com operadores que nos apoiam na prestação do serviço (por exemplo, a plataforma de mensagens WhatsApp/Meta), sempre limitados à finalidade informada. Esses terceiros possuem políticas de privacidade próprias.</p>
+      <h2>5. Cookies e sua escolha</h2>
+      <p>Cookies são pequenos arquivos gravados no seu navegador. Usamos apenas duas categorias:</p>
+      <ul>
+        <li><strong>Essenciais:</strong> guardam a sua própria decisão sobre cookies, para que o aviso não reapareça a cada visita. Não identificam você e não podem ser desativados, já que sem eles a escolha não seria respeitada.</li>
+        <li><strong>De medição (Google Analytics 4):</strong> mostram, de forma agregada, quantas pessoas acessam cada página e por quais caminhos chegam. <strong>Só são gravados se você aceitar.</strong> Enquanto não houver aceite, o Google Analytics permanece desativado por meio do Consent Mode e nenhum identificador é criado.</li>
+      </ul>
+      <p>Você pode aceitar ou recusar no aviso da primeira visita e <strong>rever a decisão quando quiser</strong> pelo link <strong>&ldquo;Cookies&rdquo;</strong> no rodapé de qualquer página. Recusar não limita nenhuma funcionalidade do site.</p>
 
-      <h2>6. Seus direitos</h2>
+      <h2>6. Compartilhamento</h2>
+      <p>Não vendemos seus dados. Podemos compartilhá-los com operadores que nos apoiam na prestação do serviço (por exemplo, a plataforma de mensagens WhatsApp/Meta, e o Google, como provedor do Firebase e do Google Analytics), sempre limitados à finalidade informada. Esses terceiros possuem políticas de privacidade próprias.</p>
+
+      <h2>7. Seus direitos</h2>
       <p>Conforme a LGPD, você pode a qualquer momento solicitar: confirmação da existência de tratamento; acesso aos dados; correção de dados incompletos ou desatualizados; anonimização ou eliminação; portabilidade; e revogação do consentimento. Para exercer seus direitos, escreva para <a href="mailto:${SITE.email}">${SITE.email}</a>.</p>
 
-      <h2>7. Retenção e segurança</h2>
+      <h2>8. Retenção e segurança</h2>
       <p>Mantemos os dados apenas pelo tempo necessário às finalidades descritas ou conforme exigido por lei. Adotamos medidas técnicas e organizacionais razoáveis para proteger seus dados contra acesso não autorizado, perda ou alteração.</p>
 
-      <h2>8. Alterações desta política</h2>
+      <h2>9. Alterações desta política</h2>
       <p>Podemos atualizar esta política periodicamente. A versão vigente estará sempre disponível nesta página, com a data da última atualização.</p>
 
-      <h2>9. Contato</h2>
+      <h2>10. Contato</h2>
       <p>Dúvidas sobre esta política ou sobre o tratamento dos seus dados? Fale com a gente: <a href="mailto:${SITE.email}">${SITE.email}</a> · <a href="tel:${SITE.tel}">${SITE.telDisplay}</a>.</p>
     </div>
   </div>
@@ -949,6 +975,196 @@ function buildPostViewer() {
   });
 }
 
+/* ---------- Landing page de material rico (/materiais/<slug>/) ----------
+   Página de conversão: gerada com `chrome:false` (sem menu, rodapé completo
+   nem botão flutuante do WhatsApp) porque cada link a mais é uma rota de
+   fuga do formulário. O post do blog é quem traz tráfego; esta página só
+   converte. Precisa de `firebase:true` — a CSP tem que liberar gstatic e
+   firestore.googleapis.com para o `addDoc` de js/lp-ebook.js funcionar. */
+function buildLpEbook() {
+  const prefix = '../../';
+  const book = J('data/ebook-smarketing.json');
+  if (!book) return null;
+
+  const dir = 'materiais/' + book.slug;
+  const path = '/' + dir + '/';
+  const pdf = prefix + book.pdf;
+  const capa = prefix + 'assets/img/ebooks/smarketing-capa.webp';
+  const wa = `https://api.whatsapp.com/send/?phone=${SITE.whats}&text=${encodeURIComponent('Olá! Baixei o guia Smarketing na Prática e quero falar com a BAM.')}`;
+
+  // Um cartão por capítulo, com a promessa concreta de cada um.
+  const CHAPS = [
+    ['01', 'O abismo entre marketing e comercial', 'Os cinco sintomas de uma operação desalinhada e onde o custo desse atrito aparece — mesmo sem linha no relatório.'],
+    ['02', 'ICP e critérios de qualificação', 'Como escrever a definição de MQL e SQL que as duas áreas assinam embaixo, e quais filtros elevam a qualidade sem matar o volume.'],
+    ['03', 'O SLA interno', 'Modelo de acordo pronto: volume de MQLs, tempo até o primeiro contato, tentativas mínimas e motivos de perda padronizados.'],
+    ['04', 'Integração e feedback loop', 'O CRM como fonte única da verdade, a pauta da reunião semanal e o fluxo de nutrição para quem não fechou agora.'],
+    ['05', 'Abordagem orientada a contexto', 'A matriz de objeções x conteúdo: qual material responde a qual objeção, e em que momento da negociação usar.'],
+    ['06', 'Checklist para esta semana', 'Oito passos aplicáveis sem ferramenta nova e sem reestruturar o time — para sair do diagnóstico e começar.'],
+  ];
+
+  const jsonLd = JSON.stringify({
+    '@context': 'https://schema.org', '@type': 'WebPage',
+    name: book.title + ' — guia gratuito', url: SITE.url + path,
+    description: book.subtitle, inLanguage: 'pt-BR',
+    isPartOf: { '@type': 'WebSite', name: SITE.name, url: SITE.url + '/' },
+    primaryImageOfPage: { '@type': 'ImageObject', url: SITE.url + '/assets/img/ebooks/smarketing-capa.webp' },
+    about: { '@type': 'Thing', name: 'Alinhamento entre marketing e vendas (Smarketing) em operações B2B' },
+    publisher: { '@type': 'Organization', name: SITE.name, url: SITE.url + '/' },
+  });
+
+  const content = `<div class="lp-bar">
+  <a class="lp-logo" href="${prefix}index.html" data-hover>
+    <img src="${ICON(prefix)}" alt="${escAttr(SITE.name)}" width="30" height="30">
+    <b>${esc(SITE.name)}</b>
+  </a>
+  <a class="lp-back" href="${prefix}index.html">Ir para o site &rarr;</a>
+</div>
+
+<!-- HERO + FORMULÁRIO -->
+<section class="lp-hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="lp-wrap">
+    <div class="lp-grid">
+
+      <div>
+        <span class="lp-kick r up in">Guia gratuito &middot; B2B</span>
+        <h1 class="r up in d1">Marketing entrega.<br>Vendas reclama.<br><span class="g">E a meta não fecha.</span></h1>
+        <p class="lp-sub r up in d2">É o retrato mais comum das operações B2B que crescem rápido: uma área medida por
+        volume de leads, outra por receita fechada — e dois times remando em direções distintas dentro da mesma empresa.
+        <strong>${esc(book.title)}</strong> mostra como transformar isso em um único funil de receita, com critérios,
+        acordos e rotinas prontos para adaptar ao seu tamanho.</p>
+
+        <ul class="lp-gets r up in d3">
+          <li>Critérios objetivos de MQL e SQL para encerrar a discussão sobre &ldquo;lead ruim&rdquo;</li>
+          <li>Modelo pronto de SLA entre marketing e comercial, com metas por área</li>
+          <li>Matriz de objeções x conteúdo para acelerar o fechamento</li>
+          <li>Checklist de 8 passos para aplicar já nesta semana</li>
+        </ul>
+
+        <div class="lp-trust r up d4">
+          <div><b>15</b> páginas</div>
+          <div><b>5</b> capítulos + checklist</div>
+          <div><b>PDF</b> download imediato</div>
+        </div>
+      </div>
+
+      <div class="lp-card r right d1" id="form">
+        <div id="lpCardHead">
+          <img class="lp-cover" src="${capa}" alt="Capa do guia ${escAttr(book.title)}" width="118" height="167" decoding="async">
+          <h2>Receba o guia<br>agora</h2>
+          <p class="lp-cardsub">PDF &middot; 15 páginas &middot; Gratuito</p>
+        </div>
+
+        <form id="lpForm" data-material="${escAttr(book.slug)}" aria-label="Formulário para receber o guia">
+          <div class="field"><label for="lpNome">Nome completo*</label>
+            <input id="lpNome" type="text" name="nome" required maxlength="80" placeholder="Seu nome" autocomplete="name"></div>
+          <div class="field"><label for="lpEmail">E-mail corporativo*</label>
+            <input id="lpEmail" type="email" name="email" required maxlength="120" placeholder="voce@empresa.com" autocomplete="email"></div>
+          <div class="field"><label for="lpTelefone">WhatsApp*</label>
+            <input id="lpTelefone" type="tel" name="telefone" required maxlength="20" placeholder="(11) 9 0000-0000" autocomplete="tel"></div>
+          <div class="field"><label for="lpEmpresa">Empresa</label>
+            <input id="lpEmpresa" type="text" name="empresa" maxlength="80" placeholder="Nome da empresa" autocomplete="organization"></div>
+
+          <div class="lp-hp" aria-hidden="true">
+            <label for="lpSite">Não preencha este campo</label>
+            <input id="lpSite" type="text" name="site" tabindex="-1" autocomplete="off">
+          </div>
+
+          <div class="lp-consent">
+            <input id="lpConsent" type="checkbox" required>
+            <label for="lpConsent">Autorizo a BAM Assessoria a usar meus dados para enviar este material e
+            entrar em contato sobre seus serviços. Posso pedir a exclusão a qualquer momento.
+            <a href="${prefix}privacidade.html" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>.</label>
+          </div>
+
+          <button type="submit" class="btn" data-hover><span>Quero o guia</span> <span class="ar">&rarr;</span></button>
+          <p class="form-note">Sem spam. Você recebe o material na hora, nesta mesma tela.</p>
+        </form>
+
+        <div class="lp-err" id="lpErr" role="alert"></div>
+
+        <div class="lp-done" id="lpDone" role="status">
+          <div class="lp-check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg></div>
+          <h2>Pronto!</h2>
+          <p>Seu guia está liberado. O arquivo abre no computador e no celular.</p>
+          <a class="btn" id="lpDownload" href="${pdf}" download data-hover><span>Baixar o PDF</span> <span class="ar">&darr;</span></a>
+          <a class="lp-alt" href="${wa}" target="_blank" rel="noopener noreferrer">Prefere conversar? Chamar no WhatsApp &rarr;</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- O QUE TEM DENTRO -->
+<section class="section">
+  <div class="wrap">
+    <div class="shead"><span class="idx r up">01 &mdash; O que tem dentro</span><h2 class="r up">Seis blocos, todos <span class="g">aplicáveis.</span></h2><p class="sub r up d1">Nada de teoria solta: cada capítulo termina em um critério, um modelo de acordo ou uma rotina que dá para levar para a próxima reunião.</p></div>
+    <div class="lp-chapters">
+      ${CHAPS.map(([n, t, d], i) => `<article class="lp-chap r up d${(i % 3) + 1}"><span class="n">${n}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></article>`).join('\n      ')}
+    </div>
+  </div>
+</section>
+
+<!-- PARA QUEM É -->
+<section class="section alt">
+  <div class="wrap">
+    <div class="shead"><span class="idx r up">02 &mdash; Antes de baixar</span><h2 class="r up">Esse guia é para <span class="g">você?</span></h2></div>
+    <div class="lp-fit">
+      <div class="yes r left d1">
+        <h3>Faz sentido se</h3>
+        <ul>
+          <li>Sua empresa vende B2B e tem time comercial, mesmo que pequeno.</li>
+          <li>O comercial reclama da qualidade dos leads e o marketing do aproveitamento.</li>
+          <li>Ninguém sabe dizer, com número, quantos leads viram oportunidade real.</li>
+          <li>Você quer formalizar o que hoje só existe de forma informal.</li>
+        </ul>
+      </div>
+      <div class="no r right d2">
+        <h3>Talvez não seja a hora se</h3>
+        <ul>
+          <li>Você ainda não tem geração de demanda rodando de forma constante.</li>
+          <li>Sua operação é 100% B2C, com ticket baixo e venda sem consultor.</li>
+          <li>Você procura táticas de anúncio, e não estrutura de processo comercial.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHAMADA FINAL -->
+<section class="lp-final">
+  <div class="lp-wrap">
+    <h2 class="r up">Leva 30 segundos<br>para <span class="g">começar.</span></h2>
+    <p class="r up d1">Preencha o formulário e o PDF é liberado na hora, sem confirmação por e-mail e sem espera.</p>
+    <a href="#form" class="btn r up d2" data-hover><span>Receber o guia</span> <span class="ar">&uarr;</span></a>
+  </div>
+</section>
+
+<div class="lp-foot">
+  <p>&copy; ${new Date().getFullYear()} ${esc(SITE.name)} &middot; Material gratuito</p>
+  <div class="lp-fl">
+    <a href="${prefix}privacidade.html">Política de Privacidade</a>
+    <a href="#" data-cookies>Cookies</a>
+    <a href="${prefix}index.html">Site da BAM</a>
+    <a href="${prefix}blog/index.html">Blog</a>
+  </div>
+</div>`;
+
+  const html = page({
+    prefix, bodyClass: 'lp', title: book.title + ' — guia gratuito | ' + SITE.name,
+    desc: `Guia gratuito em PDF: como unir marketing e comercial em um único funil de receita B2B — critérios de MQL e SQL, modelo de SLA, matriz de objeções e checklist para aplicar nesta semana.`,
+    path, active: null, jsonLd, ogType: 'article', content,
+    firebase: true, chrome: false,
+    extraScripts: `<script type="module" src="${prefix}js/lp-ebook.js"></script>\n`,
+  });
+
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(dir + '/index.html', html);
+  return path;
+}
+
 /* ===================== runner ===================== */
 mkdirSync('blog', { recursive: true });
 writeFileSync('index.html', buildHome());
@@ -957,6 +1173,8 @@ writeFileSync('contato.html', buildContato());
 writeFileSync('privacidade.html', buildPrivacidade());
 writeFileSync('blog/post.html', buildPostViewer()); // visualizador de posts dinâmicos
 let n = 5;
+const lpEbook = buildLpEbook(); // landing page do material rico (se houver o JSON)
+if (lpEbook) n++;
 if (injectPortfolio()) n++; // galeria de portifolio.html (blocos entre marcadores)
 if (posts.length) {
   writeFileSync('blog/index.html', buildBlogIndex());
@@ -986,6 +1204,7 @@ if (posts.length) {
 }
 ['trafego-pago', 'landing-pages', 'seo', 'design-identidade', 'redes-sociais', 'campanhas-sob-medida']
   .forEach(s => urls.push({ loc: '/servicos/' + s + '.html', lastmod: '2026-06-24', prio: '0.8' }));
+if (lpEbook) urls.push({ loc: lpEbook, lastmod: '2026-08-18', prio: '0.9' });
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(u => `  <url><loc>${SITE.url}${u.loc}</loc><lastmod>${u.lastmod}</lastmod><priority>${u.prio}</priority></url>`).join('\n')}

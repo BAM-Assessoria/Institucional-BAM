@@ -17,6 +17,7 @@
       "firestore.indexes.json",
       "storage.rules",
       "SETUP-BLOG.md",
+      "SETUP-APPCHECK-E-ANALYTICS.md",
       "README.md",
       "STATUS-E-PROXIMA-FASE.md",
       "public/**",
