@@ -26,3 +26,26 @@ export const SDK = 'https://www.gstatic.com/firebasejs/10.12.0';
 
 /* Detecta automaticamente se a configuração já foi preenchida. */
 export const firebaseReady = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
+
+/* -------------------------------------------------------------
+   APP CHECK — chave do reCAPTCHA v3
+   -------------------------------------------------------------
+   Sem isto, qualquer pessoa com o projectId (que é público) pode
+   gravar direto na API do Firestore, sem passar pelo formulário.
+
+   COMO OBTER:
+   1. console.firebase.google.com → projeto → Criação → App Check.
+   2. Aba "Apps" → clique no app Web → Registrar.
+   3. Escolha "reCAPTCHA v3". O console abre o cadastro do site;
+      informe o domínio  www.bamassessoria.com  (e  localhost  se
+      quiser testar na sua máquina).
+   4. Copie a CHAVE DO SITE (site key) e cole abaixo.
+
+   A chave do site é pública por design — quem não pode vazar é a
+   chave secreta, que fica só no console do Firebase.
+   ------------------------------------------------------------- */
+export const recaptchaSiteKey = '';
+
+/* O App Check só é ligado quando a chave existe. Enquanto estiver
+   vazia, o site funciona normalmente (sem proteção). */
+export const appCheckReady = Boolean(recaptchaSiteKey);

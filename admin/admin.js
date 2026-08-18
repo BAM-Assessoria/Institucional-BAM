@@ -2,7 +2,8 @@
    BAM Assessoria — painel de publicação (lógica)
    Firebase: Auth (login) + Firestore (posts) + Storage (capas).
    ============================================================= */
-import { firebaseConfig, firebaseReady, SDK } from '../js/firebase-config.js';
+import { firebaseReady, SDK } from '../js/firebase-config.js';
+import { boot as bootFirebase } from '../js/firebase-boot.js';
 import { slugify } from '../js/blog-shared.js';
 
 const $ = (id) => document.getElementById(id);
@@ -19,12 +20,14 @@ if (!firebaseReady) {
 }
 
 async function boot() {
-  const { initializeApp } = await import(`${SDK}/firebase-app.js`);
+  // Inicializa o app já com App Check (ver js/firebase-boot.js). Com a
+  // exigência ligada no console, sem esse token o Firestore e o Storage
+  // recusam tudo — inclusive o login neste painel.
+  const app = await bootFirebase();
   const auth = await import(`${SDK}/firebase-auth.js`);
   const fs = await import(`${SDK}/firebase-firestore.js`);
   const st = await import(`${SDK}/firebase-storage.js`);
 
-  const app = initializeApp(firebaseConfig);
   const authn = auth.getAuth(app);
   const db = fs.getFirestore(app);
   const storage = st.getStorage(app);

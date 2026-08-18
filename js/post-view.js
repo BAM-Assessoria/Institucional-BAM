@@ -3,7 +3,8 @@
    Lê ?slug=... da URL, busca o post na coleção "posts" do Firestore
    e renderiza com o mesmo layout dos artigos estáticos.
    ============================================================= */
-import { firebaseConfig, firebaseReady, SDK } from './firebase-config.js';
+import { firebaseReady } from './firebase-config.js';
+import { bootFirestore } from './firebase-boot.js';
 import { fmtDate, readingTime } from './blog-shared.js';
 
 const titleEl = document.getElementById('postTitle');
@@ -30,12 +31,8 @@ if (!firebaseReady) {
 
 async function render() {
   try {
-    const { initializeApp } = await import(`${SDK}/firebase-app.js`);
-    const { getFirestore, collection, getDocs, query, where, limit } =
-      await import(`${SDK}/firebase-firestore.js`);
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const { fs, db } = await bootFirestore();
+    const { collection, getDocs, query, where, limit } = fs;
     const snap = await getDocs(query(collection(db, 'posts'), where('slug', '==', slug), limit(1)));
     if (snap.empty) { fail('Esse artigo não existe ou foi removido.'); return; }
 

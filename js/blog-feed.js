@@ -4,7 +4,8 @@
    e os adiciona no topo da grade, antes dos posts estáticos. Se o Firebase
    não estiver configurado, não faz nada (o blog estático continua intacto).
    ============================================================= */
-import { firebaseConfig, firebaseReady, SDK } from './firebase-config.js';
+import { firebaseReady } from './firebase-config.js';
+import { bootFirestore } from './firebase-boot.js';
 import { postCardHtml } from './blog-shared.js';
 
 if (firebaseReady) load();
@@ -14,12 +15,8 @@ async function load() {
   const countEl = document.getElementById('blogCount');
   if (!grid) return;
   try {
-    const { initializeApp } = await import(`${SDK}/firebase-app.js`);
-    const { getFirestore, collection, getDocs, query, orderBy } =
-      await import(`${SDK}/firebase-firestore.js`);
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const { fs, db } = await bootFirestore();
+    const { collection, getDocs, query, orderBy } = fs;
     const snap = await getDocs(query(collection(db, 'posts'), orderBy('date', 'desc')));
     if (snap.empty) return;
 
