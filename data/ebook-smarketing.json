@@ -1,0 +1,168 @@
+{
+  "slug": "smarketing-na-pratica",
+  "kicker": "Guia prático B2B",
+  "title": "Smarketing na Prática",
+  "subtitle": "Como unir estratégia digital e execução comercial para fechar mais contratos",
+  "org": "BAM Assessoria em Marketing",
+  "date": "Agosto de 2026",
+  "pdf": "assets/ebooks/smarketing-na-pratica.pdf",
+  "chapters": [
+    {
+      "id": "introducao",
+      "num": null,
+      "title": "Introdução",
+      "blocks": [
+        { "type": "lead", "text": "Marketing entrega leads. Vendas reclama da qualidade. O ciclo de fechamento se alonga e ninguém sabe exatamente onde o processo emperrou." },
+        { "type": "p", "text": "Se essa cena é familiar, você não está sozinho. É o retrato mais comum das operações B2B que crescem rápido, mas de forma desorganizada: a área de marketing é medida por volume — número de leads, custo por lead, tráfego — enquanto o time comercial é medido por receita fechada. São métricas diferentes, incentivos diferentes e, na prática, dois times remando em direções distintas dentro da mesma empresa." },
+        { "type": "p", "text": "Este guia parte de uma premissa simples: marketing e vendas não são departamentos separados por um muro, mas dois estágios de uma única jornada de receita. Quando essa jornada é desenhada, medida e revisada em conjunto — o que o mercado chama de <em>Smarketing</em> (Sales + Marketing) — o resultado direto é um ciclo de vendas mais curto, uma taxa de conversão mais alta e um time comercial que chega à ligação já sabendo o que dizer." },
+        { "type": "p", "text": "Nas próximas páginas você vai encontrar um roteiro prático, com definições, critérios, modelos de acordo interno (SLA) e rotinas de reunião que podem ser adaptados para o tamanho e a maturidade da sua operação — de uma equipe de dois vendedores a um time comercial estruturado em squads." }
+      ]
+    },
+    {
+      "id": "capitulo-1",
+      "num": "01",
+      "title": "O Abismo Tradicional entre Marketing e Comercial",
+      "blocks": [
+        { "type": "h2", "text": "O Problema" },
+        { "type": "p", "text": "Em praticamente toda empresa B2B que separa marketing e vendas em times distintos, surge o mesmo atrito: o marketing comemora o volume de leads gerados no mês, enquanto o comercial reclama que a maioria não tem perfil, não responde ou simplesmente “não está pronta para comprar”. Cada lado aponta para o outro como responsável pela meta não batida." },
+        { "type": "p", "text": "O custo desse desalinhamento raramente aparece em uma única linha do relatório financeiro, mas está espalhado por toda a operação: em investimento de mídia que gera volume sem qualidade, em horas de pré-vendas gastas qualificando leads que nunca vão fechar, e em um ciclo de vendas que se alonga porque o vendedor precisa reconstruir, na ligação, o contexto que o marketing já tinha e não repassou." },
+
+        { "type": "h2", "text": "O Diagnóstico" },
+        { "type": "p", "text": "Antes de corrigir o problema, vale reconhecer os sintomas mais comuns de uma operação em que marketing e comercial trabalham desconectados:" },
+        { "type": "deflist", "items": [
+          { "term": "Demora no primeiro contato", "desc": "Leads esfriam antes do primeiro contato, porque o tempo entre a conversão e a abordagem passa de horas — às vezes dias." },
+          { "term": "Falta de contexto na abordagem", "desc": "O vendedor liga sem saber qual anúncio, e-mail ou conteúdo trouxe aquele lead, e repete perguntas que o formulário já havia respondido." },
+          { "term": "Metas concorrentes", "desc": "O marketing é avaliado por volume de leads e o comercial por receita fechada — dois números que podem crescer em direções opostas ao mesmo tempo." },
+          { "term": "Ausência de critério único de qualidade", "desc": "Sem um critério comum, cada vendedor decide sozinho o que é “lead bom”, e o feedback nunca chega de forma estruturada ao marketing." },
+          { "term": "Feedback que não retorna", "desc": "Quando um negócio é perdido, a informação fica na cabeça do vendedor ou em uma anotação solta — e o marketing nunca aprende com os motivos reais de perda." }
+        ]},
+
+        { "type": "h2", "text": "O Conceito de Smarketing" },
+        { "type": "p", "text": "Smarketing é a fusão prática entre <em>Sales</em> (vendas) e <em>Marketing</em> em um único funil de receita — o que a literatura de Revenue Operations chama de RevOps. Em vez de dois times com metas isoladas, a empresa passa a operar com um funil compartilhado, com definições comuns de cada etapa, um acordo formal de entrega entre as áreas e rituais de alinhamento recorrentes." },
+        { "type": "p", "text": "Isso não significa fundir as equipes ou eliminar suas especialidades — o marketing continua responsável pela geração de demanda e o comercial pela negociação e fechamento. O que muda é a governança: as duas áreas passam a compartilhar a mesma definição de cliente ideal, o mesmo critério de qualificação e o mesmo painel de indicadores, de forma que o sucesso de uma área dependa, estruturalmente, do sucesso da outra." },
+        { "type": "callout", "title": "Por que isso acelera o ciclo de vendas", "text": "Estudos de mercado (Aberdeen Group, HubSpot) associam empresas com forte alinhamento entre marketing e vendas a ciclos de fechamento mais curtos e taxas de retenção de clientes mais altas — porque o vendedor entra na conversa já com contexto, e o lead chega ao funil de vendas verdadeiramente pronto para comprar, não apenas “capturado”." },
+        { "type": "p", "text": "Os quatro capítulos seguintes traduzem esse conceito em prática: como definir o cliente ideal em conjunto, como formalizar o acordo entre as áreas, como integrar tecnologia e rotina, e como o vendedor deve usar o contexto entregue pelo marketing na hora da abordagem." }
+      ]
+    },
+    {
+      "id": "capitulo-2",
+      "num": "02",
+      "title": "Mapeamento de ICP e Critérios Claros de Qualificação",
+      "blocks": [
+        { "type": "h2", "text": "Definição Única de ICP (Perfil de Cliente Ideal)" },
+        { "type": "p", "text": "O primeiro ponto de alinhamento — e o mais frequentemente pulado — é garantir que marketing e comercial estejam buscando exatamente o mesmo tipo de empresa e de comprador. Não adianta o marketing otimizar campanhas para “gerar volume” se o time comercial só fecha negócio com um perfil específico de cliente." },
+        { "type": "p", "text": "Um ICP bem construído combina critérios firmográficos (setor, porte, faturamento, região, estrutura interna) com critérios comportamentais (maturidade digital, dor ativa, gatilho de compra) e deve ser escrito de forma objetiva, testável e revisado a cada trimestre com base nos negócios efetivamente fechados — não apenas nos leads gerados. Um exercício simples e revelador é listar os últimos 10 a 15 contratos fechados e mapear o que eles têm em comum: esse é o ICP real da empresa, muitas vezes diferente do ICP “imaginado”." },
+
+        { "type": "h2", "text": "A Regra da Passagem de Bastão (MQL ➔ SQL)" },
+        { "type": "p", "text": "Depois de definir o ICP, é preciso um vocabulário comum para as etapas do funil. Os dois marcos mais importantes dessa passagem de bastão são o MQL e o SQL:" },
+        { "type": "table", "head": ["Estágio", "Definição", "Quem avalia"], "rows": [
+          ["<strong>MQL</strong><br><span class=\"tsub\">Marketing Qualified Lead</span>", "Lead com o perfil correto (dentro do ICP) e que demonstrou engajamento real — baixou material rico, participou de webinar, visitou páginas de alta intenção repetidas vezes.", "Marketing"],
+          ["<strong>SQL</strong><br><span class=\"tsub\">Sales Qualified Lead</span>", "Lead que aceitou conversar com um vendedor e, na qualificação, confirmou ter dor, orçamento compatível e momento de compra definido.", "Comercial / Pré-vendas"]
+        ]},
+        { "type": "p", "text": "Sem essa distinção clara, é comum o marketing entregar “MQLs” que na verdade são apenas visitantes curiosos, e o comercial rotular como “lead ruim” um MQL legítimo que simplesmente ainda não teve a conversa de qualificação. O ponto de transição de um estágio para o outro precisa estar documentado e visível para as duas equipes — idealmente como um campo no CRM, não apenas como um conceito verbal." },
+
+        { "type": "h2", "text": "Filtros e Perguntas de Qualificação" },
+        { "type": "p", "text": "Para que o vendedor não perca tempo reconstruindo informações básicas, a estratégia digital precisa capturar, antes da ligação, os dados mínimos que definem se aquele contato é aderente ao ICP. Alguns filtros que costumam elevar significativamente a qualidade do lead sem reduzir demais o volume:" },
+        { "type": "deflist", "items": [
+          { "term": "Formulários segmentados", "desc": "Cargo/função e poder de decisão dentro da empresa." },
+          { "term": "Porte da empresa", "desc": "Faixa de faturamento, número de funcionários ou tamanho da operação, quando relevante para o ticket do produto ou serviço." },
+          { "term": "Dor declarada", "desc": "Uma pergunta objetiva sobre a dor principal (“qual desses problemas mais impacta seu resultado hoje?”) já direciona o discurso do vendedor antes mesmo da primeira ligação." },
+          { "term": "Momento de compra", "desc": "Perguntar sobre prazo ou intenção de decisão (“pretende resolver isso em quanto tempo?”) ajuda a priorizar o atendimento comercial pelos leads mais quentes." }
+        ]},
+        { "type": "p", "text": "Esses filtros podem ser aplicados em formulários de landing page, pesquisas de qualificação por e-mail, ou em um fluxo de perguntas dentro de um chatbot/WhatsApp — o formato importa menos do que a disciplina de sempre coletar os mesmos campos, de forma que o comercial saiba, antes de discar, exatamente com quem está falando." }
+      ]
+    },
+    {
+      "id": "capitulo-3",
+      "num": "03",
+      "title": "Criando um SLA (Service Level Agreement) Interno",
+      "blocks": [
+        { "type": "p", "text": "Um SLA interno é o documento que transforma o alinhamento entre marketing e vendas de intenção em compromisso mensurável. Ele funciona como um contrato entre as duas áreas: cada uma sabe exatamente o que está prometendo entregar e pode ser cobrada objetivamente por isso." },
+
+        { "type": "h2", "text": "O Acordo do Marketing" },
+        { "type": "p", "text": "O marketing se compromete a entregar um número definido de leads qualificados — dentro do ICP acordado no Capítulo 2 — por mês, com uma composição mínima de MQLs prontos para passagem ao comercial. Esse volume deve ser calculado de trás para frente, a partir da meta de receita: quantos SQLs o comercial precisa para bater a meta, quantos MQLs viram SQL (taxa histórica de conversão), e quantos leads brutos viram MQL." },
+
+        { "type": "h2", "text": "O Acordo do Comercial" },
+        { "type": "p", "text": "Em contrapartida, o time comercial assume compromissos de velocidade e consistência no atendimento:" },
+        { "type": "deflist", "items": [
+          { "term": "SLA de resposta em até 15–30 minutos após a conversão do lead", "desc": "Quanto mais rápido o primeiro contato, maior a taxa de resposta — estudos de resposta a leads mostram queda acentuada de conversão a cada minuto de atraso." },
+          { "term": "Número mínimo de tentativas de contato antes de descartar um lead", "desc": "Um único contato não é suficiente para avaliar a qualidade de um lead; o padrão de mercado costuma variar entre 5 e 8 tentativas, combinando ligação, WhatsApp e e-mail em cadência." }
+        ]},
+
+        { "type": "h2", "text": "Exemplo de SLA — Modelo de Referência" },
+        { "type": "table", "head": ["Compromisso", "Responsável", "Meta"], "rows": [
+          ["Volume de MQLs entregues por mês", "Marketing", "Definido conforme meta de receita"],
+          ["Tempo até o primeiro contato", "Comercial", "Até 30 minutos após a conversão"],
+          ["Tentativas mínimas de contato", "Comercial", "5 a 8 tentativas em cadência"],
+          ["Taxa de conversão MQL → SQL", "Ambos", "Revisada mensalmente"],
+          ["Registro do motivo de perda no CRM", "Comercial", "100% dos negócios encerrados"]
+        ]},
+
+        { "type": "h2", "text": "Motivos de Perda Padronizados" },
+        { "type": "p", "text": "De nada adianta um SLA de resposta rápida se, quando o negócio é perdido, a informação simplesmente desaparece. Padronizar uma lista fechada de motivos de perda no CRM — por exemplo: “sem orçamento”, “perfil fora do ICP”, “concorrente escolhido”, “sem resposta após qualificação”, “timing incorreto” — transforma cada negócio perdido em um dado que devolve inteligência ao marketing: quais campanhas trazem leads fora do perfil, quais conteúdos não estão gerando a dor certa, e onde ajustar a segmentação de mídia." }
+      ]
+    },
+    {
+      "id": "capitulo-4",
+      "num": "04",
+      "title": "Integração Tecnológica e Feedback Loop",
+      "blocks": [
+        { "type": "h2", "text": "O CRM como Fonte Única da Verdade" },
+        { "type": "p", "text": "Um SLA bem desenhado só funciona se os dois times enxergarem a mesma informação, no mesmo lugar. O CRM precisa concentrar o histórico completo de cada lead — origem da campanha, página que converteu, materiais consumidos, e-mails abertos, interações anteriores — de forma visível para o vendedor antes mesmo de discar. Isso elimina a pergunta “como você chegou até nós?” logo na abertura da ligação e permite que o vendedor comece a conversa já ancorado no interesse real que motivou aquele contato." },
+        { "type": "p", "text": "Na prática, isso significa integrar as ferramentas de mídia e automação de marketing diretamente ao CRM — via nativa, Zapier/Make ou webhooks — para que nenhum dado fique preso em uma plataforma isolada. Um lead sem rastro de origem é, para o vendedor, um estranho; um lead com histórico completo é, na prática, um contato já “aquecido”." },
+
+        { "type": "h2", "text": "Reuniões de Alinhamento Semanal" },
+        { "type": "p", "text": "Tecnologia resolve o registro do dado, mas não substitui a conversa entre pessoas. Uma reunião semanal curta — 30 a 45 minutos — entre o responsável por mídia/conteúdo e a liderança comercial é o principal ritual de manutenção do Smarketing. Uma pauta objetiva evita que a reunião vire desabafo genérico:" },
+        { "type": "list", "items": [
+          "<strong>Números da semana:</strong> leads gerados, MQLs, SQLs e taxa de conversão entre etapas, comparados ao SLA.",
+          "<strong>Revisão de objeções reais</strong> ouvidas nas ligações — quais dúvidas ou resistências apareceram com mais frequência.",
+          "<strong>Feedback qualitativo do comercial</strong> sobre a origem dos leads mais quentes da semana (qual campanha, anúncio ou conteúdo).",
+          "<strong>Ajustes de campanha</strong> ou de segmentação a partir desse feedback.",
+          "<strong>Pendências e combinados</strong> da semana anterior — o que foi cumprido e o que ficou em aberto."
+        ]},
+
+        { "type": "h2", "text": "Nutrição de Leads não Prontos" },
+        { "type": "p", "text": "Nem todo lead que chega ao comercial está pronto para comprar agora — e descartá-lo simplesmente porque “não fechou” desperdiça o investimento já feito para atraí-lo. Leads qualificados que não avançam devem retornar ao marketing em um fluxo de nutrição segmentado por motivo: quem disse “sem orçamento agora” entra em uma régua de conteúdo sobre ROI e cases; quem disse “ainda não é prioridade” recebe conteúdo que reforça a urgência do problema. O objetivo é manter o relacionamento ativo até que o gatilho de compra apareça — e sinalizar de volta ao comercial quando esse lead voltar a engajar." }
+      ]
+    },
+    {
+      "id": "capitulo-5",
+      "num": "05",
+      "title": "A Abordagem Comercial Orientada ao Contexto do Lead",
+      "blocks": [
+        { "type": "h2", "text": "Fim do Script Engessado" },
+        { "type": "p", "text": "Um script de vendas genérico trata todo lead como se tivesse chegado da mesma forma, pela mesma dor, no mesmo momento — o que raramente é verdade. Com os dados capturados pela campanha (origem, conteúdo consumido, respostas do formulário de qualificação), o vendedor pode personalizar a abertura da conversa desde o primeiro segundo: mencionar o material específico que o lead baixou, a dor que ele mesmo declarou, ou o contexto do anúncio que o trouxe até ali." },
+        { "type": "p", "text": "Essa personalização não é apenas um detalhe de cortesia — ela sinaliza ao lead que a empresa presta atenção, reduz a sensação de abordagem fria e antecipa objeções, porque o vendedor já sabe, antes de perguntar, qual é a dor mais provável daquele contato." },
+
+        { "type": "h2", "text": "Matriz de Objeções x Conteúdo" },
+        { "type": "p", "text": "Um recurso poderoso e subutilizado é usar os materiais ricos que o próprio marketing já produziu — cases, comparativos, calculadoras de ROI, depoimentos — como ferramenta de ancoragem de valor durante a negociação, não apenas como isca de topo de funil. Mapear qual conteúdo responde a qual objeção acelera o fechamento porque o vendedor não precisa improvisar uma resposta: ele envia, no momento certo, um material que já foi validado pelo marketing." },
+        { "type": "table", "head": ["Objeção comum", "Conteúdo de apoio recomendado", "Momento de uso"], "rows": [
+          ["“Não sei se isso realmente compensa financeiramente”", "Calculadora ou planilha de ROI", "Durante a proposta comercial"],
+          ["“Preciso ver se funciona para empresas do nosso porte”", "Case de sucesso de cliente similar", "Logo após a qualificação"],
+          ["“Já usamos um concorrente/solução parecida”", "Comparativo de diferenciais", "Na segunda reunião"],
+          ["“Preciso convencer outras pessoas internamente”", "One-pager executivo / apresentação resumida", "Ao fim da negociação"]
+        ]},
+        { "type": "p", "text": "Construir essa matriz é um trabalho conjunto: o comercial lista as objeções mais recorrentes (insumo que vem diretamente da reunião semanal descrita no Capítulo 4) e o marketing mapeia, ou produz, o conteúdo que melhor responde a cada uma. É o fechamento do ciclo: o feedback do comercial vira direção de conteúdo, e o conteúdo vira ferramenta de venda." }
+      ]
+    },
+    {
+      "id": "conclusao",
+      "num": null,
+      "title": "Conclusão — Checklist para Começar Essa Semana",
+      "blocks": [
+        { "type": "p", "text": "Implementar Smarketing não exige reestruturar a empresa de uma vez — exige começar pelos pontos de maior atrito e formalizar, aos poucos, o que hoje só existe informalmente. Use o checklist abaixo como ponto de partida:" },
+        { "type": "checklist", "items": [
+          "Liste os últimos 10–15 contratos fechados e identifique o padrão comum entre eles.",
+          "Escreva, em uma página, os critérios objetivos de MQL e de SQL da sua operação.",
+          "Defina o SLA de tempo de resposta e o número mínimo de tentativas de contato do time comercial.",
+          "Padronize a lista de motivos de perda dentro do CRM.",
+          "Garanta que a origem e o histórico de cada lead estejam visíveis para o vendedor antes da ligação.",
+          "Agende a primeira reunião semanal de alinhamento entre mídia/conteúdo e liderança comercial.",
+          "Monte um fluxo simples de nutrição para leads qualificados que não fecharam agora.",
+          "Construa a primeira versão da matriz de objeções x conteúdo com o time comercial."
+        ]},
+        { "type": "p", "text": "Nenhum desses passos depende de uma ferramenta cara ou de uma reestruturação completa do time — depende, sobretudo, de tratar marketing e vendas como partes de um único funil de receita, com linguagem, critérios e rituais em comum. É esse alinhamento, mais do que qualquer tática isolada, que efetivamente encurta o ciclo de vendas B2B." }
+      ]
+    }
+  ]
+}

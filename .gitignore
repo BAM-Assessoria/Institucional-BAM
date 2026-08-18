@@ -4,6 +4,13 @@ data/shots/
 data/tmp/
 data/tmpc/
 
+# Saída intermediária do gerador do ebook (tools/build-ebook.mjs):
+# preview HTML, perfis do Chrome headless e as folhas em PNG para conferência.
+# O que interessa (PDF + capas) vai para assets/ e é versionado.
+tools/.chrome-*/
+tools/.ebook-preview.html
+tools/.ebook-shots/
+
 # Dependências (o projeto não usa npm, mas por garantia)
 node_modules/
 
