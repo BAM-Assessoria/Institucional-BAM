@@ -44,7 +44,7 @@ export const firebaseReady = Boolean(firebaseConfig.apiKey && firebaseConfig.pro
    A chave do site é pública por design — quem não pode vazar é a
    chave secreta, que fica só no console do Firebase.
    ------------------------------------------------------------- */
-export const recaptchaSiteKey = '';
+export const recaptchaSiteKey = '6LdR3owtAAAAAIATB1hs9JjY1SB05sS6b2nQtQzs';
 
 /* O App Check só é ligado quando a chave existe. Enquanto estiver
    vazia, o site funciona normalmente (sem proteção). */
