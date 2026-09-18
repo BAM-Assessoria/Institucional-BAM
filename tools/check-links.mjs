@@ -2,7 +2,8 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-const pages = ['index.html', 'sobre.html', 'privacidade.html'];
+const pages = ['index.html', 'sobre.html', 'contato.html', 'privacidade.html', 'portifolio.html'];
+if (existsSync('servicos')) for (const f of readdirSync('servicos')) if (f.endsWith('.html')) pages.push('servicos/' + f);
 if (existsSync('blog')) for (const f of readdirSync('blog')) if (f.endsWith('.html')) pages.push('blog/' + f);
 
 const skip = (u) => /^(https?:|\/\/|mailto:|tel:|data:|javascript:|#)/.test(u);
@@ -19,8 +20,11 @@ for (const page of pages) {
     u = u.split('#')[0].split('?')[0];
     if (!u) continue;
     checked++;
+    // URLs limpas (sem .html): /sobre -> sobre.html, blog/ -> blog/index.html.
     const target = resolve(base, u);
-    if (!existsSync(target)) missing.push(`${page} -> ${m[1]}`);
+    const ok = existsSync(target) && (!u.endsWith('/') || existsSync(resolve(target, 'index.html')))
+      || existsSync(target + '.html');
+    if (!ok) missing.push(`${page} -> ${m[1]}`);
   }
 }
 

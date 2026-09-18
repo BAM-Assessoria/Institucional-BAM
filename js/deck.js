@@ -59,7 +59,7 @@
     var el = card.querySelector('.deck-card-name');
     return el ? el.textContent.trim() : 'case';
   }
-  function navigate(card) { var h = card.getAttribute('data-href') || 'portifolio.html'; window.location.href = h; }
+  function navigate(card) { var h = card.getAttribute('data-href') || 'portifolio'; window.location.href = h; }
 
   var targetIdx = Math.round((N - 1) / 2);   /* abre equilibrado (carta do meio ao centro) */
   var pos = targetIdx;
@@ -82,7 +82,7 @@
 
   cards.forEach(function (card, i) {
     card.tabIndex = 0; card.setAttribute('role', 'button'); card.setAttribute('aria-label', 'Ver case ' + nameOf(card));
-    if (!card.getAttribute('data-href')) card.setAttribute('data-href', 'portifolio.html');
+    if (!card.getAttribute('data-href')) card.setAttribute('data-href', 'portifolio');
     card.addEventListener('pointerenter', function () { hoverIndex = i; });
     card.addEventListener('pointerleave', function () { if (hoverIndex === i) hoverIndex = -1; });
     /* clicar numa carta lateral: vai pelo caminho mais curto do círculo */

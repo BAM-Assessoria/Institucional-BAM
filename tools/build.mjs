@@ -208,22 +208,22 @@ function head({ prefix, title, desc, path, jsonLd, ogType = 'website', firebase 
 
 /* ---------- Header (topbar + menu) ---------- */
 const NAV = [
-  ['inicio', 'Início', 'index.html'],
-  ['sobre', 'Sobre', 'sobre.html'],
-  ['servicos', 'Serviços', 'index.html#servicos'],
-  ['portfolio', 'Portfólio', 'portifolio.html'],
-  ['blog', 'Blog', 'blog/index.html'],
-  ['contato', 'Contato', 'contato.html'],
+  ['inicio', 'Início', ''],
+  ['sobre', 'Sobre', 'sobre'],
+  ['servicos', 'Serviços', '#servicos'],
+  ['portfolio', 'Portfólio', 'portifolio'],
+  ['blog', 'Blog', 'blog/'],
+  ['contato', 'Contato', 'contato'],
 ];
 function header(prefix, active, portfolio = true) {
   const items = portfolio ? NAV : NAV.filter(([k]) => k !== 'portfolio');
   const links = items.map(([k, label, href], i) =>
-    `<a href="${prefix}${href}" data-menu${k === active ? ' class="active"' : ''}>${label} <span>${String(i).padStart(2, '0')}</span></a>`
+    `<a href="${prefix + href || './'}" data-menu${k === active ? ' class="active"' : ''}>${label} <span>${String(i).padStart(2, '0')}</span></a>`
   ).join('\n      ');
   return `<header class="topbar" id="topbar">
-  <a href="${prefix}index.html" aria-label="BAM Assessoria — início"><img src="${prefix}assets/svg/logo-wordmark.svg" alt="BAM Assessoria" class="brand-logo" width="120" height="34"></a>
+  <a href="${prefix || './'}" aria-label="BAM Assessoria — início"><img src="${prefix}assets/svg/logo-wordmark.svg" alt="BAM Assessoria" class="brand-logo" width="120" height="34"></a>
   <div class="topbar-right">
-    <a href="${prefix}contato.html" class="store-link${active === 'contato' ? ' active' : ''}" data-hover>Diagnóstico</a>
+    <a href="${prefix}contato" class="store-link${active === 'contato' ? ' active' : ''}" data-hover>Diagnóstico</a>
     <button class="menu-btn" id="menuBtn" data-hover aria-label="Abrir menu" aria-expanded="false"><span id="menuLabel">Menu</span><span class="bars" aria-hidden="true"><span></span><span></span></span></button>
   </div>
 </header>
@@ -258,9 +258,9 @@ function loader(prefix) {
 }
 
 function footer(prefix, active, portfolio = true) {
-  const items = [['sobre', 'Sobre', 'sobre.html'], ['servicos', 'Serviços', 'index.html#servicos'], ['portfolio', 'Portfólio', 'portifolio.html'], ['blog', 'Blog', 'blog/index.html'], ['contato', 'Contato', 'contato.html']];
+  const items = [['sobre', 'Sobre', 'sobre'], ['servicos', 'Serviços', '#servicos'], ['portfolio', 'Portfólio', 'portifolio'], ['blog', 'Blog', 'blog/'], ['contato', 'Contato', 'contato']];
   const nav = (portfolio ? items : items.filter(([k]) => k !== 'portfolio'))
-    .map(([k, l, h]) => `<a href="${prefix}${h}"${k === active ? ' class="active"' : ''}>${l}</a>`).join('');
+    .map(([k, l, h]) => `<a href="${prefix + h || './'}"${k === active ? ' class="active"' : ''}>${l}</a>`).join('');
   return `<footer class="bigfoot">
   <span class="scene-edge"></span>
   <div class="wrap">
@@ -271,7 +271,7 @@ function footer(prefix, active, portfolio = true) {
       <div class="foot-col"><h4>Contato</h4><a href="tel:${SITE.tel}">${SITE.telDisplay}</a><a href="mailto:${SITE.email}">${SITE.email}</a><p>${SITE.addr}</p></div>
       <div class="foot-col"><h4>Receba insights</h4><form class="news" id="newsForm"><input type="email" name="news" placeholder="seu@email.com" aria-label="Email" required><button type="submit" aria-label="Inscrever">→</button></form><h4 style="margin-top:22px">Social</h4><a href="${SITE.instagram}" target="_blank" rel="noopener noreferrer">Instagram</a><a href="${SITE.linkedin}" target="_blank" rel="noopener noreferrer">LinkedIn</a></div>
     </div>
-    <div class="foot-bot"><span>© 2026 B.A.M. Assessoria em Marketing — Todos os direitos reservados</span><span><a href="${prefix}privacidade.html">Política de Privacidade</a> · <a href="#" data-cookies>Cookies</a> · SP / BR</span></div>
+    <div class="foot-bot"><span>© 2026 B.A.M. Assessoria em Marketing — Todos os direitos reservados</span><span><a href="${prefix}privacidade">Política de Privacidade</a> · <a href="#" data-cookies>Cookies</a> · SP / BR</span></div>
   </div>
 </footer>`;
 }
@@ -367,7 +367,7 @@ function buildHome() {
     <div class="wrap deck-head-wrap">
       <span class="idx tlabel r up">02 — Portfolio</span>
       <h2 class="r up d1" style="font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:clamp(24px,3.6vw,52px);line-height:1.06;margin-top:10px">Cases que <span class="g">falam por si.</span></h2>
-      <a href="${prefix}portifolio.html" class="btn ghost r up d2" data-hover style="margin-top:18px"><span>Ver portfólio completo</span> <span class="ar">→</span></a>
+      <a href="${prefix}portifolio" class="btn ghost r up d2" data-hover style="margin-top:18px"><span>Ver portfólio completo</span> <span class="ar">→</span></a>
     </div>
     <div class="deck-scene">
       <div class="deck-group" id="deckGroup">
@@ -439,12 +439,12 @@ ${deckCards(prefix)}
   <div class="wrap">
     <div class="shead"><span class="idx r up">03.1 — Capacidades</span><h2 class="r up">Não fazemos posts.<br>Desenhamos <span class="g">planos de negócio.</span></h2><p class="sub r up d1">Passe o mouse para ver o que cada frente entrega.</p></div>
     <div class="caps">
-      <a class="cap r up d1" href="${prefix}servicos/trafego-pago.html" data-hover><span class="cnum">S—01</span><div><h3>Tráfego Pago</h3><div class="out">Google, Meta, TikTok e LinkedIn Ads. Campanhas que reduzem o custo por venda e maximizam o retorno.</div></div><span class="cdef">Ads / Performance</span></a>
-      <a class="cap r up d2" href="${prefix}servicos/landing-pages.html" data-hover><span class="cnum">S—02</span><div><h3>Landing Pages</h3><div class="out">Páginas desenhadas para converter. Design persuasivo + copy de vendas que geram leads qualificados.</div></div><span class="cdef">Conversão</span></a>
-      <a class="cap r up d3" href="${prefix}servicos/seo.html" data-hover><span class="cnum">S—03</span><div><h3>SEO</h3><div class="out">Topo do Google de forma orgânica. Autoridade e um fluxo de clientes que não depende só de anúncios.</div></div><span class="cdef">Orgânico</span></a>
-      <a class="cap r up d1" href="${prefix}servicos/design-identidade.html" data-hover><span class="cnum">S—04</span><div><h3>Design &amp; Identidade</h3><div class="out">Sua marca precisa transmitir confiança antes de vender. Identidade e peças que valorizam o produto.</div></div><span class="cdef">Branding</span></a>
-      <a class="cap r up d2" href="${prefix}servicos/redes-sociais.html" data-hover><span class="cnum">S—05</span><div><h3>Redes Sociais</h3><div class="out">Muito além de likes: relacionamento, autoridade e uma comunidade que compra de você de novo.</div></div><span class="cdef">Social</span></a>
-      <a class="cap r up d3" href="${prefix}servicos/campanhas-sob-medida.html" data-hover><span class="cnum">S—06</span><div><h3>Campanhas Sob Medida</h3><div class="out">Lançamentos, datas sazonais e ações de branding. Projetos para o momento específico do negócio.</div></div><span class="cdef">Projetos</span></a>
+      <a class="cap r up d1" href="${prefix}servicos/trafego-pago" data-hover><span class="cnum">S—01</span><div><h3>Tráfego Pago</h3><div class="out">Google, Meta, TikTok e LinkedIn Ads. Campanhas que reduzem o custo por venda e maximizam o retorno.</div></div><span class="cdef">Ads / Performance</span></a>
+      <a class="cap r up d2" href="${prefix}servicos/landing-pages" data-hover><span class="cnum">S—02</span><div><h3>Landing Pages</h3><div class="out">Páginas desenhadas para converter. Design persuasivo + copy de vendas que geram leads qualificados.</div></div><span class="cdef">Conversão</span></a>
+      <a class="cap r up d3" href="${prefix}servicos/seo" data-hover><span class="cnum">S—03</span><div><h3>SEO</h3><div class="out">Topo do Google de forma orgânica. Autoridade e um fluxo de clientes que não depende só de anúncios.</div></div><span class="cdef">Orgânico</span></a>
+      <a class="cap r up d1" href="${prefix}servicos/design-identidade" data-hover><span class="cnum">S—04</span><div><h3>Design &amp; Identidade</h3><div class="out">Sua marca precisa transmitir confiança antes de vender. Identidade e peças que valorizam o produto.</div></div><span class="cdef">Branding</span></a>
+      <a class="cap r up d2" href="${prefix}servicos/redes-sociais" data-hover><span class="cnum">S—05</span><div><h3>Redes Sociais</h3><div class="out">Muito além de likes: relacionamento, autoridade e uma comunidade que compra de você de novo.</div></div><span class="cdef">Social</span></a>
+      <a class="cap r up d3" href="${prefix}servicos/campanhas-sob-medida" data-hover><span class="cnum">S—06</span><div><h3>Campanhas Sob Medida</h3><div class="out">Lançamentos, datas sazonais e ações de branding. Projetos para o momento específico do negócio.</div></div><span class="cdef">Projetos</span></a>
     </div>
   </div>
 </section>
@@ -512,7 +512,7 @@ ${clientsWall(prefix)}
           <span class="bw-addr-txt">blog.bamassessoria.com</span>
           <i class="bw-live" aria-hidden="true"></i>
         </span>
-        <a class="bw-tabgo" href="${prefix}blog/index.html">Ver tudo →</a>
+        <a class="bw-tabgo" href="${prefix}blog/">Ver tudo →</a>
       </div>
 
       <!-- conteúdo da janela -->
@@ -533,7 +533,7 @@ ${clientsWall(prefix)}
       <!-- rodapé da janela -->
       <div class="blogwin-foot">
         <span class="bw-crumb">~/blog · novos artigos toda semana</span>
-        <a class="btn" href="${prefix}blog/index.html" data-hover><span>Ler o blog</span> <span class="ar">→</span></a>
+        <a class="btn" href="${prefix}blog/" data-hover><span>Ler o blog</span> <span class="ar">→</span></a>
       </div>
     </div>
   </div>
@@ -559,7 +559,7 @@ function buildSobre() {
   <div class="hero-grid" data-par="0.1"></div>
   <div class="hero-glow"></div>
   <div class="wrap">
-    <nav class="breadcrumb" aria-label="Você está em"><a href="index.html">Início</a><span class="sep">/</span><span>Sobre</span></nav>
+    <nav class="breadcrumb" aria-label="Você está em"><a href="./">Início</a><span class="sep">/</span><span>Sobre</span></nav>
     <h1 class="r up in">Juntos vamos<br>mais <span class="g">longe.</span></h1>
     <p class="lead r up in d1">A BAM nasceu em 2022, da insatisfação com o óbvio. Marketing tratado como investimento, com transparência total — e estratégia comprovada dentro e fora da tela.</p>
   </div>
@@ -610,7 +610,7 @@ function buildSobre() {
     <div class="prose r up d1">
       <p>Temos como grande objetivo a <strong>democratização do acesso ao marketing de qualidade</strong> para pequenos negócios. Alcançamos isso com uma estratégia de baixo preço de mercado e alto valor agregado, entregando uma relação custo/benefício superior à dos principais concorrentes.</p>
       <p>Disponibilizamos também, de forma gratuita, conteúdos educativos, artigos e notícias do setor — no portal do nosso site e nas redes sociais — para o desenvolvimento profissional do nosso público.</p>
-      <div class="fcta" style="margin-top:30px"><a href="blog/index.html" class="btn ghost" data-hover><span>Ver o blog</span> <span class="ar">→</span></a></div>
+      <div class="fcta" style="margin-top:30px"><a href="blog/" class="btn ghost" data-hover><span>Ver o blog</span> <span class="ar">→</span></a></div>
     </div>
   </div>
 </section>
@@ -626,13 +626,13 @@ function buildSobre() {
       <div class="founder r up d2"><span class="role">CMO</span><h3>Lucca Almeida</h3><p>Graduado em Publicidade (FEBASP) · Pós em Marketing (ESPM) · Pós em Marketing Digital (ESPM)</p></div>
       <div class="founder r up d3"><span class="role">CTO</span><h3>Natan Michneves</h3><p>Graduado em Marketing (USP) · MBA em Gestão de Projetos e TI (USP)</p></div>
     </div>
-    <div class="fcta" style="margin-top:48px"><a href="contato.html" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a></div>
+    <div class="fcta" style="margin-top:48px"><a href="contato" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a></div>
   </div>
 </section>`;
   return page({
     prefix, title: 'Sobre a BAM | Assessoria de Marketing de Performance',
     desc: 'Conheça a BAM: fundada em 2022 para democratizar o marketing de ponta. Missão, visão, valores e o time por trás da inteligência de crescimento.',
-    path: '/sobre.html', active: 'sobre', content,
+    path: '/sobre', active: 'sobre', content,
   });
 }
 
@@ -641,7 +641,7 @@ function buildContato() {
   const wa = `https://api.whatsapp.com/send/?phone=${SITE.whats}&text=${encodeURIComponent('Olá, quero falar com a BAM')}`;
   const jsonLd = JSON.stringify({
     '@context': 'https://schema.org', '@type': 'ContactPage',
-    name: 'Contato — ' + SITE.name, url: SITE.url + '/contato.html',
+    name: 'Contato — ' + SITE.name, url: SITE.url + '/contato',
     mainEntity: {
       '@type': 'Organization', name: SITE.name, url: SITE.url + '/',
       email: SITE.email, telephone: SITE.tel,
@@ -654,7 +654,7 @@ function buildContato() {
   <div class="hero-grid" data-par="0.1"></div>
   <div class="hero-glow"></div>
   <div class="wrap">
-    <nav class="breadcrumb" aria-label="Você está em"><a href="index.html">Início</a><span class="sep">/</span><span>Contato</span></nav>
+    <nav class="breadcrumb" aria-label="Você está em"><a href="./">Início</a><span class="sep">/</span><span>Contato</span></nav>
     <h1 class="r up in">Vamos crescer<br><span class="g">juntos?</span></h1>
     <p class="lead r up in d1">Conte sobre o momento do seu negócio e receba um diagnóstico estratégico gratuito. Escolha o canal que preferir — respondemos rápido, com foco em resultado e retorno sobre investimento.</p>
   </div>
@@ -716,7 +716,7 @@ function buildContato() {
   return page({
     prefix, title: 'Contato | ' + SITE.name,
     desc: 'Fale com a BAM Assessoria: WhatsApp, e-mail, telefone e formulário para um diagnóstico estratégico gratuito do seu negócio. São Paulo / BR.',
-    path: '/contato.html', active: 'contato', jsonLd, content,
+    path: '/contato', active: 'contato', jsonLd, content,
   });
 }
 
@@ -725,7 +725,7 @@ function buildPrivacidade() {
   const content = `<header class="page-head">
   <div class="hero-grid"></div>
   <div class="wrap">
-    <nav class="breadcrumb" aria-label="Você está em"><a href="index.html">Início</a><span class="sep">/</span><span>Política de Privacidade</span></nav>
+    <nav class="breadcrumb" aria-label="Você está em"><a href="./">Início</a><span class="sep">/</span><span>Política de Privacidade</span></nav>
     <h1>Política de <span class="g">Privacidade</span></h1>
     <p class="lead">Como a BAM Assessoria coleta, usa e protege os seus dados pessoais, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).</p>
   </div>
@@ -787,7 +787,7 @@ function buildPrivacidade() {
   return page({
     prefix, title: 'Política de Privacidade | BAM Assessoria',
     desc: 'Política de Privacidade da BAM Assessoria em Marketing, em conformidade com a LGPD: quais dados tratamos, finalidade e seus direitos.',
-    path: '/privacidade.html', active: null, content,
+    path: '/privacidade', active: null, content,
   });
 }
 
@@ -804,7 +804,7 @@ function homeThumb(prefix, p) {
 
 function homeFeature(prefix, p) {
   if (!p) return '';
-  return `<a class="bw-feature" href="${prefix}blog/${p.slug}.html" data-hover>
+  return `<a class="bw-feature" href="${prefix}blog/${p.slug}" data-hover>
           <span class="bw-cover">
             ${p.cover ? `<img src="${prefix}assets/img/blog/${p.cover}" alt="${escAttr(p.title)}" loading="lazy" decoding="async">` : ''}
             <span class="bw-badge">Destaque</span>
@@ -819,7 +819,7 @@ function homeFeature(prefix, p) {
 }
 
 function homeRow(prefix, p, n) {
-  return `<a class="bw-row" href="${prefix}blog/${p.slug}.html" data-hover>
+  return `<a class="bw-row" href="${prefix}blog/${p.slug}" data-hover>
             <span class="bw-no">${String(n).padStart(2, '0')}</span>
             <span class="bw-rthumb">${homeThumb(prefix, p)}</span>
             <span class="bw-rtext"><span class="date">${fmtDate(p.date)}</span><h4>${esc(p.title)}</h4></span>
@@ -833,7 +833,7 @@ function postCard(prefix, p) {
     : `<div class="thumb brand"><img src="${ICON(prefix)}" alt="" aria-hidden="true"></div>`;
   const cat = p.category ? `<span class="pcat">${esc(p.category)}</span>` : '';
   const search = (p.title + ' ' + (p.category || '') + ' ' + (p.excerpt || '')).toLowerCase();
-  return `<a class="pcard" href="${prefix}blog/${p.slug}.html" data-post="${escAttr(search)}" data-hover>
+  return `<a class="pcard" href="${prefix}blog/${p.slug}" data-post="${escAttr(search)}" data-hover>
   ${thumb}
   <div class="pbody">
     <div class="pmeta">${cat}<span class="date">${fmtDate(p.date)}</span></div>
@@ -851,7 +851,7 @@ function buildBlogIndex() {
   <div class="hero-grid" data-par="0.1"></div>
   <div class="hero-glow"></div>
   <div class="wrap">
-    <nav class="breadcrumb" aria-label="Você está em"><a href="${prefix}index.html">Início</a><span class="sep">/</span><span>Blog</span></nav>
+    <nav class="breadcrumb" aria-label="Você está em"><a href="${prefix || './'}">Início</a><span class="sep">/</span><span>Blog</span></nav>
     <h1 class="r up in">Insights de <span class="g">marketing.</span></h1>
     <p class="lead r up in d1">Conteúdo educativo sobre performance, tráfego, SEO, branding e estratégia — de graça, para o crescimento do seu negócio.</p>
   </div>
@@ -875,7 +875,7 @@ function buildBlogIndex() {
   return page({
     prefix, title: 'Blog | BAM Assessoria em Marketing',
     desc: 'Artigos e insights de marketing de performance, tráfego pago, SEO, branding e estratégia pela BAM Assessoria.',
-    path: '/blog/index.html', active: 'blog', content, firebase: true,
+    path: '/blog/', active: 'blog', content, firebase: true,
     extraScripts: `<script type="module" src="${prefix}js/blog-feed.js"></script>\n`,
   });
 }
@@ -891,14 +891,14 @@ function buildPost(p, prev, next) {
     headline: p.title, datePublished: p.date || undefined, inLanguage: 'pt-BR',
     author: { '@type': 'Organization', name: SITE.name },
     publisher: { '@type': 'Organization', name: SITE.name },
-    mainEntityOfPage: SITE.url + '/blog/' + p.slug + '.html',
+    mainEntityOfPage: SITE.url + '/blog/' + p.slug,
     description: p.excerpt || undefined,
   });
   const content = `<header class="page-head">
   <div class="hero-grid"></div>
   <div class="hero-glow"></div>
   <div class="wrap">
-    <nav class="breadcrumb" aria-label="Você está em"><a href="${prefix}index.html">Início</a><span class="sep">/</span><a href="${prefix}blog/index.html">Blog</a><span class="sep">/</span><span>Artigo</span></nav>
+    <nav class="breadcrumb" aria-label="Você está em"><a href="${prefix || './'}">Início</a><span class="sep">/</span><a href="${prefix}blog/">Blog</a><span class="sep">/</span><span>Artigo</span></nav>
     <div class="article-head">
       <div class="pmeta">${cat}<span class="dim">${fmtDate(p.date)} · ${readingTime(p.bodyHtml)} min de leitura</span></div>
       <h1>${esc(p.title)}</h1>
@@ -915,23 +915,23 @@ ${p.bodyHtml}
       </div>
     </div>
     <div class="article-foot">
-      <a class="back" href="${prefix}blog/index.html"><span aria-hidden="true">←</span> Voltar ao blog</a>
+      <a class="back" href="${prefix}blog/"><span aria-hidden="true">←</span> Voltar ao blog</a>
       <div style="display:flex;gap:18px">
-        ${prev ? `<a class="back" href="${prefix}blog/${prev.slug}.html"><span aria-hidden="true">←</span> Anterior</a>` : ''}
-        ${next ? `<a class="back" href="${prefix}blog/${next.slug}.html">Próximo <span aria-hidden="true">→</span></a>` : ''}
+        ${prev ? `<a class="back" href="${prefix}blog/${prev.slug}"><span aria-hidden="true">←</span> Anterior</a>` : ''}
+        ${next ? `<a class="back" href="${prefix}blog/${next.slug}">Próximo <span aria-hidden="true">→</span></a>` : ''}
       </div>
     </div>
     <div class="article-cta article">
       <h3>Quer resultados como esses no seu <span class="g">negócio?</span></h3>
       <p>Receba um diagnóstico estratégico gratuito e descubra como tratar o seu marketing como investimento.</p>
-      <a href="${prefix}contato.html" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a>
+      <a href="${prefix}contato" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a>
     </div>
   </div>
 </article>`;
   return page({
     prefix, title: p.title + ' | Blog BAM Assessoria',
     desc: p.excerpt || ('Artigo do blog da BAM Assessoria: ' + p.title),
-    path: '/blog/' + p.slug + '.html', active: 'blog', ogType: 'article', jsonLd, content, portfolio: false,
+    path: '/blog/' + p.slug, active: 'blog', ogType: 'article', jsonLd, content, portfolio: false,
   });
 }
 
@@ -944,7 +944,7 @@ function buildPostViewer() {
   <div class="hero-grid"></div>
   <div class="hero-glow"></div>
   <div class="wrap">
-    <nav class="breadcrumb" aria-label="Você está em"><a href="${prefix}index.html">Início</a><span class="sep">/</span><a href="${prefix}blog/index.html">Blog</a><span class="sep">/</span><span>Artigo</span></nav>
+    <nav class="breadcrumb" aria-label="Você está em"><a href="${prefix || './'}">Início</a><span class="sep">/</span><a href="${prefix}blog/">Blog</a><span class="sep">/</span><span>Artigo</span></nav>
     <div class="article-head">
       <div class="pmeta" id="postMeta"></div>
       <h1 id="postTitle">Carregando artigo…</h1>
@@ -959,19 +959,19 @@ function buildPostViewer() {
       <div class="prose" id="postBody"><p style="color:var(--gray)">Carregando conteúdo…</p></div>
     </div>
     <div class="article-foot">
-      <a class="back" href="${prefix}blog/index.html"><span aria-hidden="true">←</span> Voltar ao blog</a>
+      <a class="back" href="${prefix}blog/"><span aria-hidden="true">←</span> Voltar ao blog</a>
     </div>
     <div class="article-cta article">
       <h3>Quer resultados como esses no seu <span class="g">negócio?</span></h3>
       <p>Receba um diagnóstico estratégico gratuito e descubra como tratar o seu marketing como investimento.</p>
-      <a href="${prefix}contato.html" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a>
+      <a href="${prefix}contato" class="btn" data-hover><span>Falar com a BAM</span> <span class="ar">→</span></a>
     </div>
   </div>
 </article>`;
   return page({
     prefix, title: 'Artigo | Blog BAM Assessoria',
     desc: 'Artigo do blog da BAM Assessoria em Marketing.',
-    path: '/blog/post.html', active: 'blog', ogType: 'article',
+    path: '/blog/post', active: 'blog', ogType: 'article',
     firebase: true, noindex: true, content, portfolio: false,
     extraScripts: `<script type="module" src="${prefix}js/post-view.js"></script>\n`,
   });
@@ -1015,11 +1015,11 @@ function buildLpEbook() {
   });
 
   const content = `<div class="lp-bar">
-  <a class="lp-logo" href="${prefix}index.html" data-hover>
+  <a class="lp-logo" href="${prefix || './'}" data-hover>
     <img src="${ICON(prefix)}" alt="${escAttr(SITE.name)}" width="30" height="30">
     <b>${esc(SITE.name)}</b>
   </a>
-  <a class="lp-back" href="${prefix}index.html">Ir para o site &rarr;</a>
+  <a class="lp-back" href="${prefix || './'}">Ir para o site &rarr;</a>
 </div>
 
 <!-- HERO + FORMULÁRIO -->
@@ -1077,7 +1077,7 @@ function buildLpEbook() {
             <input id="lpConsent" type="checkbox" required>
             <label for="lpConsent">Autorizo a BAM Assessoria a usar meus dados para enviar este material e
             entrar em contato sobre seus serviços. Posso pedir a exclusão a qualquer momento.
-            <a href="${prefix}privacidade.html" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>.</label>
+            <a href="${prefix}privacidade" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>.</label>
           </div>
 
           <button type="submit" class="btn" data-hover><span>Quero o guia</span> <span class="ar">&rarr;</span></button>
@@ -1147,10 +1147,10 @@ function buildLpEbook() {
 <div class="lp-foot">
   <p>&copy; ${new Date().getFullYear()} ${esc(SITE.name)} &middot; Material gratuito</p>
   <div class="lp-fl">
-    <a href="${prefix}privacidade.html">Política de Privacidade</a>
+    <a href="${prefix}privacidade">Política de Privacidade</a>
     <a href="#" data-cookies>Cookies</a>
-    <a href="${prefix}index.html">Site da BAM</a>
-    <a href="${prefix}blog/index.html">Blog</a>
+    <a href="${prefix || './'}">Site da BAM</a>
+    <a href="${prefix}blog/">Blog</a>
   </div>
 </div>`;
 
@@ -1195,17 +1195,17 @@ if (posts.length) {
 const REV = '2026-06-16';
 const urls = [
   { loc: '/', lastmod: REV, prio: '1.0' },
-  { loc: '/sobre.html', lastmod: REV, prio: '0.8' },
-  { loc: '/contato.html', lastmod: REV, prio: '0.8' },
-  { loc: '/portifolio.html', lastmod: '2026-06-17', prio: '0.9' },
-  { loc: '/privacidade.html', lastmod: REV, prio: '0.3' },
+  { loc: '/sobre', lastmod: REV, prio: '0.8' },
+  { loc: '/contato', lastmod: REV, prio: '0.8' },
+  { loc: '/portifolio', lastmod: '2026-06-17', prio: '0.9' },
+  { loc: '/privacidade', lastmod: REV, prio: '0.3' },
 ];
 if (posts.length) {
-  urls.push({ loc: '/blog/index.html', lastmod: REV, prio: '0.7' });
-  posts.forEach(p => urls.push({ loc: '/blog/' + p.slug + '.html', lastmod: p.date || REV, prio: '0.6' }));
+  urls.push({ loc: '/blog/', lastmod: REV, prio: '0.7' });
+  posts.forEach(p => urls.push({ loc: '/blog/' + p.slug, lastmod: p.date || REV, prio: '0.6' }));
 }
 ['trafego-pago', 'landing-pages', 'seo', 'design-identidade', 'redes-sociais', 'campanhas-sob-medida']
-  .forEach(s => urls.push({ loc: '/servicos/' + s + '.html', lastmod: '2026-06-24', prio: '0.8' }));
+  .forEach(s => urls.push({ loc: '/servicos/' + s, lastmod: '2026-06-24', prio: '0.8' }));
 if (lpEbook) urls.push({ loc: lpEbook, lastmod: '2026-08-18', prio: '0.9' });
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

@@ -42,7 +42,7 @@ export function postCardHtml(p, prefix = '') {
     : `<div class="thumb brand"><img src="${prefix}../assets/svg/logo-icon.svg" alt="" aria-hidden="true"></div>`;
   const cat = p.category ? `<span class="pcat">${escapeHtml(p.category)}</span>` : '';
   const search = (p.title + ' ' + (p.category || '') + ' ' + (p.excerpt || '')).toLowerCase();
-  return `<a class="pcard in" href="${prefix}post.html?slug=${encodeURIComponent(p.slug)}" data-post="${escapeAttr(search)}" data-hover>
+  return `<a class="pcard in" href="${prefix}post?slug=${encodeURIComponent(p.slug)}" data-post="${escapeAttr(search)}" data-hover>
   ${thumb}
   <div class="pbody">
     <div class="pmeta">${cat}<span class="date">${fmtDate(p.date)}</span></div>

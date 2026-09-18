@@ -462,7 +462,7 @@ const HTML = `<!DOCTYPE html>
       ao CRM — para que o time de vendas receba lead com contexto e o investimento em mídia vire
       contrato assinado.</p>
       <div class="chan">
-        <a href="https://www.bamassessoria.com/contato.html"><span class="cl">Site</span>bamassessoria.com</a>
+        <a href="https://www.bamassessoria.com/contato"><span class="cl">Site</span>bamassessoria.com</a>
         <a href="https://api.whatsapp.com/send/?phone=5511976259165"><span class="cl">WhatsApp</span>(11) 97625-9165</a>
         <a href="https://www.instagram.com/bam.assessoria/"><span class="cl">Instagram</span>@bam.assessoria</a>
       </div>

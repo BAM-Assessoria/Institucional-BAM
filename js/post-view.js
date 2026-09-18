@@ -18,7 +18,7 @@ const slug = new URLSearchParams(location.search).get('slug');
 function fail(msg) {
   if (titleEl) titleEl.textContent = 'Artigo não encontrado';
   if (metaEl) metaEl.innerHTML = '';
-  if (bodyEl) bodyEl.innerHTML = `<p style="color:var(--gray)">${msg} <a href="index.html" style="color:var(--green)">Voltar ao blog →</a></p>`;
+  if (bodyEl) bodyEl.innerHTML = `<p style="color:var(--gray)">${msg} <a href="./" style="color:var(--green)">Voltar ao blog →</a></p>`;
 }
 
 if (!firebaseReady) {

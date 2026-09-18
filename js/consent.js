@@ -118,7 +118,7 @@ function close(el) {
 /* A política está na raiz; daqui o caminho depende da profundidade da página. */
 function privacyHref() {
   const depth = location.pathname.replace(/\/[^/]*$/, '/').split('/').filter(Boolean).length;
-  return '../'.repeat(depth) + 'privacidade.html';
+  return '../'.repeat(depth) + 'privacidade';
 }
 
 /* ---------- API para o resto do site ---------- */

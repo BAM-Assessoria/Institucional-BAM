@@ -66,7 +66,7 @@ async function boot() {
   $('data').value = todayISO();
   $('titulo').addEventListener('input', () => {
     const s = slugify($('titulo').value);
-    $('slugPreview').textContent = s ? `/blog/post.html?slug=${s}` : '/blog/post.html?slug=…';
+    $('slugPreview').textContent = s ? `/blog/post?slug=${s}` : '/blog/post?slug=…';
   });
 
   /* ---------- capa ---------- */
@@ -123,7 +123,7 @@ async function boot() {
         slug, title, date, category: category || null, excerpt,
         coverUrl, coverPath, bodyHtml, createdAt: fs.serverTimestamp(),
       });
-      ok.innerHTML = `Artigo publicado! <a target="_blank" href="../blog/post.html?slug=${encodeURIComponent(slug)}">Abrir artigo →</a>`;
+      ok.innerHTML = `Artigo publicado! <a target="_blank" href="../blog/post?slug=${encodeURIComponent(slug)}">Abrir artigo →</a>`;
       ok.classList.add('show');
       resetForm();
       loadList();
@@ -152,7 +152,7 @@ async function boot() {
       li.innerHTML =
         `<div class="meta"><b></b><span></span></div>
          <div class="grp">
-           <a class="btn ghost" target="_blank" href="../blog/post.html?slug=${encodeURIComponent(p.slug || docSnap.id)}">Abrir</a>
+           <a class="btn ghost" target="_blank" href="../blog/post?slug=${encodeURIComponent(p.slug || docSnap.id)}">Abrir</a>
            <button class="btn danger" type="button">Excluir</button>
          </div>`;
       li.querySelector('b').textContent = p.title || '(sem título)';
@@ -175,7 +175,7 @@ async function boot() {
     $('postForm').reset();
     $('editor').innerHTML = '';
     $('data').value = todayISO();
-    $('slugPreview').textContent = '/blog/post.html?slug=…';
+    $('slugPreview').textContent = '/blog/post?slug=…';
     $('coverPrev').style.backgroundImage = '';
     coverFile = null;
   }
