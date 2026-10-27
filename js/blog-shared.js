@@ -27,6 +27,20 @@ export function slugify(s) {
     .slice(0, 90);
 }
 
+/* Blog dono do post. O painel publica nos dois sites do projeto Firebase:
+   'bam' (www.bamassessoria.com) e 'bamtec' (tec.bamassessoria.com). */
+export function siteOf(p) {
+  return p.site || 'bam';
+}
+
+/* Momento em que o post entra no ar, em ms. Posts agendados têm publishAt
+   no futuro e ficam fora do blog até lá. Sem publishAt, vale o createdAt. */
+export function publishMs(p) {
+  if (p.publishAt && p.publishAt.toMillis) return p.publishAt.toMillis();
+  if (p.createdAt && p.createdAt.toMillis) return p.createdAt.toMillis();
+  return Date.parse(p.date || '') || 0;
+}
+
 export function escapeHtml(s = '') {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

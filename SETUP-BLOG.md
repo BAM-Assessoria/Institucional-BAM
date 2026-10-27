@@ -1,15 +1,24 @@
 # Publicação de posts no blog (área `/admin`)
 
-Este guia ativa a página secreta **`/admin`**, onde a equipe da BAM publica
-novos artigos no blog de qualquer lugar, com login. Os artigos antigos
-(importados do site) continuam fixos e não são afetados.
+Este guia ativa a página secreta **`/admin`**, onde a equipe da BAM publica,
+agenda, edita e exclui artigos de qualquer lugar, com login. O mesmo painel
+atende **dois blogs**: o da BAM Assessoria (este repositório) e o da BAM Tec
+(repositório `BAMTEC`, site `bamtec` no mesmo projeto Firebase). Os artigos
+antigos (escritos direto no código dos sites) continuam fixos e não são afetados.
 
 > **Resumo da arquitetura**
 > - Login: **Firebase Authentication** (e-mail + senha).
-> - Conteúdo dos novos posts: **Cloud Firestore** (coleção `posts`).
+> - Conteúdo dos novos posts: **Cloud Firestore** (coleção `posts`), com o
+>   campo `site` (`bam` ou `bamtec`) dizendo em qual blog o post sai.
 > - Imagens de capa: **Firebase Storage** (pasta `blog/`).
-> - O blog (`/blog/index.html`) lê os posts novos e os mostra no topo.
-> - Cada post novo abre em `/blog/post.html?slug=...`.
+> - `publishAt` diz quando o post entra no ar. Se a data estiver no futuro, o
+>   post fica **programado**: os blogs o escondem até a hora chegar e ele entra
+>   sozinho, sem servidor nem deploy (cada blog filtra ao montar a página).
+> - Blog da BAM: `/blog/index.html` lê os posts com `site = bam` e os mostra
+>   no topo; cada um abre em `/blog/post?slug=...` (`js/post-view.js`).
+> - Blog da BAM Tec: `/blog/` e `/blog/post?slug=...` do site BAM Tec leem os
+>   posts com `site = bamtec` pela API REST do Firestore (`js/blog-posts.js`
+>   no repositório `BAMTEC`).
 > - A página `/admin` **não** é linkada em lugar nenhum e tem `noindex`.
 
 ---
@@ -85,10 +94,23 @@ firebase deploy --only hosting
 
 1. Acesse **`https://www.bamassessoria.com/admin/`** (ou `/admin`).
 2. Faça login com um dos e-mails autorizados.
-3. Preencha título, data, categoria (opcional), resumo, capa (opcional) e o
-   conteúdo, e clique em **Publicar artigo**.
-4. O post aparece no topo do blog na hora. A lista no rodapé do painel permite
-   **abrir** ou **excluir** os artigos publicados por ali.
+3. Escolha o blog (**BAM Assessoria** ou **BAM Tec**) e preencha título,
+   **Publicar em** (data e hora), categoria (opcional), resumo, capa (opcional)
+   e o conteúdo.
+   - Data e hora de agora (o padrão) ou no passado → **Publicar artigo**: o
+     post aparece no topo do blog na hora, com essa data.
+   - Data no futuro → **Agendar artigo**: o post vai para **Programados** e
+     entra no ar sozinho na hora marcada.
+4. Na **Gestão do blog**, abaixo do formulário, ficam duas listas, com filtro
+   por blog:
+   - **Programados** (do mais próximo ao mais distante): **Prévia** abre o
+     artigo com um aviso de pré-visualização (link com `&preview=1`),
+     **Publicar agora** antecipa a publicação, **Editar** e **Excluir**.
+   - **Publicados**: **Ver**, **Editar** e **Excluir**.
+5. Ao editar um post que já está no ar, o endereço (slug) não muda, para não
+   quebrar links compartilhados. Enquanto o post ainda está programado, o
+   endereço acompanha o título. Mudar a data de um post publicado para o
+   futuro tira ele do ar até lá (o painel pede confirmação).
 
 ---
 
@@ -111,6 +133,14 @@ O painel só adiciona posts novos por cima.
 (não são HTML pré-gerado), então têm menos força de SEO que os antigos. Para um
 artigo muito estratégico, vale gerar ele de forma estática (via `data/posts.json`
 + `build.mjs`) como os antigos.
+
+**Um post programado é secreto até a hora?** Ele não aparece em nenhum blog,
+lista ou busca do site, mas a coleção `posts` tem leitura pública nas regras
+(é o que deixa os blogs lerem sem login). Quem conhecer o endereço com
+`&preview=1`, ou consultar a API do Firestore direto, consegue ler o texto
+antes da hora. Para um anúncio que não pode vazar, só agende quando o texto
+puder ser lido; se isso virar exigência, o caminho é endurecer as regras
+(`publishAt <= request.time` para quem não é admin).
 
 **Esqueci a senha.** Console → Authentication → Users → menu do usuário →
 *Reset password*.
